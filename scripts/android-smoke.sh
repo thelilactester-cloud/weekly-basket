@@ -29,10 +29,13 @@ if [ -z "$(adb shell pidof "$PKG")" ]; then
   exit 1
 fi
 echo "── text on screen ──"
-grep -o 'text="[^"]\+"' smoke/ui.xml 2>/dev/null | sed 's/text=//' | head -25
-grep -q 'Prepcart\|Where do you shop' smoke/ui.xml 2>/dev/null || {
+# WebView text shows up as text="…" or, for some elements, as content-desc="…" (what screen readers read).
+grep -o '\(text\|content-desc\)="[^"]\+"' smoke/ui.xml 2>/dev/null | head -40
+echo "($(grep -o '<node ' smoke/ui.xml 2>/dev/null | wc -l) elements on screen)"
+grep -q '="[^"]*\(Prepcart\|Where do you shop\)' smoke/ui.xml 2>/dev/null || {
   echo "The app opened but its screen is empty (or could not be read)."
   echo "── uiautomator ──"; cat smoke/uiautomator.txt
+  echo "── screen dump (start) ──"; head -c 3000 smoke/ui.xml 2>/dev/null; echo
   echo "── app messages ──"; grep -i "console\|chromium" smoke/logcat.txt | grep -v "Handling local request" | tail -30
   exit 1
 }
