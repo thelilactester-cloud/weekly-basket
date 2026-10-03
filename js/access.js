@@ -9,7 +9,7 @@
  *                                         d: free days (0 = no end), e: last day to redeem ('' = none), i: code id }
  *
  * Codes work on the web and Android. Apple doesn't allow unlocking features with your own codes in
- * iPhone apps (App Review 3.1.1): there, use App Store offer codes, redeemed through Apple (see APP_STORE.md).
+ * iPhone apps (App Review 3.1.1): there, use App Store offer codes, redeemed through Apple (see LAUNCH.md).
  * There is no server, so a code can't be "used up". Give each affiliate their own code, set an end
  * date, and add the id of any code that leaks to MP.REVOKED_CODES (it stops working after the next update).
  */

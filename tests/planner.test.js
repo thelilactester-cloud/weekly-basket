@@ -249,16 +249,30 @@ test('Premium never costs more than Amazon Prime, and every country’s currency
   }
   for (const [code, c] of Object.entries(MP.COUNTRIES)) assert.ok(MP.PRICES[c.currency], `${code} ${c.currency}`);
   for (const [cur, [monthly, yearly]] of Object.entries(MP.PRICES)) assert.ok(yearly < monthly * 12, `${cur} yearly should be cheaper`);
+  for (const [code, o] of Object.entries(MP.COUNTRY_PRICES)) {
+    assert.ok(MP.COUNTRIES[code], code);
+    assert.ok(o.price[0] < o.prime, `${code}: not below Prime`);
+    assert.ok(o.price[1] < o.price[0] * 12, `${code} yearly should be cheaper`);
+  }
+  // every country's shown price is below its Prime price
+  for (const code of Object.keys(MP.COUNTRIES)) {
+    const p = MP.priceFor(code);
+    if (p.prime) assert.ok(p.monthly < p.prime, `${code}: ${p.monthly} vs Prime ${p.prime}`);
+  }
+  assert.equal(MP.BILLING_CONFIG.trialDays, 30);
 });
 
-test('free trial lasts 7 days from the end of setup', () => {
+test('free trial lasts one month from the end of setup, two months through an affiliate', () => {
   const start = Date.UTC(2026, 9, 1);
   const day = 864e5;
   assert.equal(MP.trialStatus({ trialStart: null }).active, true);
-  assert.equal(MP.trialStatus({ trialStart: start }, start + 6.9 * day).active, true);
-  const over = MP.trialStatus({ trialStart: start }, start + 7.1 * day);
+  assert.equal(MP.trialStatus({ trialStart: start }, start + 29.9 * day).active, true);
+  const over = MP.trialStatus({ trialStart: start }, start + 30.1 * day);
   assert.equal(over.active, false);
-  assert.equal(over.trialEndsAt, start + 7 * day);
+  assert.equal(over.trialEndsAt, start + 30 * day);
+  const aff = { trialStart: start, referral: { code: 'MARIA' } };
+  assert.equal(MP.trialStatus(aff, start + 59 * day).active, true);
+  assert.equal(MP.trialStatus(aff, start + 61 * day).active, false);
   assert.ok(!MP.PREMIUM_TABS.includes('profile'), 'export/delete data must stay free');
 });
 
@@ -428,4 +442,36 @@ test('free-access codes: signed codes work, changed / expired / revoked / unknow
   assert.equal(await MP.access.grant({ access: { code: aff.code, redeemedAt: now } }, now), null);
   MP.REVOKED_CODES.pop();
   delete MP.ACCESS_KEYS.test;
+});
+
+// ───────── health and lifestyle needs ─────────
+
+test('health needs filter recipes and every need has breakfasts, mains and snacks', () => {
+  for (const need of MP.NEEDS) {
+    for (const id of [...MP.NEED_RULES[need].avoid, ...(MP.NEED_RULES[need].favour || [])]) assert.ok(MP.INGREDIENTS[id], `${need}: unknown ${id}`);
+    for (const meal of ['breakfast', 'main', 'snack']) {
+      assert.ok(MP.RECIPES.some((r) => r.meal.includes(meal) && MP.fitsNeeds(r, [need])), `${need} has no ${meal}`);
+    }
+  }
+  const hasTomato = MP.RECIPES.find((r) => r.ing.some(([id]) => id === 'tomato'));
+  assert.equal(MP.fitsNeeds(hasTomato, ['low_histamine']), false);
+  const garlicky = MP.RECIPES.find((r) => r.ing.some(([id]) => id === 'garlic'));
+  assert.equal(MP.fitsNeeds(garlicky, ['low_fodmap']), false);
+  assert.equal(MP.fitsNeeds(MP.RECIPE_BY_ID.turkey_quinoa_peppers, ['kosher']), false, 'meat with dairy is not kosher');
+  assert.equal(MP.fitsNeeds(MP.RECIPE_BY_ID.herb_chicken_rice, ['kosher', 'low_histamine', 'low_fodmap']), true);
+  for (const r of MP.RECIPES) if (MP.fitsNeeds(r, ['blood_sugar'])) assert.ok(MP.recipeNutrition(r).carbs <= 55, r.id);
+});
+
+test('a family member on low-histamine + low-FODMAP still gets a full week, separate from the others', () => {
+  const st = household([
+    MP.newMember({ name: 'Ana', diet: 'omnivore', needs: ['low_histamine', 'low_fodmap'] }),
+    MP.newMember({ name: 'Ion', diet: 'omnivore' }),
+  ]);
+  MP.autoFillWeek(st, 7);
+  const ana = st.members[0].id;
+  const cov = MP.coverage(st);
+  for (const slot of ['breakfast', 'lunch', 'dinner']) assert.equal(cov[slot][ana], 7, `Ana ${slot}`);
+  for (const it of st.week.items) {
+    if (it.eaters.includes(ana)) assert.ok(MP.fitsNeeds(MP.RECIPE_BY_ID[it.recipeId], ['low_histamine', 'low_fodmap']), it.recipeId);
+  }
 });

@@ -1,9 +1,9 @@
 # Tests the app, builds the Android test app and publishes everything:
 #   - website (GitHub Pages):  https://<owner>.github.io/weekly-basket/   (+ download.html, admin.html)
-#   - Android test app:        https://<owner>.github.io/weekly-basket/download/weekly-basket.apk
+#   - Android test app:        https://<owner>.github.io/weekly-basket/download/prepcart.apk
 #                              and the "android-test" release
 # One-time setup for the website: Settings → Pages → Build and deployment → Source: "GitHub Actions".
-name: Publish Weekly Basket
+name: Publish Prepcart
 
 on:
   push:
@@ -19,12 +19,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      HAS_UPLOAD_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -38,30 +43,61 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Run tests
         run: npm test
+      - name: Test the server functions
+        working-directory: functions
+        run: npm ci --no-audit --no-fund && npm test
       - name: Create the Android project
+        env:
+          # Optional repository secrets (Settings → Secrets and variables → Actions). See LAUNCH.md.
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
+          FACEBOOK_CLIENT_TOKEN: ${{ secrets.FACEBOOK_CLIENT_TOKEN }}
         run: |
           npm run build
           npx cap add android
+          npm run cap:configure
           npm run icons -- --android
           npx cap sync android
-      - name: Build the Android app
+      - name: Build the Android test app
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
-      - run: cp android/app/build/outputs/apk/debug/app-debug.apk weekly-basket.apk
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk prepcart.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: weekly-basket-android
-          path: weekly-basket.apk
+          name: prepcart-android
+          path: prepcart.apk
+      # Google Play needs a signed App Bundle (.aab). Built only once the upload key is in the repository secrets.
+      - name: Build the signed Google Play bundle
+        if: env.HAS_UPLOAD_KEY == 'true'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          ./gradlew bundleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.jks" \
+            -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$ANDROID_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
+          cp app/build/outputs/bundle/release/app-release.aab ../prepcart-play.aab
+      - uses: actions/upload-artifact@v4
+        if: hashFiles('prepcart-play.aab') != ''
+        with:
+          name: prepcart-google-play
+          path: prepcart-play.aab
       - name: Publish the "android-test" release
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete android-test --yes --cleanup-tag || true
-          gh release create android-test weekly-basket.apk \
+          gh release create android-test prepcart.apk \
             --prerelease --target "$GITHUB_SHA" \
-            --title "Weekly Basket: Android test app" \
-            --notes "Test build from commit ${GITHUB_SHA::7}. On your Android phone: download weekly-basket.apk, open it, and allow installing from this source when asked. Payments are off until the RevenueCat keys are added."
+            --title "Prepcart: Android test app" \
+            --notes "Test build from commit ${GITHUB_SHA::7}. On your Android phone: download prepcart.apk, open it, and allow installing from this source when asked. Payments are off until the RevenueCat keys are added."
 
   website:
     needs: android
@@ -84,10 +120,10 @@ jobs:
       - name: Build the website
         run: |
           node scripts/build.mjs
-          cp admin.html download.html dist/
+          cp admin.html download.html join.html delete-account.html dist/
       - uses: actions/download-artifact@v4
         with:
-          name: weekly-basket-android
+          name: prepcart-android
           path: dist/download
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -1,10 +1,10 @@
 {
-  "name": "Weekly Basket: meal plan & shopping list",
-  "short_name": "Weekly Basket",
+  "name": "Prepcart: meal prep & shopping list",
+  "short_name": "Prepcart",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#1f9d55",
+  "background_color": "#f7f5fb",
+  "theme_color": "#7e5bc2",
   "icons": [
     {
       "src": "icons/icon-192.png",

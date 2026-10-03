@@ -115,7 +115,7 @@
     async wipe() {
       await store._queue;
       try {
-        Object.keys(g.localStorage).filter((k) => k.startsWith('weekly-basket') || k.startsWith('wb-cache:'))
+        Object.keys(g.localStorage).filter((k) => k.startsWith('weekly-basket') || k.startsWith('prepcart') || k.startsWith('wb-cache:'))
           .forEach((k) => g.localStorage.removeItem(k));
       } catch (e) { /* ignore */ }
       try {

@@ -10,7 +10,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.en = {
-    appName: 'Weekly Basket', tagline: 'Your supermarket, your diet, your family. Planned every week.',
+    appName: 'Prepcart', tagline: 'Your supermarket, your diet, your family. Planned every week.',
     next: 'Next', back: 'Back', close: 'Close', remove: 'Remove', stepOf: (a, b) => `${a} of ${b}`,
     // setup steps
     placeTitle: 'Where do you shop?', placeHint: 'Shops, prices, language and units follow your choice.',
@@ -84,7 +84,7 @@
     cookFor: (n) => `Quantities for ${n} servings`, favorite: 'Favourite', notForHousehold: 'Doesn’t suit anyone’s diet or allergies',
     stepsInEnglish: 'Recipe steps are shown in English.',
     // subscription
-    premiumTitle: 'Weekly Basket Premium', premiumPitch: 'Take the pressure off shopping, every week.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Take the pressure off shopping, every week.',
     perk1: 'Weekly plans for the whole family, with each person’s diet', perk2: 'Shopping lists for your supermarket, with quantities',
     perk3: 'Real products and prices from your shop', perk4: 'Recipes from the cuisines you love',
     planMonthly: 'Monthly', planYearly: 'Yearly', perMonth: '/month', perYear: '/year', savePct: (n) => `Save ${n}%`,
@@ -104,8 +104,38 @@
     freeUntil: (d) => `Free until ${d}`,
     redeemOffer: 'Redeem an offer code',
     subscribeSoon: 'Subscriptions aren’t switched on yet in this test version.',
+    // accounts (js/account.js)
+    account: 'Account', signIn: 'Sign in', signUp: 'Create account', signOut: 'Sign out', signedOut: 'You’re signed out.',
+    accountWhy: 'Create a free account to keep your subscription on all your devices. Your diets and lists stay private on this device.',
+    continueWith: (p) => `Continue with ${p}`, orEmail: 'or with email', email: 'Email', password: 'Password', yourName: 'Your name',
+    passwordHint: 'At least 8 characters', forgotPassword: 'Forgot password?', sendReset: 'Send reset link',
+    resetSent: 'Check your email for a link to choose a new password.',
+    haveAccount: 'Already have an account? Sign in', noAccount: 'New here? Create an account', skipForNow: 'Not now',
+    consentLine: 'By continuing you confirm you are 16 or older and agree to the Terms of Use and the Privacy Policy.',
+    signedInAs: (e) => `Signed in as ${e}`, welcomeBack: 'You’re signed in.',
+    verifyEmail: 'Please confirm your email address. We sent you a link.', resend: 'Send the link again', sent: 'Sent',
+    deleteAccount: 'Delete my account', accountDeleted: 'Your account was deleted.',
+    deleteAccountConfirm: 'Delete your account and everything stored online for it? This can’t be undone. If you subscribed, also cancel the subscription in the App Store or Google Play.',
+    errEmail: 'Please enter a valid email address.', errEmailUsed: 'There is already an account with this email. Sign in instead.',
+    errWeakPassword: 'Please choose a password with at least 8 characters.', errLogin: 'Wrong email or password.',
+    errTooMany: 'Too many attempts. Please wait a few minutes and try again.', errNetwork: 'No connection. Check your internet and try again.',
+    errRecentLogin: 'For your security, please sign in again first.', errOtherMethod: 'This email is already used with another sign-in method. Use that one.',
+    errMethodOff: 'This sign-in method isn’t available yet.', errGeneric: 'Something went wrong. Please try again.',
+    // health and lifestyle needs (planner.js NEED_RULES)
+    needs: 'Health & lifestyle needs (optional, combine with the diet)',
+    need_low_histamine: 'Low histamine', need_low_fodmap: 'Low FODMAP (sensitive gut / IBS)', need_mind: 'MIND (brain health)',
+    need_dash: 'DASH (heart & blood pressure)', need_blood_sugar: 'Blood-sugar friendly', need_anti_inflammatory: 'Anti-inflammatory',
+    need_halal: 'Halal', need_kosher: 'Kosher',
+    needNote_low_histamine: 'Eat dishes fresh: freeze leftovers instead of keeping them in the fridge, because histamine builds up over time.',
+    needNote_halal: 'Choose halal-certified meat when you shop.', needNote_kosher: 'Choose kosher-certified meat and products when you shop.',
+    needNote_medical: 'This is planning help, not medical advice. If you have a medical condition, follow your doctor’s or dietitian’s advice.',
+    // appearance
+    theme: 'Appearance', theme_system: 'Automatic', theme_light: 'Light', theme_dark: 'Dark',
+    // affiliates
+    referralBanner: (name, months) => `${name}’s link: ${months} months free`, referralJoined: (name) => `Joined with ${name}’s link`,
+    referralBad: 'This referral code isn’t valid.', referralAlready: 'A referral offer is already applied.',
     trialOver: 'Your free trial has ended. Subscribe to keep planning your weeks.',
-    subscribeInApp: 'Subscriptions are available in the Weekly Basket app for iPhone and Android.',
+    subscribeInApp: 'Subscriptions are available in the Prepcart app for iPhone and Android.',
     premiumActive: 'Premium is active', subscription: 'Subscription', manageSub: 'Manage subscription',
     // privacy
     privacyTitle: 'Privacy & your data', encryptedOn: 'Your data is encrypted and stored only on this device.',
