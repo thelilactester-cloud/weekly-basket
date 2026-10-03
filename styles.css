@@ -415,7 +415,8 @@ a.btn { display: block; text-align: center; text-decoration: none; color: inheri
 /* meals per person */
 .meals-field .seg { margin-bottom: 8px; }
 .meal-row { border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px 10px; margin: 8px 0 0; min-width: 0; }
-.meal-row legend { font-weight: 600; padding: 0 4px; text-transform: capitalize; }
+.meal-row legend { font-weight: 600; padding: 0 4px; }
+.meal-row legend::first-letter { text-transform: uppercase; }
 .meal-row .seg { margin: 4px 0 8px; }
 .meal-row .chips { margin-bottom: 4px; }
 .chip.snack.on { background: var(--brand-soft); border-color: var(--brand); color: var(--ink); }
