@@ -129,6 +129,7 @@
     needNote_low_histamine: 'Eat dishes fresh: freeze leftovers instead of keeping them in the fridge, because histamine builds up over time.',
     needNote_halal: 'Choose halal-certified meat when you shop.', needNote_kosher: 'Choose kosher-certified meat and products when you shop.',
     needNote_medical: 'This is planning help, not medical advice. If you have a medical condition, follow your doctor’s or dietitian’s advice.',
+    newIdeas: 'New ideas',
     // appearance
     theme: 'Appearance', theme_system: 'Automatic', theme_light: 'Light', theme_dark: 'Dark',
     // affiliates

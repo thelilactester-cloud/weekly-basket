@@ -475,3 +475,20 @@ test('a family member on low-histamine + low-FODMAP still gets a full week, sepa
     if (it.eaters.includes(ana)) assert.ok(MP.fitsNeeds(MP.RECIPE_BY_ID[it.recipeId], ['low_histamine', 'low_fodmap']), it.recipeId);
   }
 });
+
+// ───────── variety ─────────
+
+test('suggestions change from week to week and last week’s dishes move down', () => {
+  const st = household([MP.newMember({ name: 'Ana' })]);
+  const top = (seed) => { st.week = { items: [], seed }; return MP.suggestRecipes(st, 'dinner').slice(0, 8).map((s) => s.recipe.id); };
+  const a = top(1);
+  assert.deepEqual(top(1), a, 'the same week keeps the same order while planning');
+  const differs = [2, 3, 4, 5].filter((seed) => top(seed).join() !== a.join()).length;
+  assert.ok(differs >= 3, 'different weeks get different first suggestions');
+  st.week = { items: [], seed: 1 };
+  const first = MP.suggestRecipes(st, 'dinner')[0];
+  st.lastWeek = [{ recipeId: first.recipe.id, slot: 'dinner', days: 3, eaters: [st.members[0].id] }];
+  const again = MP.suggestRecipes(st, 'dinner');
+  assert.ok(again.find((s) => s.recipe.id === first.recipe.id).score < first.score, 'last week’s dish scores lower');
+  assert.ok(MP.RECIPES.length >= 120);
+});
