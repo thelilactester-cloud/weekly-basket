@@ -2,6 +2,20 @@
   "appId": "com.weeklybasket.app",
   "appName": "Weekly Basket",
   "webDir": "dist",
-  "ios": { "contentInset": "automatic" },
-  "android": { "allowMixedContent": false }
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": [
+        "google.com",
+        "apple.com",
+        "facebook.com"
+      ]
+    }
+  }
 }

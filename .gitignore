@@ -1,2 +1,9 @@
 node_modules/
 dist/
+functions/node_modules/
+functions/.secret.local
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+*-debug.log

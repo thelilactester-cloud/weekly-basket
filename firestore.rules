@@ -1,0 +1,48 @@
+rules_version = '2';
+// Who can read and write what in the database. Deploy with: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function activeAffiliate(code) {
+      return code is string && exists(/databases/$(database)/documents/affiliates/$(code))
+        && get(/databases/$(database)/documents/affiliates/$(code)).data.active == true;
+    }
+    function validReferral(r) { return r == null || (r is map && activeAffiliate(r.code)); }
+
+    // One document per account: email, name, consent, affiliate code. Nothing about diets or health.
+    match /users/{uid} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['email', 'name', 'createdAt', 'consent', 'referral'])
+        && validReferral(request.resource.data.get('referral', null));
+      // The affiliate code can be added once and never changed (so commissions can't be redirected).
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['referral', 'name'])
+        && (resource.data.get('referral', null) == null || request.resource.data.get('referral', null) == resource.data.get('referral', null))
+        && validReferral(request.resource.data.get('referral', null));
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Public part of an affiliate (name, active, Apple offer code). Anyone can look up one code; only admins can list or change.
+    match /affiliates/{code} {
+      allow get: if true;
+      allow list, write: if isAdmin();
+    }
+    // Private part (payout email, notes).
+    match /affiliatePrivate/{code} {
+      allow read, write: if isAdmin();
+    }
+    // Written only by the revenuecatWebhook function. Admins can mark them paid.
+    match /commissions/{id} {
+      allow read: if isAdmin();
+      allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['paid', 'paidAt']);
+      allow create, delete: if false;
+    }
+    // Admin accounts: added by hand in the Firebase console (see LAUNCH.md).
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+  }
+}

@@ -249,16 +249,30 @@ test('Premium never costs more than Amazon Prime, and every country’s currency
   }
   for (const [code, c] of Object.entries(MP.COUNTRIES)) assert.ok(MP.PRICES[c.currency], `${code} ${c.currency}`);
   for (const [cur, [monthly, yearly]] of Object.entries(MP.PRICES)) assert.ok(yearly < monthly * 12, `${cur} yearly should be cheaper`);
+  for (const [code, o] of Object.entries(MP.COUNTRY_PRICES)) {
+    assert.ok(MP.COUNTRIES[code], code);
+    assert.ok(o.price[0] < o.prime, `${code}: not below Prime`);
+    assert.ok(o.price[1] < o.price[0] * 12, `${code} yearly should be cheaper`);
+  }
+  // every country's shown price is below its Prime price
+  for (const code of Object.keys(MP.COUNTRIES)) {
+    const p = MP.priceFor(code);
+    if (p.prime) assert.ok(p.monthly < p.prime, `${code}: ${p.monthly} vs Prime ${p.prime}`);
+  }
+  assert.equal(MP.BILLING_CONFIG.trialDays, 30);
 });
 
-test('free trial lasts 7 days from the end of setup', () => {
+test('free trial lasts one month from the end of setup, two months through an affiliate', () => {
   const start = Date.UTC(2026, 9, 1);
   const day = 864e5;
   assert.equal(MP.trialStatus({ trialStart: null }).active, true);
-  assert.equal(MP.trialStatus({ trialStart: start }, start + 6.9 * day).active, true);
-  const over = MP.trialStatus({ trialStart: start }, start + 7.1 * day);
+  assert.equal(MP.trialStatus({ trialStart: start }, start + 29.9 * day).active, true);
+  const over = MP.trialStatus({ trialStart: start }, start + 30.1 * day);
   assert.equal(over.active, false);
-  assert.equal(over.trialEndsAt, start + 7 * day);
+  assert.equal(over.trialEndsAt, start + 30 * day);
+  const aff = { trialStart: start, referral: { code: 'MARIA' } };
+  assert.equal(MP.trialStatus(aff, start + 59 * day).active, true);
+  assert.equal(MP.trialStatus(aff, start + 61 * day).active, false);
   assert.ok(!MP.PREMIUM_TABS.includes('profile'), 'export/delete data must stay free');
 });
 

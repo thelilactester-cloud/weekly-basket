@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; frame-src https://*.firebaseapp.com https://*.web.app https://apis.google.com; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Weekly Basket Admin</title>
   <link rel="icon" href="icon.svg">
@@ -34,8 +34,48 @@
 <body>
   <main class="admin">
     <h1>🧺 Weekly Basket Admin</h1>
-    <p class="muted">Make free-access codes for yourself, testers, affiliates and gifts. Everything happens in this browser: your admin key is never uploaded or saved.</p>
+    <p class="muted">Manage affiliates and see commissions (needs your admin account), and make free-access codes for yourself, testers and gifts (needs your admin key file, which never leaves this browser).</p>
 
+    <section class="card" id="affSection">
+      <h2>Affiliates and commissions</h2>
+      <p id="affOff" class="hint" hidden>Accounts aren't switched on yet: fill in the Firebase settings in <code>js/config.js</code> (see LAUNCH.md).</p>
+      <div id="affSignin" hidden>
+        <p class="hint">Sign in with your admin account.</p>
+        <label for="aEmail">Email</label><input id="aEmail" type="email" autocomplete="email">
+        <label for="aPass">Password</label><input id="aPass" type="password" autocomplete="current-password">
+        <div class="row"><button type="button" class="btn primary" id="aSignin">Sign in</button><button type="button" class="btn" id="aGoogle">Sign in with Google</button></div>
+        <p id="aErr" class="status err" hidden></p>
+      </div>
+      <div id="affNotAdmin" hidden>
+        <p class="status err">This account isn't an admin.</p>
+        <p class="hint">To make it one: Firebase console → Firestore → collection <strong>admins</strong> → add a document whose id is <code id="aUid"></code> (any field, e.g. <code>email</code>).</p>
+        <div class="row"><button type="button" class="btn" id="aSignout2">Sign out</button></div>
+      </div>
+      <div id="affAdmin" hidden>
+        <p class="hint">Signed in as <span id="aWho"></span>. <button type="button" class="btn small" id="aSignout">Sign out</button></p>
+
+        <h2>Add or change an affiliate</h2>
+        <label for="fCode">Code (letters and numbers, e.g. MARIA)</label><input id="fCode" maxlength="32" autocomplete="off" style="text-transform:uppercase">
+        <label for="fName">Name shown to users</label><input id="fName" maxlength="60">
+        <label for="fPayout">Payout email (PayPal / bank contact; only admins see it)</label><input id="fPayout" type="email">
+        <label for="fApple">App Store offer code for this affiliate (optional, see LAUNCH.md)</label><input id="fApple" maxlength="64" autocomplete="off" style="text-transform:uppercase">
+        <label><input id="fActive" type="checkbox" checked style="width:auto"> Active (new people can use the link)</label>
+        <div class="row"><button type="button" class="btn primary" id="fSave">Save affiliate</button></div>
+        <p id="fMsg" class="status" hidden></p>
+
+        <h2>Affiliates</h2>
+        <div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th><th>Active</th><th>Link to share</th><th></th></tr></thead><tbody id="affList"></tbody></table></div>
+
+        <h2>Commissions</h2>
+        <p class="hint">20% of what you receive (after the store fee and tax) for each payment in a subscriber's first 12 months. In US dollars.</p>
+        <label for="rMonth">Month</label><input id="rMonth" type="month">
+        <div class="table-wrap"><table><thead><tr><th>Affiliate</th><th>Payments</th><th>Refunds</th><th>Commission</th><th>Unpaid</th><th></th></tr></thead><tbody id="rBody"></tbody></table></div>
+        <p class="hint" id="rTotal"></p>
+        <div class="row"><button type="button" class="btn" id="rCsv">Download month (CSV)</button></div>
+      </div>
+    </section>
+
+    <h2 style="margin-top:28px">Free-access codes (web and Android)</h2>
     <section class="card">
       <h2>1. Open your admin key</h2>
       <p class="hint">The file <strong>weekly-basket-admin-key.json</strong>. Keep it private: anyone who has it can make free codes.</p>
@@ -112,6 +152,10 @@
     <p class="fine">On iPhone, Apple only allows App Store offer codes, made in App Store Connect. These codes work on the web and in the Android app.</p>
   </main>
   <script src="js/access.js"></script>
+  <script src="js/vendor/firebase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/account.js"></script>
   <script src="js/admin.js"></script>
+  <script src="js/admin-affiliates.js"></script>
 </body>
 </html>

@@ -346,3 +346,16 @@ a.btn { display: block; text-align: center; text-decoration: none; color: inheri
 .code-row { display: flex; gap: 8px; margin-top: 8px; }
 .code-row input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: inherit; font: inherit; font-size: 0.9rem; }
 .code-row .btn { flex: none; }
+
+/* accounts */
+.account-sheet .logo { font-size: 2.4rem; }
+.center { text-align: center; }
+.providers { display: grid; gap: 8px; margin-top: 12px; }
+.btn.provider { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 0; font-weight: 600; }
+.provider .pico { width: 20px; text-align: center; font-weight: 800; }
+.provider-apple { background: #000; border-color: #000; color: #fff; }
+.provider-google .pico { color: #4285f4; }
+.provider-facebook { background: #1877f2; border-color: #1877f2; color: #fff; }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.85rem; margin: 14px 0 4px; }
+.or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.account-sheet .link { color: var(--accent); font: inherit; padding: 6px; }

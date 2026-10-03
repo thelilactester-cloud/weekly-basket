@@ -1,8 +1,8 @@
 // Offline support: cache the app shell, serve it when there is no connection.
-const CACHE = 'weekly-basket-v5';
+const CACHE = 'weekly-basket-v6';
 const LANGS = ['ro', 'es', 'fr', 'de', 'it', 'pt', 'zh', 'hi', 'ar', 'bn', 'bg', 'cs', 'el', 'hu', 'id', 'ja', 'ko', 'nl', 'pl', 'ru', 'sv', 'sw', 'th', 'tr', 'uk', 'vi'];
 const FILES = ['./', 'index.html', 'privacy.html', 'styles.css', 'manifest.webmanifest', 'icon.svg', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'js/data.js', 'js/regions.js',
-  'js/planner.js', 'js/products.js', 'js/storage.js', 'js/billing.js', 'js/access.js', 'js/i18n.js', 'js/app.js',
+  'js/planner.js', 'js/products.js', 'js/storage.js', 'js/billing.js', 'js/access.js', 'js/vendor/firebase.js', 'js/config.js', 'js/account.js', 'terms.html', 'js/i18n.js', 'js/app.js',
   ...LANGS.map((l) => `js/lang/${l}.js`)];
 
 self.addEventListener('install', (e) => {

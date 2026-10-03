@@ -30,7 +30,7 @@
       prefs: { mealsPerDay: 3, maxTime: 60, budget: 'balanced', weeklyBudget: '', cuisines: [] },
       week: { startedAt: Date.now(), items: [] }, lastWeek: null,
       favorites: [], checked: {}, products: {}, extras: [],
-      trialStart: null, premiumCachedUntil: 0, access: null,
+      trialStart: null, premiumCachedUntil: 0, access: null, referral: null,
     };
   }
 
@@ -67,7 +67,13 @@
   try { grant = await MP.access.grant(state); } catch (e) { grant = null; }
   premium = withGrant(premium);
   async function refreshPremium() {
-    premium = withGrant(await MP.billing.status(state));
+    let p = await MP.billing.status(state);
+    // Signed in on the web (or before the store answers): Premium bought on another device counts too.
+    if (p.reason !== 'store' && MP.account && MP.account.user && MP.billing.provider !== 'store') {
+      const ent = await MP.account.entitlement();
+      if (ent && ent.active) p = { active: true, reason: 'store' };
+    }
+    premium = withGrant(p);
     if (premium.active && premium.reason === 'store') { state.premiumCachedUntil = Date.now() + 3 * DAY; save(); }
     render();
   }
@@ -76,6 +82,7 @@
   const isIOSApp = () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.getPlatform() === 'ios');
 
   async function redeemCode(text) {
+    if (!MP.access.extract(text) && /^\s*[A-Za-z0-9_-]{2,32}\s*$/.test(text || '')) return applyReferral(text, true);
     const res = await MP.access.check(text);
     if (!res.ok) return toast(t(res.reason === 'expired' || res.reason === 'revoked' ? 'codeExpired' : 'codeBad'));
     state.access = { code: res.code, redeemedAt: Date.now() };
@@ -97,6 +104,150 @@
           <button type="button" class="btn primary" data-redeem>${t('redeem')}</button>
         </div>
       </details>`;
+  }
+
+  // ---------- affiliates ----------
+  // Someone arriving through an affiliate's link (…?ref=CODE) or typing the code gets the affiliate offer.
+  async function applyReferral(code, typed) {
+    if (state.referral && state.referral.code === String(code).trim().toUpperCase()) { if (typed) toast(t('referralJoined', state.referral.name)); return; }
+    if (state.referral || premium.reason === 'store') { if (typed) toast(t('referralAlready')); return; }
+    const aff = MP.account && (await MP.account.affiliate(code));
+    if (!aff) { if (typed) toast(t('referralBad')); return; }
+    state.referral = { code: aff.code, name: aff.name, appleOfferCode: aff.appleOfferCode, at: Date.now() };
+    save();
+    if (MP.account.user) {
+      await MP.account.addReferral(state.referral).catch(() => {});
+      MP.billing.identify(MP.account.user.uid, { affiliate: aff.code });
+    }
+    toast(t('referralBanner', aff.name, Math.round(MP.BILLING_CONFIG.affiliateTrialDays / 30)));
+    refreshPremium();
+  }
+
+  // ---------- account ----------
+  const acct = () => (MP.account && MP.account.enabled ? MP.account : null);
+
+  async function onAccountChange(a) {
+    if (a.user) {
+      // The account remembers the affiliate code, so it follows the person to a new phone.
+      if (a.profile && a.profile.referral && !state.referral) {
+        const aff = await a.affiliate(a.profile.referral.code);
+        state.referral = { code: a.profile.referral.code, name: aff ? aff.name : a.profile.referral.code, appleOfferCode: aff ? aff.appleOfferCode : '', at: Date.now() };
+        save();
+      } else if (state.referral && a.profile && !a.profile.referral) {
+        await a.addReferral(state.referral).catch(() => {});
+      }
+      await MP.billing.identify(a.user.uid, state.referral ? { affiliate: state.referral.code } : null);
+    }
+    refreshPremium();
+  }
+
+  function accountCard() {
+    const a = acct();
+    if (!a) return '';
+    const u = a.user;
+    if (!u) {
+      return `
+      <h2>${t('account')}</h2>
+      <div class="card form">
+        <p class="muted small">${t('accountWhy')}</p>
+        <button type="button" class="btn primary wide" data-account="signup">${t('signUp')}</button>
+        <button type="button" class="btn ghost wide" data-account="signin">${t('signIn')}</button>
+      </div>`;
+    }
+    const unverified = !u.emailVerified && (u.providerData || []).some((p) => p.providerId === 'password');
+    return `
+      <h2>${t('account')}</h2>
+      <div class="card form">
+        <p>👤 ${esc(t('signedInAs', u.email || u.displayName || ''))}</p>
+        ${unverified ? `<p class="small bad">${t('verifyEmail')}</p><button type="button" class="btn ghost wide" data-resend>${t('resend')}</button>` : ''}
+        ${state.referral ? `<p class="small good">🎁 ${esc(t('referralJoined', state.referral.name))}</p>` : ''}
+        <button type="button" class="btn ghost wide" data-signout>${t('signOut')}</button>
+        <button type="button" class="btn ghost wide danger" data-delete-account>🗑 ${t('deleteAccount')}</button>
+      </div>`;
+  }
+
+  // Sign in / create account / forgot password, in a sheet.
+  function openAccount(mode, opts) {
+    opts = opts || {};
+    const a = acct();
+    if (!a) return;
+    let error = '';
+    let info = '';
+    let busy = false;
+    const P = MP.CONFIG.providers || {};
+    const providers = [['apple', '', 'Apple'], ['google', 'G', 'Google'], ['facebook', 'f', 'Facebook']].filter(([k]) => P[k]);
+    const draw = () => {
+      $modal.innerHTML = `
+        <div class="sheet account-sheet" role="dialog" aria-modal="true" aria-label="${esc(t(mode === 'signin' ? 'signIn' : mode === 'reset' ? 'forgotPassword' : 'signUp'))}">
+          <button type="button" class="icon-btn close" data-close aria-label="${t('close')}">✕</button>
+          <div class="logo center">🧺</div>
+          <h2 class="center">${t(mode === 'signin' ? 'signIn' : mode === 'reset' ? 'forgotPassword' : 'signUp')}</h2>
+          ${mode === 'signup' && opts.intro ? `<p class="muted small center">${t('accountWhy')}</p>` : ''}
+          ${state.referral && mode === 'signup' ? `<p class="good small center">🎁 ${esc(t('referralBanner', state.referral.name, Math.round(MP.BILLING_CONFIG.affiliateTrialDays / 30)))}</p>` : ''}
+          ${mode !== 'reset' ? `
+          <div class="providers">
+            ${providers.map(([k, ic, label]) => `<button type="button" class="btn wide provider provider-${k}" data-provider="${k}" ${busy ? 'disabled' : ''}><span class="pico">${ic}</span>${esc(t('continueWith', label))}</button>`).join('')}
+          </div>
+          <p class="or"><span>${t('orEmail')}</span></p>` : ''}
+          <form class="form" data-account-form novalidate>
+            ${mode === 'signup' ? `<label class="field"><span>${t('yourName')}</span><input name="name" autocomplete="name" maxlength="60"></label>` : ''}
+            <label class="field"><span>${t('email')}</span><input name="email" type="email" autocomplete="email" required dir="ltr"></label>
+            ${mode !== 'reset' ? `<label class="field"><span>${t('password')}</span><input name="password" type="password" autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" minlength="8" required dir="ltr">
+              ${mode === 'signup' ? `<small class="muted">${t('passwordHint')}</small>` : ''}</label>` : ''}
+            ${error ? `<p class="bad small" role="alert">${esc(error)}</p>` : ''}
+            ${info ? `<p class="good small" role="status">${esc(info)}</p>` : ''}
+            <button type="submit" class="btn primary wide" ${busy ? 'disabled' : ''}>${busy ? '…' : t(mode === 'signin' ? 'signIn' : mode === 'reset' ? 'sendReset' : 'signUp')}</button>
+          </form>
+          <p class="center small">
+            ${mode === 'signin' ? `<button type="button" class="link" data-mode="reset">${t('forgotPassword')}</button><br><button type="button" class="link" data-mode="signup">${t('noAccount')}</button>`
+              : `<button type="button" class="link" data-mode="signin">${t('haveAccount')}</button>`}
+          </p>
+          ${opts.intro ? `<button type="button" class="btn ghost wide" data-close>${t('skipForNow')}</button>` : ''}
+          <p class="legal">${t('consentLine')}<br><a href="terms.html" target="_blank" rel="noopener">${t('terms')}</a> · <a href="privacy.html" target="_blank" rel="noopener">${t('privacyPolicy')}</a></p>
+        </div>`;
+      $modal.classList.add('open');
+    };
+    const done = (user) => {
+      if (!user) return;
+      closeModal();
+      toast(t('welcomeBack'));
+    };
+    const fail = (e) => {
+      busy = false;
+      if (a.cancelled(e)) { draw(); return; }
+      error = t(a.errorKey(e));
+      draw();
+    };
+    $modal.onclick = async (e) => {
+      const b = e.target.closest('button');
+      if (e.target === $modal || (b && b.hasAttribute('data-close'))) return closeModal();
+      if (!b) return undefined;
+      if (b.dataset.mode) { mode = b.dataset.mode; error = ''; info = ''; return draw(); }
+      if (b.dataset.provider && !busy) {
+        busy = true; error = ''; draw();
+        try { done(await a.signInWith(b.dataset.provider, { referral: state.referral })); } catch (err) { fail(err); }
+      }
+      return undefined;
+    };
+    $modal.onsubmit = async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      const f = e.target;
+      const email = f.email.value;
+      const password = f.password ? f.password.value : '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { error = t('errEmail'); return draw(); }
+      if (mode === 'signup' && password.length < 8) { error = t('errWeakPassword'); return draw(); }
+      busy = true; error = ''; info = ''; draw();
+      try {
+        if (mode === 'reset') { await a.resetPassword(email); busy = false; info = t('resetSent'); mode = 'signin'; return draw(); }
+        if (mode === 'signup') return done(await a.signUp(email, password, f.name ? f.name.value : '', { referral: state.referral }));
+        return done(await a.signIn(email, password, { referral: state.referral }));
+      } catch (err) {
+        return fail(err);
+      }
+    };
+    delete $modal.dataset.pick;
+    draw();
   }
 
   // ---------- small helpers ----------
@@ -356,6 +507,7 @@
     save();
     refreshPremium();
     window.scrollTo(0, 0);
+    if (acct() && !acct().user) openAccount('signup', { intro: true });
   }
 
   // ---------- main app ----------
@@ -554,6 +706,7 @@
         : `<p class="bad">${t('trialOver')}</p>`;
     const manage = MP.billing.manageUrl();
     return `
+      ${accountCard()}
       <h2>${t('placeTitle')}</h2><form class="card form">${placeFields()}</form>
       <h2>${t('shopTitle')}</h2><form class="card form">${shopFields()}</form>
       <h2>${t('householdTitle')}</h2><form class="card form">${householdFields()}</form>
@@ -584,19 +737,19 @@
       MP.billing.plans(state).then((p) => { plansCache = p; render(); });
       return `<p class="muted center">…</p>`;
     }
-    const currency = MP.storeOf(state).country.currency;
-    const prime = MP.PRIME_MONTHLY[currency];
+    const { currency, prime } = MP.priceFor(state.country);
     const monthly = plansCache.find((p) => p.id === 'monthly');
     const yearly = plansCache.find((p) => p.id === 'yearly');
     const save = monthly && yearly ? Math.round((1 - yearly.price / (monthly.price * 12)) * 100) : 0;
     const trialOver = !premium.active;
-    const days = MP.BILLING_CONFIG.trialDays;
+    const days = MP.trialDaysFor(state);
     return `
       <div class="paywall">
         <div class="logo">🧺</div>
         <h2>${t('premiumTitle')}</h2>
         ${trialOver ? `<p class="bad">${t('trialOver')}</p>` : ''}
         <p class="muted">${t('premiumPitch')}</p>
+        ${state.referral && !trialOver ? `<p class="good center">🎁 ${esc(t('referralBanner', state.referral.name, Math.round(MP.BILLING_CONFIG.affiliateTrialDays / 30)))}</p>` : ''}
         <ul class="perks"><li>👨‍👩‍👧 ${t('perk1')}</li><li>🛒 ${t('perk2')}</li><li>🏷 ${t('perk3')}</li><li>🌍 ${t('perk4')}</li></ul>
         <div class="plans">
           ${plansCache.map((p) => `
@@ -1027,10 +1180,25 @@
     if (b.hasAttribute('data-subscribe')) {
       const plan = (plansCache || []).find((p) => p.id === ui.plan);
       if (!plan) return;
-      const res = await MP.billing.purchase(plan);
+      const res = await MP.billing.purchase(plan, state.referral);
       if (res === 'purchased') { toast(t('purchased')); return refreshPremium(); }
       if (res === 'unavailable') return toast(t(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? 'subscribeSoon' : 'subscribeInApp'));
       return undefined;
+    }
+    if (d.account) return openAccount(d.account);
+    if (b.hasAttribute('data-signout')) { await MP.account.signOut(); await MP.billing.logOut(); toast(t('signedOut')); return refreshPremium(); }
+    if (b.hasAttribute('data-resend')) { await MP.account.resendVerification().catch(() => {}); return toast(t('sent')); }
+    if (b.hasAttribute('data-delete-account')) {
+      if (!confirm(t('deleteAccountConfirm'))) return undefined;
+      try {
+        await MP.account.deleteAccount();
+        await MP.billing.logOut();
+        toast(t('accountDeleted'));
+      } catch (err) {
+        toast(t(MP.account.errorKey(err)));
+        if (err && err.code === 'auth/requires-recent-login') openAccount('signin');
+      }
+      return refreshPremium();
     }
     if (b.hasAttribute('data-redeem')) {
       const input = b.parentElement.querySelector('[data-code-input]');
@@ -1108,6 +1276,19 @@
   render();
   await MP.billing.init();
   refreshPremium();
+
+  if (MP.account) {
+    MP.account.onChange((a) => { onAccountChange(a); });
+    await MP.account.init();
+    if (MP.account.user) await MP.account.finishRedirect().catch(() => {});
+  }
+
+  // Affiliate links: …/?ref=CODE (or #ref=CODE)
+  const refMatch = (location.search + '&' + location.hash).match(/[?&#]ref=([A-Za-z0-9_-]{2,32})/);
+  if (refMatch) {
+    history.replaceState(null, '', location.pathname);
+    applyReferral(refMatch[1], false);
+  }
 
   // Links like …/index.html#code=WB1.… (from admin.html) apply the code straight away.
   const linkCode = MP.access.extract(decodeURIComponent(location.hash || ''));
