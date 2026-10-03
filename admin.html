@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Weekly Basket Admin</title>
+  <link rel="icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    main.admin { max-width: 640px; margin: 0 auto; padding: 16px; }
+    .admin h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+    .admin h2 { font-size: 1.1rem; margin: 22px 0 8px; }
+    .admin label { display: block; font-weight: 600; margin: 12px 0 4px; }
+    .admin input, .admin select, .admin textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+      background: var(--card); color: inherit; font: inherit; box-sizing: border-box;
+    }
+    .admin textarea { font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; min-height: 90px; word-break: break-all; }
+    .admin .hint { color: var(--muted); font-size: 0.85rem; margin: 4px 0 0; }
+    .admin .status { padding: 10px 12px; border-radius: 10px; margin-top: 10px; font-size: 0.92rem; }
+    .admin .status.ok { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+    .admin .status.err { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+    .admin .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .admin .row .btn { flex: 1 1 auto; }
+    .admin table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .admin th, .admin td { text-align: start; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .admin td.code { font-family: ui-monospace, Menlo, monospace; word-break: break-all; font-size: 0.75rem; }
+    .admin .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <main class="admin">
+    <h1>🧺 Weekly Basket Admin</h1>
+    <p class="muted">Make free-access codes for yourself, testers, affiliates and gifts. Everything happens in this browser: your admin key is never uploaded or saved.</p>
+
+    <section class="card">
+      <h2>1. Open your admin key</h2>
+      <p class="hint">The file <strong>weekly-basket-admin-key.json</strong>. Keep it private: anyone who has it can make free codes.</p>
+      <label for="keyFile">Key file</label>
+      <input id="keyFile" type="file" accept=".json,application/json">
+      <label for="keyText">…or paste its contents</label>
+      <textarea id="keyText" spellcheck="false" autocomplete="off" placeholder='{ "privateKey": { "kty": "EC", … } }'></textarea>
+      <div class="row"><button type="button" class="btn primary" id="loadKey">Use this key</button></div>
+      <div id="keyStatus" class="status" hidden></div>
+    </section>
+
+    <section class="card" id="makeCard" hidden>
+      <h2>2. Make a code</h2>
+      <label for="type">Who is it for?</label>
+      <select id="type">
+        <option value="affiliate">Affiliate (one code they share with their audience)</option>
+        <option value="gift">Gift (one person)</option>
+        <option value="tester">Tester</option>
+        <option value="owner">Owner / admin</option>
+      </select>
+      <label for="name">Name or email</label>
+      <input id="name" type="text" maxlength="80" placeholder="e.g. Maria Popescu or maria@example.com" autocomplete="off">
+      <p class="hint">Users see it as "Free access (name)". For affiliates, use the name their followers know.</p>
+      <label for="days">Free for</label>
+      <select id="days">
+        <option value="7">7 days</option>
+        <option value="14">14 days</option>
+        <option value="30" selected>1 month</option>
+        <option value="90">3 months</option>
+        <option value="180">6 months</option>
+        <option value="365">1 year</option>
+        <option value="0">Forever</option>
+      </select>
+      <label for="until">Last day the code can be used (optional)</label>
+      <input id="until" type="date">
+      <p class="hint">After this day new people can't use it. People who already used it keep their free days.</p>
+      <div class="row"><button type="button" class="btn primary" id="make">Make code</button></div>
+
+      <div id="result" hidden>
+        <label for="link">Link to share (opens the app and applies the code)</label>
+        <textarea id="link" readonly></textarea>
+        <label for="code">Code (to paste in the app: Profile → Subscription → Have a free-access code?)</label>
+        <textarea id="code" readonly></textarea>
+        <div class="row">
+          <button type="button" class="btn" id="copyLink">Copy link</button>
+          <button type="button" class="btn" id="copyCode">Copy code</button>
+          <button type="button" class="btn" id="share" hidden>Share…</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="historyCard" hidden>
+      <h2>Codes made in this session</h2>
+      <p class="hint">Not saved anywhere. Download the list to keep a record of who got which code (and its id, to switch a code off later).</p>
+      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name</th><th>Free</th><th>Use by</th><th>Id</th></tr></thead><tbody id="history"></tbody></table></div>
+      <div class="row"><button type="button" class="btn" id="csv">Download list (CSV)</button></div>
+    </section>
+
+    <section class="card">
+      <h2>Switch a code off</h2>
+      <p class="hint">Codes can't be deleted remotely (there is no server). Add the code's id to <code>MP.REVOKED_CODES</code> in <code>js/access.js</code>; it stops working once the app is updated.</p>
+    </section>
+
+    <details class="card">
+      <summary><strong>Make a new admin key</strong> (only if yours is lost or leaked)</summary>
+      <p class="hint">A new key makes every old code stop working once the app is updated with the new public key.</p>
+      <div class="row"><button type="button" class="btn" id="newKey">Make a new key pair</button></div>
+      <div id="newKeyOut" hidden>
+        <p class="hint">Your new private key was downloaded. Put this public key in <code>js/access.js</code> → <code>MP.ACCESS_KEYS</code> (it's safe to share):</p>
+        <textarea id="pubKey" readonly></textarea>
+      </div>
+    </details>
+
+    <p class="fine">On iPhone, Apple only allows App Store offer codes, made in App Store Connect. These codes work on the web and in the Android app.</p>
+  </main>
+  <script src="js/access.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

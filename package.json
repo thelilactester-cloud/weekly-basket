@@ -1,0 +1,30 @@
+{
+  "name": "weekly-basket",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Weekly meal planner and shopping list for your supermarket, diet and family.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build.mjs",
+    "cap:add:ios": "npm run build && cap add ios",
+    "cap:add:android": "npm run build && cap add android",
+    "cap:sync": "npm run build && cap sync",
+    "cap:open:ios": "cap open ios",
+    "cap:open:android": "cap open android",
+    "icons": "capacitor-assets generate --iconBackgroundColor '#1f9d55' --splashBackgroundColor '#f6f4ef'",
+    "android:apk": "npm run build && cap sync android && cd android && ./gradlew assembleDebug"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/assets": "^3.0.5"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@revenuecat/purchases-capacitor": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

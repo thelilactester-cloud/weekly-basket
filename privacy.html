@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Privacy Policy · Weekly Basket</title>
+  <style>
+    :root { --bg: #f6f4ef; --ink: #1d1f1c; --muted: #6b6f68; --accent: #1f9d55; --card: #fff; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #121412; --ink: #eef0ec; --muted: #9aa097; --accent: #3cc47a; --card: #1c1f1c; } }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 1.7rem; } h2 { font-size: 1.15rem; margin-top: 28px; }
+    .muted { color: var(--muted); } a { color: var(--accent); }
+    table { border-collapse: collapse; width: 100%; background: var(--card); border-radius: 12px; overflow: hidden; }
+    td, th { text-align: left; padding: 10px 12px; border-bottom: 1px solid rgba(127,127,127,.2); vertical-align: top; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Privacy Policy</h1>
+  <p class="muted">Weekly Basket · Last updated: 2 October 2026</p>
+
+  <p><strong>Short version:</strong> what you type into Weekly Basket stays on your device, encrypted.
+  We have no accounts, no servers that store your data, no ads and no tracking.</p>
+
+  <h2>1. What you enter and where it is kept</h2>
+  <p>To plan meals the app asks for: names (or nicknames) of the people you plan for, age, sex, height, weight,
+  activity level, goal, diet, allergies and foods to avoid, preferred cuisines, your country, region and supermarket,
+  your chosen recipes, shopping list and any prices you type in.</p>
+  <p>All of this is stored <strong>only on your device</strong>, encrypted with AES-256 (Web Crypto, AES-GCM) using a key
+  that is created on your device and cannot be exported. It is never sent to us or to anyone else.
+  Because we never receive it, we cannot see, sell or share it.</p>
+
+  <h2>2. What leaves your device, and why</h2>
+  <table>
+    <tr><th>Sent to</th><th>What</th><th>Why</th></tr>
+    <tr><td><a href="https://world.openfoodfacts.org/privacy" rel="noopener">Open Food Facts</a> and
+      <a href="https://prices.openfoodfacts.org" rel="noopener">Open Prices</a> (non-profit, open data)</td>
+      <td>The search word (e.g. "rice"), your country and your supermarket's name. Your IP address is visible to them as for any website.</td>
+      <td>To show real products and recently reported prices at your supermarket.</td></tr>
+    <tr><td>Apple App Store / Google Play, and <a href="https://www.revenuecat.com/privacy/" rel="noopener">RevenueCat</a> (app versions only)</td>
+      <td>Your purchase and subscription status, and a random, anonymous app user ID.</td>
+      <td>To process and verify your subscription. We never see your payment card details.</td></tr>
+  </table>
+  <p>No personal profile, health information, family details or shopping list is ever included in these requests.</p>
+
+  <h2>3. Health information</h2>
+  <p>Weight, height, age, diet and allergies are used only on your device to estimate calorie needs and filter recipes.
+  Calorie targets are estimates and are not medical advice.</p>
+
+  <h2>4. Children</h2>
+  <p>The app is meant for adults planning for themselves or their family. A parent or guardian may enter details
+  about children to plan family meals; that information also stays on the device.</p>
+
+  <h2>5. Your control</h2>
+  <ul>
+    <li><strong>Export:</strong> Profile → "Export my data" downloads everything the app holds about you as a file.</li>
+    <li><strong>Delete:</strong> Profile → "Delete all my data" erases everything, including the encryption key. Uninstalling the app does the same.</li>
+    <li><strong>Subscription:</strong> manage or cancel in your App Store / Google Play account settings.</li>
+  </ul>
+
+  <h2>6. Security</h2>
+  <p>Data is encrypted at rest on the device. The app only loads its own code (a strict Content Security Policy blocks
+  third-party scripts), product images are only loaded from Open Food Facts' image servers, and all network
+  traffic uses HTTPS.</p>
+
+  <h2>7. Changes and contact</h2>
+  <p>If this policy changes, the new version will be shown in the app. Questions: <em>[your support email]</em>.</p>
+</main>
+</body>
+</html>

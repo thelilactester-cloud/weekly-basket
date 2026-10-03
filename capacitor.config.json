@@ -1,0 +1,7 @@
+{
+  "appId": "com.weeklybasket.app",
+  "appName": "Weekly Basket",
+  "webDir": "dist",
+  "ios": { "contentInset": "automatic" },
+  "android": { "allowMixedContent": false }
+}

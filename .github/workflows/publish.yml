@@ -1,0 +1,97 @@
+# Tests the app, builds the Android test app and publishes everything:
+#   - website (GitHub Pages):  https://<owner>.github.io/weekly-basket/   (+ download.html, admin.html)
+#   - Android test app:        https://<owner>.github.io/weekly-basket/download/weekly-basket.apk
+#                              and the "android-test" release
+# One-time setup for the website: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+name: Publish Weekly Basket
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      # Keep the same signing key between builds so a new test app installs over the old one.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: android-debug-keystore
+      - run: npm ci --no-audit --no-fund
+      - name: Run tests
+        run: npm test
+      - name: Create the Android project
+        run: |
+          npm run build
+          npx cap add android
+          npm run icons -- --android
+          npx cap sync android
+      - name: Build the Android app
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk weekly-basket.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: weekly-basket-android
+          path: weekly-basket.apk
+      - name: Publish the "android-test" release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-test --yes --cleanup-tag || true
+          gh release create android-test weekly-basket.apk \
+            --prerelease --target "$GITHUB_SHA" \
+            --title "Weekly Basket: Android test app" \
+            --notes "Test build from commit ${GITHUB_SHA::7}. On your Android phone: download weekly-basket.apk, open it, and allow installing from this source when asked. Payments are off until the RevenueCat keys are added."
+
+  website:
+    needs: android
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the website
+        run: |
+          node scripts/build.mjs
+          cp admin.html download.html dist/
+      - uses: actions/download-artifact@v4
+        with:
+          name: weekly-basket-android
+          path: dist/download
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
