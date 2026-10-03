@@ -11,10 +11,18 @@ adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null
 sleep 25
 adb exec-out screencap -p > smoke/screen.png
 adb logcat -d > smoke/logcat.txt
-# uiautomator sometimes reports "could not get idle state" on a busy emulator: try a few times and keep its messages.
+# The page's own text, read through the WebView's DevTools connection (the debug app allows it).
+SOCK=$(adb shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | head -1)
+if [ -n "$SOCK" ] && adb forward tcp:9222 "localabstract:$SOCK" >/dev/null; then
+  node scripts/webview-text.mjs 9222 > smoke/page.txt 2>&1
+else
+  echo "no WebView DevTools socket" > smoke/page.txt
+fi
+# The screen as Android sees it. The WebView fills in its contents for uiautomator only after the first
+# dump, and uiautomator sometimes reports "could not get idle state", so try a few times.
 for i in 1 2 3 4 5; do
   adb shell uiautomator dump /sdcard/ui.xml >> smoke/uiautomator.txt 2>&1 \
-    && adb pull /sdcard/ui.xml smoke/ui.xml >/dev/null 2>&1 && grep -q '<hierarchy' smoke/ui.xml && break
+    && adb pull /sdcard/ui.xml smoke/ui.xml >/dev/null 2>&1 && grep -q '="[^"]*Prepcart' smoke/ui.xml && break
   sleep 4
 done
 echo "── crash check ──"
@@ -28,11 +36,13 @@ if [ -z "$(adb shell pidof "$PKG")" ]; then
   tail -60 smoke/logcat.txt
   exit 1
 fi
+echo "── page text ──"
+cat smoke/page.txt
 echo "── text on screen ──"
 # WebView text shows up as text="…" or, for some elements, as content-desc="…" (what screen readers read).
 grep -o '\(text\|content-desc\)="[^"]\+"' smoke/ui.xml 2>/dev/null | head -40
 echo "($(grep -o '<node ' smoke/ui.xml 2>/dev/null | wc -l) elements on screen)"
-grep -q '="[^"]*\(Prepcart\|Where do you shop\)' smoke/ui.xml 2>/dev/null || {
+grep -q 'Where do you shop' smoke/page.txt || grep -q '="[^"]*\(Prepcart\|Where do you shop\)' smoke/ui.xml 2>/dev/null || {
   echo "The app opened but its screen is empty (or could not be read)."
   echo "── uiautomator ──"; cat smoke/uiautomator.txt
   echo "── screen dump (start) ──"; head -c 3000 smoke/ui.xml 2>/dev/null; echo
