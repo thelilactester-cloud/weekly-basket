@@ -233,9 +233,69 @@
   MP.mealTypeForSlot = (slot) => (slot === 'lunch' || slot === 'dinner' ? 'main' : slot);
   MP.DAYS = 7;
 
+  // ---------- who eats which meals on which days ----------
+  // Each person has their own week (Monday first): member.meals = { mode, days: [[slots] × 7] }.
+  // A child who has lunch at nursery on weekdays, an adult who fasts on Mondays or eats out on
+  // Fridays: those meals are simply not on their list, so nothing is cooked or bought for them.
+  // mode is only for the screen: 'same' (every day), 'split' (Mon–Fri / Sat–Sun) or 'each'.
+  MP.SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'];
+  MP.MEAL_SLOTS = ['breakfast', 'lunch', 'dinner'];
+  MP.WEEKDAYS = [0, 1, 2, 3, 4];
+  MP.WEEKEND = [5, 6];
+  // 0–3 meals (1 = dinner, 2 = lunch + dinner, 3 = all three), with or without snacks.
+  MP.mealsPreset = (n, snacks) => [[], ['dinner'], ['lunch', 'dinner'], MP.MEAL_SLOTS][Math.max(0, Math.min(3, n))]
+    .concat(snacks ? ['snack'] : []);
+  const sortSlots = (day) => MP.SLOTS.filter((sl) => day.includes(sl));
+
+  // A person's meals for each day. People who haven't set this up follow the household
+  // default (prefs.mealsPerDay: 3 meals, or 4 = 3 meals + snacks).
+  MP.memberMeals = function (member, mealsPerDay) {
+    const days = member && member.meals && member.meals.days;
+    if (Array.isArray(days) && days.length === MP.DAYS) return days.map((d) => sortSlots(Array.isArray(d) ? d : []));
+    const def = MP.mealsPreset(3, Number(mealsPerDay) === 4);
+    return [...Array(MP.DAYS)].map(() => def.slice());
+  };
+  MP.memberEatsSnacks = (member, mealsPerDay) => MP.memberMeals(member, mealsPerDay).some((d) => d.includes('snack'));
+  const mpdOf = (state) => (state && state.prefs ? state.prefs.mealsPerDay : 3);
+
+  // Days (0 = Monday) on which a person needs this meal from home.
+  MP.slotDays = function (state, member, slot) {
+    return MP.memberMeals(member, mpdOf(state)).flatMap((d, i) => (d.includes(slot) ? [i] : []));
+  };
+  // How many days each person needs each meal: { dinner: { memberId: 5 }, … }
+  MP.mealNeed = function (state) {
+    const out = {};
+    for (const slot of MP.SLOTS) {
+      out[slot] = {};
+      for (const m of MP.activeMembers(state)) out[slot][m.id] = MP.slotDays(state, m, slot).length;
+    }
+    return out;
+  };
+  // The meals someone in the household needs at least once this week (in day order).
+  MP.weekSlots = function (state) {
+    const need = MP.mealNeed(state);
+    const slots = MP.SLOTS.filter((sl) => Object.values(need[sl]).some((n) => n > 0));
+    return slots.length ? slots : ['dinner'];
+  };
+  // People who need this meal at least once (everyone, if nobody does).
+  MP.slotMembers = function (state, slot) {
+    const members = MP.activeMembers(state);
+    const need = MP.mealNeed(state)[slot] || {};
+    const some = members.filter((m) => need[m.id] > 0);
+    return some.length ? some : members;
+  };
+  // Share of the day's energy one person gets from home-cooked meals on day `di`.
+  MP.memberDayShare = function (state, member, di) {
+    const mpd = mpdOf(state);
+    const shares = MP.SLOT_SHARES[MP.memberEatsSnacks(member, mpd) ? 4 : 3];
+    return MP.memberMeals(member, mpd)[di].reduce((s, sl) => s + (shares[sl] || 0), 0);
+  };
+
   // How much of a recipe one person eats at one meal, sized to their calorie target (0.5 – 3 servings).
+  // A meal is the same size whatever else the person eats that day (a lunch at nursery or a meal
+  // out doesn't make dinner bigger); only snacks shift a little energy away from the meals.
   MP.portionFor = function (recipe, member, slot, mealsPerDay) {
-    const share = (MP.SLOT_SHARES[mealsPerDay] || MP.SLOT_SHARES[3])[slot] || 0.3;
+    const share = MP.SLOT_SHARES[MP.memberEatsSnacks(member, mealsPerDay) ? 4 : 3][slot] || 0.3;
     const kcal = MP.recipeNutrition(recipe, { dropSides: member.diet === 'keto' }).kcal || 1;
     const p = (MP.memberTargets(member).kcal * share) / kcal;
     return Math.min(MAX_PORTION, Math.max(MIN_PORTION, Math.round(p * 4) / 4));
@@ -272,7 +332,7 @@
   // Recipes for one meal that at least one person in the household can eat, best first.
   // Score: fits more people > liked cuisines > favourites > diet preferences > budget > not already chosen.
   MP.suggestRecipes = function (state, slot) {
-    const members = MP.activeMembers(state);
+    const members = MP.slotMembers(state, slot);
     const prefs = state.prefs || {};
     const liked = prefs.cuisines || [];
     const mealType = MP.mealTypeForSlot(slot);
@@ -312,7 +372,7 @@
   MP.coverage = function (state) {
     const members = MP.activeMembers(state);
     const cov = {};
-    for (const slot of MP.slotsFor((state.prefs || {}).mealsPerDay)) {
+    for (const slot of MP.SLOTS) {
       cov[slot] = {};
       for (const m of members) cov[slot][m.id] = 0;
     }
@@ -327,12 +387,12 @@
   // (or to everyone who can eat it, if they are all covered already).
   MP.addToWeek = function (state, recipeId, slot, days) {
     const r = MP.RECIPE_BY_ID[recipeId];
-    const members = MP.activeMembers(state);
-    const can = MP.whoCanEat(r, members);
+    const can = MP.whoCanEat(r, MP.slotMembers(state, slot));
     const cov = MP.coverage(state)[slot] || {};
-    const needy = can.filter((m) => (cov[m.id] || 0) < MP.DAYS);
+    const need = MP.mealNeed(state)[slot] || {};
+    const needy = can.filter((m) => (cov[m.id] || 0) < need[m.id]);
     const eaters = (needy.length ? needy : can).map((m) => m.id);
-    const minNeed = needy.length ? Math.min(...needy.map((m) => MP.DAYS - (cov[m.id] || 0))) : 1;
+    const minNeed = needy.length ? Math.min(...needy.map((m) => need[m.id] - (cov[m.id] || 0))) : 1;
     const item = {
       key: MP.uid(), recipeId, slot, eaters,
       days: Math.max(1, Math.min(days || (r.tags.includes('batch') ? 2 : 1), minNeed)),
@@ -350,10 +410,12 @@
   MP.autoFillWeek = function (state, seed) {
     const rng = MP.rng(seed == null ? Math.floor(Math.random() * 1e9) : seed);
     const members = MP.activeMembers(state);
-    for (const slot of MP.slotsFor((state.prefs || {}).mealsPerDay)) {
+    const needAll = MP.mealNeed(state);
+    for (const slot of MP.weekSlots(state)) {
+      const need = needAll[slot];
       for (let guard = 0; guard < 60; guard++) {
         const cov = MP.coverage(state)[slot];
-        const needy = members.filter((m) => cov[m.id] < MP.DAYS);
+        const needy = members.filter((m) => cov[m.id] < need[m.id]);
         if (!needy.length) break;
         const needyIds = new Set(needy.map((m) => m.id));
         let best = null;
@@ -366,7 +428,7 @@
         }
         if (!best) break; // nobody left can eat anything for this meal
         const eaters = best.eaters.filter((id) => needyIds.has(id));
-        const minNeed = Math.min(...eaters.map((id) => MP.DAYS - cov[id]));
+        const minNeed = Math.min(...eaters.map((id) => need[id] - cov[id]));
         const want = best.recipe.tags.includes('batch') ? 2 + Math.floor(rng() * 2) : 1 + Math.floor(rng() * 2);
         const days = Math.min(want, minNeed);
         const same = weekItems(state).find((it) => it.slot === slot && it.recipeId === best.recipe.id &&
@@ -378,24 +440,28 @@
     return state.week;
   };
 
-  // Day-by-day view of the week: for each person and meal, their dishes fill the days in order.
+  // Day-by-day view of the week: for each person and meal, their dishes fill the days on which
+  // they need that meal, in order. A day only lists the meals someone needs that day.
   // Returns [ { breakfast: [{ item, recipe, eaters: [memberIds] }], ... } × 7 ]
   MP.schedule = function (state) {
     const members = MP.activeMembers(state);
-    const slots = MP.slotsFor((state.prefs || {}).mealsPerDay);
-    const days = [...Array(MP.DAYS)].map(() => Object.fromEntries(slots.map((sl) => [sl, []])));
-    for (const slot of slots) {
-      for (const m of members) {
-        let d = 0;
+    const plans = members.map((m) => MP.memberMeals(m, mpdOf(state)));
+    const days = [...Array(MP.DAYS)].map((_, di) =>
+      Object.fromEntries(MP.SLOTS.filter((sl) => plans.some((p) => p[di].includes(sl))).map((sl) => [sl, []])));
+    for (const slot of MP.SLOTS) {
+      members.forEach((m) => {
+        const free = MP.slotDays(state, m, slot);
+        let n = 0;
         for (const it of weekItems(state)) {
           if (it.slot !== slot || !it.eaters.includes(m.id)) continue;
-          for (let k = 0; k < it.days && d < MP.DAYS; k++, d++) {
+          for (let k = 0; k < it.days && n < free.length; k++, n++) {
+            const d = free[n];
             let entry = days[d][slot].find((e) => e.item.key === it.key);
             if (!entry) days[d][slot].push((entry = { item: it, recipe: MP.RECIPE_BY_ID[it.recipeId], eaters: [] }));
             entry.eaters.push(m.id);
           }
         }
-      }
+      });
     }
     return days;
   };

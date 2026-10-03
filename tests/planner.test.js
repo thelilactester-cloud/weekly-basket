@@ -492,3 +492,65 @@ test('suggestions change from week to week and last week’s dishes move down', 
   assert.ok(again.find((s) => s.recipe.id === first.recipe.id).score < first.score, 'last week’s dish scores lower');
   assert.ok(MP.RECIPES.length >= 120);
 });
+
+// ───────── meals per person and per day ─────────
+
+const weekOf = (weekday, weekend) => [0, 1, 2, 3, 4, 5, 6].map((d) => (d < 5 ? weekday : weekend).slice());
+
+test('meal presets: 1 meal = dinner, 2 = lunch + dinner, 3 = all, snacks are separate', () => {
+  assert.deepEqual(MP.mealsPreset(0, false), []);
+  assert.deepEqual(MP.mealsPreset(1, false), ['dinner']);
+  assert.deepEqual(MP.mealsPreset(2, true), ['lunch', 'dinner', 'snack']);
+  assert.deepEqual(MP.mealsPreset(3, false), ['breakfast', 'lunch', 'dinner']);
+});
+
+test('people without their own schedule follow the household default', () => {
+  const m = MP.newMember();
+  assert.deepEqual(MP.memberMeals(m, 3)[0], ['breakfast', 'lunch', 'dinner']);
+  assert.deepEqual(MP.memberMeals(m, 4)[6], ['breakfast', 'lunch', 'dinner', 'snack']);
+});
+
+test('weekday 1 meal + snacks, weekend 3 meals: only those meals are planned and bought', () => {
+  const me = MP.newMember({ meals: { mode: 'split', days: weekOf(MP.mealsPreset(1, true), MP.mealsPreset(3, false)) } });
+  const st = household([me]);
+  MP.autoFillWeek(st, 11);
+  const cov = MP.coverage(st);
+  assert.equal(cov.dinner[me.id], 7);
+  assert.equal(cov.snack[me.id], 5);
+  assert.equal(cov.lunch[me.id], 2);
+  assert.equal(cov.breakfast[me.id], 2);
+  const days = MP.schedule(st);
+  assert.deepEqual(Object.keys(days[0]), ['dinner', 'snack']);
+  assert.deepEqual(Object.keys(days[5]), ['breakfast', 'lunch', 'dinner']);
+  for (const [di, d] of days.entries()) for (const [slot, entries] of Object.entries(d)) {
+    assert.equal(entries.filter((e) => e.eaters.includes(me.id)).length, 1, `day ${di} ${slot}`);
+  }
+});
+
+test('a child who eats at nursery on weekdays and a parent who fasts on Mondays', () => {
+  const kid = MP.newMember({ name: 'Kid', age: 3, meals: { mode: 'split', days: weekOf(['breakfast', 'dinner'], MP.mealsPreset(3, true)) } });
+  const fastDays = [[], ...[...Array(6)].map(() => MP.mealsPreset(2, false))];
+  const mum = MP.newMember({ name: 'Mum', meals: { mode: 'each', days: fastDays } });
+  const st = household([kid, mum]);
+  MP.autoFillWeek(st, 5);
+  const need = MP.mealNeed(st);
+  const cov = MP.coverage(st);
+  for (const slot of MP.SLOTS) for (const m of [kid, mum]) assert.equal(cov[slot][m.id], need[slot][m.id], `${m.name} ${slot}`);
+  assert.equal(need.lunch[kid.id], 2, 'lunch only at the weekend');
+  assert.equal(need.breakfast[mum.id], 0);
+  const days = MP.schedule(st);
+  for (const entries of Object.values(days[0])) assert.ok(entries.every((e) => !e.eaters.includes(mum.id)), 'Mum fasts on Monday');
+  assert.ok(days[0].lunch === undefined, 'nobody needs lunch on Monday');
+  // a dish added for lunch goes only to people who need lunch
+  const st2 = household([kid, mum]);
+  const it = MP.addToWeek(st2, 'chana_masala', 'breakfast', 3);
+  assert.ok(!it.eaters.includes(mum.id), 'Mum never has breakfast');
+});
+
+test('a meal is the same size whatever else the person eats that day', () => {
+  const r = MP.RECIPE_BY_ID.chana_masala;
+  const three = MP.newMember({ meals: { mode: 'same', days: weekOf(MP.mealsPreset(3, false), MP.mealsPreset(3, false)) } });
+  const one = MP.newMember({ meals: { mode: 'same', days: weekOf(MP.mealsPreset(1, false), MP.mealsPreset(1, false)) } });
+  assert.equal(MP.portionFor(r, one, 'dinner'), MP.portionFor(r, three, 'dinner'));
+  assert.ok(MP.memberDayShare({}, one, 0) < MP.memberDayShare({}, three, 0));
+});

@@ -12,15 +12,30 @@
   const $app = document.getElementById('app');
   const $modal = document.getElementById('modal');
   const $toast = document.getElementById('toast');
-  try { // show the chosen light/dark theme straight away
-    const theme = localStorage.getItem('prepcart-theme');
-    if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+  // Display & reading settings, also kept outside the encrypted store so the very first screen
+  // already shows the chosen colours, text size and font.
+  const DISPLAY = { text: ['normal', 'large', 'xl'], font: ['standard', 'dyslexic', 'legible'], spacing: ['normal', 'wide'], contrast: ['normal', 'high'], motion: ['normal', 'reduce'] };
+  const DISPLAY_DEFAULT = { text: 'normal', font: 'standard', spacing: 'normal', contrast: 'normal', motion: 'normal' };
+  function applyDisplay(display, theme) {
+    const root = document.documentElement;
+    if (theme === 'light' || theme === 'dark') root.dataset.theme = theme; else delete root.dataset.theme;
+    for (const k of Object.keys(DISPLAY)) {
+      const v = display && DISPLAY[k].includes(display[k]) ? display[k] : DISPLAY_DEFAULT[k];
+      if (v === DISPLAY_DEFAULT[k]) delete root.dataset[k]; else root.dataset[k] = v;
+    }
+  }
+  try {
+    applyDisplay(JSON.parse(localStorage.getItem('prepcart-display') || 'null'), localStorage.getItem('prepcart-theme'));
   } catch (e) { /* private mode */ }
   const DAY = 864e5;
 
   // ---------- state ----------
   // Guess language and country from the device (e.g. es-US → Spanish, United States).
   const newSeed = () => Math.floor(Math.random() * 1e9);
+
+  function readDisplay() {
+    try { return JSON.parse(localStorage.getItem('prepcart-display') || 'null') || {}; } catch (e) { return {}; }
+  }
 
   function defaultState() {
     const prefs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en'];
@@ -37,6 +52,7 @@
       week: { startedAt: Date.now(), items: [], seed: newSeed() }, lastWeek: null, recentWeeks: [],
       favorites: [], checked: {}, products: {}, extras: [],
       trialStart: null, premiumCachedUntil: 0, access: null, referral: null, theme: 'system',
+      display: Object.assign({}, DISPLAY_DEFAULT, readDisplay()),
     };
   }
 
@@ -49,6 +65,7 @@
     if (oldIds[s.store]) s.store = oldIds[s.store];
     const out = Object.assign(defaultState(), s, { v: 2 });
     out.prefs = Object.assign(defaultState().prefs, s.prefs || {});
+    out.display = Object.assign({}, DISPLAY_DEFAULT, s.display || {});
     if (!out.week || !Array.isArray(out.week.items)) out.week = { startedAt: Date.now(), items: [] };
     if (!out.week.seed) out.week.seed = newSeed();
     if (s.v === 1 && s.onboarded) { out.tab = 'week'; out.trialStart = out.trialStart || Date.now(); }
@@ -295,6 +312,25 @@
       `<button type="button" role="radio" aria-checked="${String(v) === String(value)}" class="${String(v) === String(value) ? 'on' : ''}" data-set="${field}" data-v="${esc(v)}">${esc(label)}</button>`).join('')}</div>`;
   }
 
+  // ---------- display & reading (first screen and Profile) ----------
+  function displayCard(open) {
+    const d = state.display;
+    const row = (label, field, value, opts) => `<div class="field"><span id="lbl-${field}">${label}</span>${segmented(field, value, opts).replace('role="radiogroup"', `role="radiogroup" aria-labelledby="lbl-${field}"`)}</div>`;
+    return `
+      <div class="card form display-card">
+        ${row(t('theme'), 'theme', state.theme || 'system', [['system', t('theme_system')], ['light', '☀️ ' + t('theme_light')], ['dark', '🌙 ' + t('theme_dark')]])}
+        ${row(t('textSize'), 'text', d.text, [['normal', t('text_normal')], ['large', t('text_large')], ['xl', t('text_xl')]])}
+        ${row(t('dyslexiaMode'), 'dyslexia', d.font === 'dyslexic' ? 'on' : 'off', [['off', t('off')], ['on', t('on')]])}
+        <p class="muted small">${t('dyslexiaHint')}</p>
+        <details ${open ? 'open' : ''}><summary>${t('moreReading')}</summary>
+          ${row(t('readingFont'), 'font', d.font, [['standard', t('font_standard')], ['dyslexic', t('font_dyslexic')], ['legible', t('font_legible')]])}
+          ${row(t('spacing'), 'spacing', d.spacing, [['normal', t('spacing_normal')], ['wide', t('spacing_wide')]])}
+          ${row(t('contrast'), 'contrast', d.contrast, [['normal', t('off')], ['high', t('on')]])}
+          ${row(t('motion'), 'motion', d.motion, [['normal', t('off')], ['reduce', t('on')]])}
+        </details>
+      </div>`;
+  }
+
   // ---------- setup screens (also reused on the Profile tab) ----------
   function placeFields() {
     const c = MP.COUNTRIES[state.country];
@@ -356,6 +392,7 @@
         </div>
         <p class="note" data-child-note ${isChild ? '' : 'hidden'}>${t('childNote')}</p>
         <label class="field" data-goal ${isChild ? 'hidden' : ''}><span>${t('goal')}</span>${select('goal', m.goal, opt('goal_', MP.GOALS))}</label>
+        ${mealsFields(m)}
         <label class="field"><span>${t('diet')}</span>${select('diet', m.diet, opt('diet_', MP.DIETS))}</label>
         <div class="field"><span>${t('needs')}</span>
           <div class="chips">${MP.NEEDS.map((n) => `
@@ -370,6 +407,58 @@
         </div>
         <label class="field"><span>${t('dislikes')}</span><input data-f="dislikes" value="${esc(m.dislikes)}" placeholder="${t('dislikesHint')}" autocomplete="off" maxlength="200"></label>
       </div>`;
+  }
+
+  // Which meals this person eats from home, the same every day, weekdays / weekend, or day by day.
+  const SLOT_ICON = { breakfast: '🍳', lunch: '🥗', dinner: '🍲', snack: '🍎' };
+  function mealGroups(mode) {
+    const names = MP.dayNames();
+    if (mode === 'split') return [[t('monFri'), MP.WEEKDAYS], [t('satSun'), MP.WEEKEND]];
+    if (mode === 'each') return names.map((n, i) => [n, [i]]);
+    return [[t('everyDay'), [0, 1, 2, 3, 4, 5, 6]]];
+  }
+  function mealsSummary(day) {
+    const n = day.filter((sl) => sl !== 'snack').length;
+    const snacks = day.includes('snack');
+    if (!n && !snacks) return t('noMealsDay');
+    return t('mealsSummary', n, snacks);
+  }
+  function mealsFields(m) {
+    const days = MP.memberMeals(m, state.prefs.mealsPerDay);
+    const mode = (m.meals && m.meals.mode) || 'same';
+    const rows = mealGroups(mode).map(([label, idx]) => {
+      const day = days[idx[0]];
+      const n = day.filter((sl) => sl !== 'snack').length;
+      return `
+        <fieldset class="meal-row" data-meal-days="${idx.join(',')}">
+          <legend>${esc(label)}</legend>
+          <div class="seg small" role="radiogroup" aria-label="${t('mealCount')}">${[0, 1, 2, 3].map((k) => `
+            <button type="button" role="radio" aria-checked="${k === n}" class="${k === n ? 'on' : ''}" data-meal-count="${k}">${k === 0 ? t('mealsNone') : k}</button>`).join('')}
+          </div>
+          <div class="chips">${MP.MEAL_SLOTS.map((sl) => `
+            <button type="button" class="chip small ${day.includes(sl) ? 'on' : ''}" aria-pressed="${day.includes(sl)}" data-meal-slot="${sl}">${SLOT_ICON[sl]} ${t('slot_' + sl)}</button>`).join('')}
+            <button type="button" class="chip small snack ${day.includes('snack') ? 'on' : ''}" aria-pressed="${day.includes('snack')}" data-meal-slot="snack">${SLOT_ICON.snack} ${t('snacks')}</button>
+          </div>
+          <small class="muted">${esc(mealsSummary(day))}</small>
+        </fieldset>`;
+    }).join('');
+    return `
+      <div class="field meals-field"><span>${t('mealsTitle')}</span>
+        <p class="muted small">${t('mealsHint')}</p>
+        ${segmented('mealMode', mode, [['same', t('mealsSame')], ['split', t('mealsSplit')], ['each', t('mealsEach')]])}
+        ${rows}
+      </div>`;
+  }
+  function setMeals(m, idx, fn) {
+    const days = MP.memberMeals(m, state.prefs.mealsPerDay);
+    for (const i of idx) days[i] = fn(days[i]);
+    m.meals = { mode: (m.meals && m.meals.mode) || 'same', days };
+  }
+  function setMealMode(m, mode) {
+    const days = MP.memberMeals(m, state.prefs.mealsPerDay);
+    if (mode === 'same') days.forEach((_, i) => { days[i] = days[0].slice(); });
+    if (mode === 'split') days.forEach((_, i) => { days[i] = (i < 5 ? days[0] : days[5]).slice(); });
+    m.meals = { mode, days };
   }
 
   // Short practical notes for the needs a person has ticked.
@@ -399,7 +488,6 @@
           <button type="button" class="cuisine ${p.cuisines.includes(c) ? 'on' : ''}" data-cuisine="${c}"><span>${CUISINE_ICON[c]}</span>${t('cuisine_' + c)}</button>`).join('')}
         </div>
       </div>
-      <div class="field"><span>${t('mealsPerDay')}</span>${segmented('mealsPerDay', p.mealsPerDay, [[3, t('meals3')], [4, t('meals4')]])}</div>
       <div class="field"><span>${t('maxTime')}</span>${segmented('maxTime', p.maxTime, [[20, t('minutes', 20)], [40, t('minutes', 40)], [60, t('minutes', 60)], [999, t('anyTime')]])}</div>
       <div class="field"><span>${t('budget')}</span>${segmented('budget', p.budget, [['save', t('budget_save')], ['balanced', t('budget_balanced')], ['any', t('budget_any')]])}</div>
       <label class="field"><span>${t('weeklyBudget')} (${MP.storeOf(state).country.currency})</span>
@@ -408,22 +496,25 @@
 
   // ---------- choosing the week's recipes ----------
   function builder() {
-    const slots = MP.slotsFor(state.prefs.mealsPerDay);
+    const slots = MP.weekSlots(state);
     if (!slots.includes(ui.slot)) ui.slot = slots.includes('dinner') ? 'dinner' : slots[0];
-    const ms = members();
+    const all = members();
     const cov = MP.coverage(state);
+    const need = MP.mealNeed(state);
+    const ms = all.filter((m) => need[ui.slot][m.id] > 0);
     const slotCov = cov[ui.slot];
     const items = state.week.items.filter((it) => it.slot === ui.slot);
     const sugg = MP.suggestRecipes(state, ui.slot);
     const missing = ms.filter((m) => !sugg.some((s) => s.eaters.includes(m.id)));
-    const slotDone = (sl) => ms.every((m) => cov[sl][m.id] >= MP.DAYS);
+    const slotDone = (sl) => all.every((m) => cov[sl][m.id] >= need[sl][m.id]);
     return `
-      <div class="slot-tabs">${slots.map((sl) => `
-        <button type="button" class="${sl === ui.slot ? 'on' : ''}" data-slot="${sl}">${t('slot_' + sl)}${slotDone(sl) ? ' ✓' : ''}</button>`).join('')}
+      <div class="slot-tabs" role="tablist">${slots.map((sl) => `
+        <button type="button" role="tab" aria-selected="${sl === ui.slot}" class="${sl === ui.slot ? 'on' : ''}" data-slot="${sl}">${SLOT_ICON[sl]} ${t(sl === 'snack' ? 'snacks' : 'slot_' + sl)}${slotDone(sl) ? ' ✓' : ''}</button>`).join('')}
       </div>
       <div class="coverage">${ms.map((m) => {
         const n = slotCov[m.id];
-        return `<span class="cov ${n >= MP.DAYS ? 'full' : ''}"><b>${memberName(m)}</b> ${t('coverageLabel', Math.min(n, MP.DAYS), MP.DAYS)}<i style="width:${Math.min(100, (n / MP.DAYS) * 100)}%"></i></span>`;
+        const of = need[ui.slot][m.id];
+        return `<span class="cov ${n >= of ? 'full' : ''}"><b>${memberName(m)}</b> ${t('coverageLabel', Math.min(n, of), of)}<i style="width:${Math.min(100, (n / of) * 100)}%"></i></span>`;
       }).join('')}</div>
       ${missing.length ? `<p class="bad small">${esc(t('noFit', missing.map(memberName).join(', ')))}</p>` : ''}
       ${items.length ? `<div class="chosen">${items.map(chosenCard).join('')}</div>` : ''}
@@ -431,7 +522,7 @@
         ${slotDone(ui.slot) ? `<span class="good small">${t('allCovered')}</span>` : `<button type="button" class="btn small primary" data-autofill>✨ ${t('autoFill')}</button>`}
         ${items.length ? `<button type="button" class="btn small ghost" data-clear-slot>${t('clearWeek')}</button>` : ''}
       </div>
-      <div class="row between"><h3>${t('suggestions')}</h3><button type="button" class="btn small ghost" data-shuffle>🔀 ${t('newIdeas')}</button></div>
+      <div class="row between"><h2 class="sub-h">${t('suggestions')}</h2><button type="button" class="btn small ghost" data-shuffle>🔀 ${t('newIdeas')}</button></div>
       <div class="suggestions">${sugg.slice(0, ui.sugLimit).map(suggestionCard).join('')}</div>
       ${sugg.length > ui.sugLimit ? `<button type="button" class="btn ghost wide" data-more>${t('showMore')}</button>` : ''}`;
   }
@@ -479,7 +570,7 @@
           <small class="muted">${esc(t('cookServings', Math.round(sv.all * 2) / 2))}</small>
         </div>
         ${ms.length > 1 ? `<div class="chips eaters">${ms.map((m) => {
-          const ok = can.includes(m.id);
+          const ok = can.includes(m.id) && MP.mealNeed(state)[it.slot][m.id] > 0;
           return `<button type="button" class="chip small ${it.eaters.includes(m.id) ? 'on' : ''}" data-eater="${it.key}:${m.id}" ${ok ? '' : 'disabled'}>${memberName(m)}</button>`;
         }).join('')}</div>` : ''}
       </div>`;
@@ -495,10 +586,11 @@
     const body = { place: placeFields, shop: shopFields, household: householdFields, people: peopleFields, taste: tasteFields, choose: builder }[step]();
     const last = state.step === STEPS.length - 1;
     $app.innerHTML = `
-      <div class="screen onboarding">
-        ${state.step === 0 ? `<div class="hero"><div class="logo"><img class="logo-img" src="icon.svg" alt=""></div><h1>${t('appName')}</h1><p>${t('tagline')}</p></div>` : ''}
+      <main class="screen onboarding">
+        ${state.step === 0 ? `<div class="hero"><div class="logo"><img class="logo-img" src="icon.svg" alt=""></div><h1>${t('appName')}</h1><p>${t('tagline')}</p></div>
+          <details class="display-quick" ${ui.displayOpen ? 'open' : ''}><summary>👁 ${t('displayTitle')} <small class="muted">${t('displaySummary')}</small></summary>${displayCard(false)}</details>` : ''}
         ${progress(state.step + 1, STEPS.length)}
-        <h2>${esc(titles[step])}</h2>
+        ${state.step === 0 ? `<h2>${esc(titles[step])}</h2>` : `<h1 class="step-title">${esc(titles[step])}</h1>`}
         ${hints[step] ? `<p class="muted">${hints[step]}</p>` : ''}
         <form class="${step === 'choose' ? '' : 'card form'}">${body}</form>
         <div class="actions sticky">
@@ -507,7 +599,7 @@
             : `<button type="button" class="btn primary" data-step="1">${t('next')}</button>`}
         </div>
         ${state.step === 0 ? `<p class="fine">🔒 ${t('privacy')}</p>` : ''}
-      </div>`;
+      </main>`;
   }
 
   function progress(a, b) {
@@ -541,7 +633,7 @@
     const daysLeft = premium.reason === 'trial' && premium.trialEndsAt ? Math.max(0, Math.ceil((premium.trialEndsAt - Date.now()) / DAY)) : null;
     $app.innerHTML = `
       <header class="topbar">
-        <div class="brand"><img class="brand-logo" src="icon.svg" alt="">${t('appName')}</div>
+        <h1 class="brand"><img class="brand-logo" src="icon.svg" alt="">${t('appName')}</h1>
         <button type="button" class="pill" data-tab="profile">${MP.flag(state.country)} ${esc(store.name)}</button>
       </header>
       ${daysLeft !== null && !locked ? `<button type="button" class="trial-bar" data-tab="paywall">⏳ ${esc(t('trialLeft', daysLeft))} · ${t('seePlans')}</button>` : ''}
@@ -574,9 +666,14 @@
       const tg = MP.memberTargets(m);
       const tot = sched.reduce((acc, d) => { const n = MP.memberDayNutrition(state, d, m); acc.k += n.kcal; acc.p += n.protein; return acc; }, { k: 0, p: 0 });
       const avg = tot.k / MP.DAYS;
+      // Meals eaten elsewhere (nursery, work, out) aren't on the plan, so compare with home meals only.
+      let share = 0;
+      for (let di = 0; di < MP.DAYS; di++) share += MP.memberDayShare(state, m, di);
+      const home = Math.max(1, Math.round((tg.kcal * share) / MP.DAYS));
       return `<div class="target">
-        <div class="target-row"><strong>${memberName(m)}</strong><span>${round(avg)} / ${tg.kcal} ${t('kcal')}${t('perDay')}</span></div>
-        <div class="bar"><i style="width:${Math.min(100, (avg / tg.kcal) * 100)}%"></i></div>
+        <div class="target-row"><strong>${memberName(m)}</strong><span>${round(avg)} / ${home} ${t('kcal')}${t('perDay')}</span></div>
+        <div class="bar"><i style="width:${Math.min(100, (avg / home) * 100)}%"></i></div>
+        ${home < tg.kcal * 0.97 ? `<small class="muted">${esc(t('homeMealsOnly', tg.kcal))}</small>` : ''}
         <small class="muted">${t('diet_' + m.diet)} · ${round(tot.p / MP.DAYS)} g ${t('protein')} (${t('target').toLowerCase()} ${tg.protein} g)</small>
       </div>`;
     }).join('');
@@ -742,8 +839,8 @@
         ${manage ? `<a class="btn ghost wide" href="${esc(manage)}" target="_blank" rel="noopener">${t('manageSub')}</a>` : ''}
         ${MP.billing.provider === 'store' ? `<button type="button" class="btn ghost wide" data-restore>${t('restore')}</button>` : ''}
       </div>
-      <h2>${t('theme')}</h2>
-      <div class="card form">${segmented('theme', state.theme || 'system', [['system', t('theme_system')], ['light', t('theme_light')], ['dark', t('theme_dark')]])}</div>
+      <h2>${t('displayTitle')}</h2>
+      ${displayCard(true)}
       <h2>${t('privacyTitle')}</h2>
       <div class="card form">
         <p>${MP.secureStore.encrypted ? '🔒 ' + t('encryptedOn') : '⚠ ' + t('encryptedOff')}</p>
@@ -1122,6 +1219,10 @@
     }
   });
 
+  $app.addEventListener('toggle', (e) => {
+    if (e.target.matches('.display-quick')) ui.displayOpen = e.target.open;
+  }, true);
+
   $app.addEventListener('submit', (e) => {
     e.preventDefault();
     if (e.target.hasAttribute('data-store-search')) runStoreSearch(e.target.q.value);
@@ -1134,6 +1235,18 @@
     if (d.step) return go(Number(d.step));
     if (b.hasAttribute('data-finish')) return finishOnboarding();
     if (d.store) { state.store = d.store; storeSearch.res = null; save(); return render(); }
+    if (d.set === 'mealMode' || d.mealCount || d.mealSlot) {
+      const m = memberAt(b);
+      if (!m) return undefined;
+      if (d.set === 'mealMode') setMealMode(m, d.v);
+      else {
+        const idx = b.closest('[data-meal-days]').dataset.mealDays.split(',').map(Number);
+        if (d.mealCount) setMeals(m, idx, (day) => MP.mealsPreset(Number(d.mealCount), day.includes('snack')));
+        else setMeals(m, idx, (day) => (day.includes(d.mealSlot) ? day.filter((x) => x !== d.mealSlot) : day.concat(d.mealSlot)));
+      }
+      save(); render();
+      return undefined;
+    }
     if (d.set) return setOption(d.set, d.v);
     if (d.count) { setMemberCount(state.members.length + Number(d.count)); save(); return render(); }
     if (d.memberTab) { ui.member = Number(d.memberTab); return render(); }
@@ -1288,6 +1401,10 @@
   function setOption(field, v) {
     if (field === 'units') state.units = v;
     else if (field === 'theme') { state.theme = v; applyTheme(); }
+    else if (field === 'dyslexia') {
+      // One switch for the usual dyslexia-friendly set-up: a dyslexia font and wider spacing.
+      Object.assign(state.display, v === 'on' ? { font: 'dyslexic', spacing: 'wide' } : { font: 'standard', spacing: 'normal' });
+    } else if (DISPLAY[field]) state.display[field] = v;
     else if (field === 'weekView') ui.weekView = v;
     else if (field === 'household') {
       state.household = v;
@@ -1306,8 +1423,11 @@
   // shows the right colours before the data is decrypted.
   function applyTheme() {
     const theme = state.theme || 'system';
-    if (theme === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem('prepcart-theme', theme); } catch (e) { /* private mode */ }
+    applyDisplay(state.display, theme);
+    try {
+      localStorage.setItem('prepcart-theme', theme);
+      localStorage.setItem('prepcart-display', JSON.stringify(state.display));
+    } catch (e) { /* private mode */ }
     const dark = theme === 'dark' || (theme === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = dark ? '#14121a' : '#7e5bc2';
@@ -1319,6 +1439,12 @@
     document.documentElement.dir = MP.RTL_LANGUAGES.includes(state.lang) ? 'rtl' : 'ltr';
     document.title = t('appName');
     if (!state.onboarded) renderOnboarding(); else renderMain();
+    // Screen readers: toggle buttons say whether they're on, emoji icons are decoration.
+    $app.querySelectorAll('button.chip, button.cuisine, button.store, button.add-btn').forEach((x) => {
+      if (!x.hasAttribute('role')) x.setAttribute('aria-pressed', String(x.classList.contains('on')));
+    });
+    $app.querySelectorAll('.emoji, nav.tabs button > span, .cuisine > span').forEach((x) => x.setAttribute('aria-hidden', 'true'));
+    $app.querySelectorAll('nav.tabs button.on').forEach((x) => x.setAttribute('aria-current', 'page'));
   }
 
   render();

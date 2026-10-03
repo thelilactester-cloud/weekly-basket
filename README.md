@@ -3,7 +3,7 @@
 A weekly meal planner and shopping list for **your supermarket**, **where you live**, **your diet** and **your family**.
 Made to be used every week to take the pressure off shopping.
 
-**27 languages · 58 countries · 122 recipes from 12 cuisines · 8 health needs (low histamine, MIND, DASH…) · light & dark mode · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
+**27 languages · 58 countries · 122 recipes from 12 cuisines · 8 health needs (low histamine, MIND, DASH…) · light & dark mode · dyslexia-friendly reading mode · per-person meal schedules · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
 
 ## How it works for the user
 
@@ -17,9 +17,16 @@ Made to be used every week to take the pressure off shopping.
    the diet: **low histamine**, **low FODMAP** (sensitive gut / IBS), **MIND** (brain health), **DASH** (heart & blood
    pressure), **blood-sugar friendly**, **anti-inflammatory**, **halal**, **kosher**. Then allergies and foods to avoid
    (gluten, dairy, eggs, peanuts, tree nuts, fish, shellfish, soy, sesame, beef) and anything else they don't eat, in any language.
+   **Meals at home, per person:** 1, 2 or 3 meals and snacks (separately), the same every day, weekdays / weekend, or day by
+   day. A child who has lunch at nursery, a parent who fasts on Mondays or eats out on Fridays: only the meals eaten at
+   home are planned and bought.
 5. **Taste:** the cuisines you like (Romanian & Eastern European, Mediterranean, Italian, American & British,
    Mexican & Latin, Middle Eastern & Turkish, African, Indian, Chinese, Japanese & Korean, Thai & Vietnamese,
-   Everyday & healthy), meals per day, cooking time, budget.
+   Everyday & healthy), cooking time, budget.
+**Display and reading** (first screen, and Profile): light / dark / automatic, three text sizes, a **dyslexia-friendly**
+mode (OpenDyslexic font + wider letter, word and line spacing), Atkinson Hyperlegible for low vision, high contrast and
+reduced motion. Screens are checked with axe-core (WCAG 2.1 AA) in light and dark.
+
 6. **Choose this week's recipes:** for each meal the app suggests recipes everyone can eat first, ranked by
    your cuisines. Add a dish and pick on how many days to have it; each person's week fills up
    (e.g. *Ana 5/7 days*). **Auto-fill** completes the rest.
