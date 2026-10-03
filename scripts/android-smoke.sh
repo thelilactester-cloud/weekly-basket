@@ -11,7 +11,12 @@ adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null
 sleep 25
 adb exec-out screencap -p > smoke/screen.png
 adb logcat -d > smoke/logcat.txt
-adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml smoke/ui.xml >/dev/null 2>&1
+# uiautomator sometimes reports "could not get idle state" on a busy emulator: try a few times and keep its messages.
+for i in 1 2 3 4 5; do
+  adb shell uiautomator dump /sdcard/ui.xml >> smoke/uiautomator.txt 2>&1 \
+    && adb pull /sdcard/ui.xml smoke/ui.xml >/dev/null 2>&1 && grep -q '<hierarchy' smoke/ui.xml && break
+  sleep 4
+done
 echo "── crash check ──"
 if grep -q "FATAL EXCEPTION" smoke/logcat.txt; then
   grep -A25 "FATAL EXCEPTION" smoke/logcat.txt | head -40
@@ -25,5 +30,10 @@ if [ -z "$(adb shell pidof "$PKG")" ]; then
 fi
 echo "── text on screen ──"
 grep -o 'text="[^"]\+"' smoke/ui.xml 2>/dev/null | sed 's/text=//' | head -25
-grep -q 'Prepcart\|Where do you shop' smoke/ui.xml 2>/dev/null || { echo "The app opened but its screen is empty."; grep -i "console\|chromium\|capacitor" smoke/logcat.txt | tail -30; exit 1; }
+grep -q 'Prepcart\|Where do you shop' smoke/ui.xml 2>/dev/null || {
+  echo "The app opened but its screen is empty (or could not be read)."
+  echo "── uiautomator ──"; cat smoke/uiautomator.txt
+  echo "── app messages ──"; grep -i "console\|chromium" smoke/logcat.txt | grep -v "Handling local request" | tail -30
+  exit 1
+}
 echo "OK: the app opened and shows its first screen."
