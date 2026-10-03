@@ -18,6 +18,26 @@ function edit(file, fn) {
   if (after !== before) writeFileSync(file, after);
 }
 
+// The native Firebase sign-in plugin starts Firebase when the app opens and crashes the app if
+// google-services.json is missing. Until Firebase is set up, build the app without it
+// (sign-in then simply isn't offered; everything else works).
+const configPath = join(root, 'capacitor.config.json');
+const capConfig = JSON.parse(readFileSync(configPath, 'utf8'));
+if (!env.GOOGLE_SERVICES_JSON) {
+  const deps = Object.keys(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).dependencies || {});
+  capConfig.includePlugins = deps.filter((d) => !/^@capacitor\/(android|ios|core)$/.test(d) && d !== 'firebase' && d !== '@capacitor-firebase/authentication');
+  console.log('No GOOGLE_SERVICES_JSON: building without native Firebase sign-in (' + capConfig.includePlugins.join(', ') + ')');
+} else {
+  delete capConfig.includePlugins;
+}
+// Only ask the plugin for Facebook login when the Facebook SDK is included (it crashes on start otherwise).
+const fa = capConfig.plugins && capConfig.plugins.FirebaseAuthentication;
+if (fa) {
+  const all = ['google.com', 'apple.com', 'facebook.com'];
+  fa.providers = env.FACEBOOK_APP_ID && env.FACEBOOK_CLIENT_TOKEN ? all : all.filter((p) => p !== 'facebook.com');
+}
+writeFileSync(configPath, JSON.stringify(capConfig, null, 2) + '\n');
+
 if (existsSync(android)) {
   // Which sign-in SDKs the plugin includes.
   edit(join(android, 'variables.gradle'), (s) => (s.includes('rgcfaIncludeGoogle') ? s
