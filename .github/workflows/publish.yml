@@ -1,9 +1,9 @@
 # Tests the app, builds the Android test app and publishes everything:
 #   - website (GitHub Pages):  https://<owner>.github.io/weekly-basket/   (+ download.html, admin.html)
-#   - Android test app:        https://<owner>.github.io/weekly-basket/download/weekly-basket.apk
+#   - Android test app:        https://<owner>.github.io/weekly-basket/download/prepcart.apk
 #                              and the "android-test" release
 # One-time setup for the website: Settings → Pages → Build and deployment → Source: "GitHub Actions".
-name: Publish Weekly Basket
+name: Publish Prepcart
 
 on:
   push:
@@ -61,11 +61,11 @@ jobs:
       - name: Build the Android test app
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
-      - run: cp android/app/build/outputs/apk/debug/app-debug.apk weekly-basket.apk
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk prepcart.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: weekly-basket-android
-          path: weekly-basket.apk
+          name: prepcart-android
+          path: prepcart.apk
       # Google Play needs a signed App Bundle (.aab). Built only once the upload key is in the repository secrets.
       - name: Build the signed Google Play bundle
         if: env.HAS_UPLOAD_KEY == 'true'
@@ -82,22 +82,22 @@ jobs:
             -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" \
             -Pandroid.injected.signing.key.alias="$ANDROID_KEY_ALIAS" \
             -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
-          cp app/build/outputs/bundle/release/app-release.aab ../weekly-basket-play.aab
+          cp app/build/outputs/bundle/release/app-release.aab ../prepcart-play.aab
       - uses: actions/upload-artifact@v4
-        if: hashFiles('weekly-basket-play.aab') != ''
+        if: hashFiles('prepcart-play.aab') != ''
         with:
-          name: weekly-basket-google-play
-          path: weekly-basket-play.aab
+          name: prepcart-google-play
+          path: prepcart-play.aab
       - name: Publish the "android-test" release
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete android-test --yes --cleanup-tag || true
-          gh release create android-test weekly-basket.apk \
+          gh release create android-test prepcart.apk \
             --prerelease --target "$GITHUB_SHA" \
-            --title "Weekly Basket: Android test app" \
-            --notes "Test build from commit ${GITHUB_SHA::7}. On your Android phone: download weekly-basket.apk, open it, and allow installing from this source when asked. Payments are off until the RevenueCat keys are added."
+            --title "Prepcart: Android test app" \
+            --notes "Test build from commit ${GITHUB_SHA::7}. On your Android phone: download prepcart.apk, open it, and allow installing from this source when asked. Payments are off until the RevenueCat keys are added."
 
   website:
     needs: android
@@ -123,7 +123,7 @@ jobs:
           cp admin.html download.html join.html delete-account.html dist/
       - uses: actions/download-artifact@v4
         with:
-          name: weekly-basket-android
+          name: prepcart-android
           path: dist/download
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

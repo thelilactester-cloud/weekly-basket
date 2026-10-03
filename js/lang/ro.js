@@ -4,7 +4,7 @@
   MP.STRINGS = MP.STRINGS || {};
 
   MP.STRINGS.ro = {
-    appName: 'Coșul Săptămânii', tagline: 'Supermarketul tău, dieta ta, familia ta. Planificate în fiecare săptămână.',
+    appName: 'Prepcart', tagline: 'Supermarketul tău, dieta ta, familia ta. Planificate în fiecare săptămână.',
     next: 'Continuă', back: 'Înapoi', close: 'Închide', remove: 'Șterge', stepOf: (a, b) => `${a} din ${b}`,
     placeTitle: 'De unde faci cumpărături?', placeHint: 'Magazinele, prețurile, limba și unitățile de măsură urmează alegerea ta.',
     language: 'Limba', country: 'Țara', units: 'Unități de măsură', metric: 'Metric (g, kg, l)', imperial: 'SUA (oz, lb)',
@@ -71,7 +71,7 @@
     search: 'Caută rețete…', allRecipes: 'Toate', ingredients: 'Ingrediente', method: 'Mod de preparare', perServing: 'Per porție',
     cookFor: (n) => `Cantități pentru ${n} porții`, favorite: 'Favorită', notForHousehold: 'Nu se potrivește cu dieta sau alergiile nimănui',
     stepsInEnglish: 'Pașii rețetei sunt afișați în engleză.',
-    premiumTitle: 'Coșul Săptămânii Premium', premiumPitch: 'Scapă de stresul cumpărăturilor, în fiecare săptămână.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Scapă de stresul cumpărăturilor, în fiecare săptămână.',
     perk1: 'Planuri săptămânale pentru toată familia, cu dieta fiecăruia', perk2: 'Liste de cumpărături pentru supermarketul tău, cu cantități',
     perk3: 'Produse și prețuri reale din magazinul tău', perk4: 'Rețete din bucătăriile tale preferate',
     planMonthly: 'Lunar', planYearly: 'Anual', perMonth: '/lună', perYear: '/an', savePct: (n) => `Economisești ${n}%`,
@@ -81,7 +81,7 @@
     terms: 'Termeni de utilizare', privacyPolicy: 'Politica de confidențialitate', primeCompare: (p) => `Costă mai puțin decât Amazon Prime (${p}/lună)`,
     trialLeft: (n) => (n === 1 ? 'Perioadă gratuită: 1 zi rămasă' : `Perioadă gratuită: ${n} zile rămase`), seePlans: 'Vezi abonamentele',
     trialOver: 'Perioada gratuită s-a încheiat. Abonează-te ca să-ți planifici în continuare săptămânile.',
-    subscribeInApp: 'Abonamentele sunt disponibile în aplicația Coșul Săptămânii pentru iPhone și Android.',
+    subscribeInApp: 'Abonamentele sunt disponibile în aplicația Prepcart pentru iPhone și Android.',
     premiumActive: 'Premium este activ', subscription: 'Abonament', manageSub: 'Gestionează abonamentul',
     privacyTitle: 'Confidențialitate și datele tale', encryptedOn: 'Datele tale sunt criptate și stocate doar pe acest dispozitiv.',
     encryptedOff: 'Acest browser nu poate cripta datele; sunt stocate doar pe acest dispozitiv.',
@@ -145,5 +145,25 @@
     referralJoined: (name) => `Te-ai înscris prin linkul lui ${name}`,
     referralBad: 'Acest cod de recomandare nu e valid.',
     referralAlready: 'O ofertă de recomandare e deja aplicată.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.ro, {
+    needs: 'Nevoi de sănătate și stil de viață (opțional, combinate cu dieta)',
+    need_low_histamine: 'Sărac în histamină',
+    need_low_fodmap: 'Low FODMAP (intestin sensibil / IBS)',
+    need_mind: 'MIND (sănătatea creierului)',
+    need_dash: 'DASH (inimă și tensiune)',
+    need_blood_sugar: 'Prietenos cu glicemia',
+    need_anti_inflammatory: 'Antiinflamator',
+    need_halal: 'Halal',
+    need_kosher: 'Cușer',
+    needNote_low_histamine: 'Mănâncă preparatele proaspete: congelează resturile în loc să le ții la frigider, pentru că histamina crește în timp.',
+    needNote_halal: 'Alege carne cu certificare halal la cumpărături.',
+    needNote_kosher: 'Alege carne și produse cu certificare cușer la cumpărături.',
+    needNote_medical: 'Este un ajutor pentru planificare, nu un sfat medical. Dacă ai o afecțiune, urmează sfaturile medicului sau ale nutriționistului.',
+    theme: 'Aspect',
+    theme_system: 'Automat',
+    theme_light: 'Luminos',
+    theme_dark: 'Întunecat',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

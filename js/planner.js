@@ -42,7 +42,7 @@
 
   MP.newMember = (overrides) => Object.assign({
     id: MP.uid(), name: '', sex: 'f', age: 30, height: 165, weight: 65,
-    activity: 'light', goal: 'maintain', diet: 'omnivore', allergies: [], dislikes: '',
+    activity: 'light', goal: 'maintain', diet: 'omnivore', allergies: [], needs: [], dislikes: '',
   }, overrides || {});
 
   // ---------- nutrition ----------
@@ -149,8 +149,78 @@
     });
   };
 
-  // A recipe works for a person if it fits their diet, allergies and the foods they don't eat.
-  MP.recipeFitsMember = (recipe, m) => MP.fitsDiet(recipe, m.diet) && !MP.hasAllergen(recipe, m.allergies) && !MP.hasDisliked(recipe, m.dislikes);
+  // ---------- health and lifestyle needs ----------
+  // Ticked per person on top of their diet (e.g. vegetarian + low-histamine). `avoid`: ingredients left out;
+  // `favour`: ingredients that make a recipe rank higher. Based on published guidance (SIGHI list for histamine,
+  // Monash University for FODMAP, the MIND and DASH studies). Planning help, not a medical diet.
+  const NEED_RULES = {
+    low_histamine: {
+      avoid: ['tomato', 'tomato_can', 'tomato_paste', 'spinach', 'eggplant', 'avocado', 'banana', 'berries', 'lemon', 'lime',
+        'parmesan', 'cheddar', 'telemea', 'sour_cream', 'greek_yogurt', 'soy_sauce', 'miso', 'gochujang', 'curry_paste',
+        'tuna_can', 'shrimp', 'walnuts', 'peanuts', 'peanut_butter', 'chili', 'chili_flakes', 'stock_cube', 'hummus',
+        'chickpeas', 'red_beans', 'black_beans', 'olives'],
+    },
+    low_fodmap: {
+      avoid: ['onion', 'garlic', 'bread', 'pasta', 'tortilla', 'pita', 'couscous', 'lentils', 'white_beans', 'chickpeas',
+        'red_beans', 'black_beans', 'hummus', 'mushrooms', 'apple', 'honey', 'milk', 'greek_yogurt', 'sour_cream', 'cottage',
+        'avocado', 'green_peas', 'sweet_corn', 'stock_cube', 'curry_paste', 'gochujang', 'berries', 'cabbage'],
+    },
+    mind: { // brain health: leafy greens, vegetables, berries, nuts, beans, whole grains, fish, poultry, olive oil
+      avoid: ['ground_beef', 'butter', 'cheddar', 'parmesan', 'sour_cream', 'paneer'],
+      favour: ['spinach', 'kale', 'lettuce', 'cabbage', 'broccoli', 'berries', 'walnuts', 'almonds', 'salmon', 'white_fish',
+        'lentils', 'white_beans', 'chickpeas', 'black_beans', 'red_beans', 'oats', 'quinoa', 'olive_oil', 'chicken_breast'],
+    },
+    dash: { // heart and blood pressure: less salt and saturated fat, more vegetables, fruit, whole grains, low-fat dairy
+      avoid: ['soy_sauce', 'miso', 'gochujang', 'stock_cube', 'olives', 'telemea', 'cheddar', 'parmesan', 'curry_paste',
+        'ground_beef', 'butter', 'sour_cream', 'coconut_milk'],
+      favour: ['spinach', 'kale', 'broccoli', 'carrot', 'sweet_potato', 'banana', 'berries', 'apple', 'oats', 'quinoa',
+        'lentils', 'white_beans', 'greek_yogurt', 'milk', 'almonds', 'salmon'],
+    },
+    blood_sugar: { // steadier blood sugar: no added sugar, moderate carbohydrate per serving, more fibre and protein
+      avoid: ['honey'], maxCarbs: 55,
+      favour: ['lentils', 'chickpeas', 'white_beans', 'black_beans', 'red_beans', 'quinoa', 'oats', 'broccoli', 'spinach',
+        'eggs', 'greek_yogurt', 'almonds', 'walnuts', 'chia'],
+    },
+    anti_inflammatory: {
+      avoid: ['ground_beef', 'butter', 'sour_cream', 'cheddar'],
+      favour: ['salmon', 'olive_oil', 'turmeric', 'ginger', 'berries', 'spinach', 'kale', 'broccoli', 'walnuts', 'almonds',
+        'chia', 'lentils', 'oats', 'sweet_potato'],
+    },
+    halal: { avoid: [] }, // no pork or alcohol in any recipe; buy halal-certified meat
+    kosher: { avoid: ['shrimp'], noMeatWithDairy: true }, // buy kosher-certified products
+  };
+  MP.NEEDS = Object.keys(NEED_RULES);
+  MP.NEED_RULES = NEED_RULES;
+
+  MP.fitsNeeds = function (recipe, needs) {
+    if (!needs || !needs.length) return true;
+    const ids = recipe.ing.map(([id]) => id);
+    return needs.every((need) => {
+      const rule = NEED_RULES[need];
+      if (!rule) return true;
+      if (ids.some((id) => rule.avoid.includes(id))) return false;
+      if (rule.maxCarbs && MP.recipeNutrition(recipe).carbs > rule.maxCarbs) return false;
+      if (rule.noMeatWithDairy) {
+        const a = animalsOf(recipe);
+        if (a.has('meat') && a.has('dairy')) return false;
+      }
+      return true;
+    });
+  };
+
+  // How many "favour" ingredients for the given needs a recipe has (used to rank suggestions).
+  MP.needsBonus = function (recipe, needs) {
+    let n = 0;
+    for (const need of needs || []) {
+      const fav = (NEED_RULES[need] && NEED_RULES[need].favour) || [];
+      n += recipe.ing.filter(([id]) => fav.includes(id)).length;
+    }
+    return n;
+  };
+
+  // A recipe works for a person if it fits their diet, needs, allergies and the foods they don't eat.
+  MP.recipeFitsMember = (recipe, m) => MP.fitsDiet(recipe, m.diet) && MP.fitsNeeds(recipe, m.needs)
+    && !MP.hasAllergen(recipe, m.allergies) && !MP.hasDisliked(recipe, m.dislikes);
   MP.recipeFitsMembers = (recipe, members) => members.every((m) => MP.recipeFitsMember(recipe, m));
   MP.whoCanEat = (recipe, members) => members.filter((m) => MP.recipeFitsMember(recipe, m));
 
@@ -204,6 +274,8 @@
       if ((state.favorites || []).includes(r.id)) score += 1;
       if (r.time > (prefs.maxTime || 999)) score -= 2;
       if (members.some((m) => m.diet === 'mediterranean') && (r.cuisine === 'mediterranean' || r.tags.includes('mediterranean'))) score += 0.8;
+      const needBonus = members.reduce((sum, m) => sum + MP.needsBonus(r, m.needs), 0);
+      if (needBonus) score += Math.min(1.5, needBonus * 0.3);
       if (members.some((m) => m.diet === 'high_protein')) {
         const n = MP.recipeNutrition(r);
         if ((n.protein * 4) / n.kcal >= 0.3) score += 0.8;

@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.it = {
-    appName: 'Il Carrello della Settimana', tagline: 'Il tuo supermercato, la tua dieta, la tua settimana, pianificata.',
+    appName: 'Prepcart', tagline: 'Il tuo supermercato, la tua dieta, la tua settimana, pianificata.',
     next: 'Avanti', back: 'Indietro', remove: 'Rimuovi', close: 'Chiudi',
     stepOf: (a, b) => `${a} di ${b}`,
     country: 'Paese', 
@@ -133,7 +133,7 @@
     mealPrep: 'Cosa cucinare questa settimana', newWeek: 'Inizia una nuova settimana',
     newWeekConfirm: 'Iniziare una nuova settimana? Ricette, spunte e articoli extra di questa settimana verranno cancellati.',
     allRecipes: 'Tutte', notForHousehold: 'Non adatta alla dieta o alle allergie di nessuno',
-    premiumTitle: 'Il Carrello della Settimana Premium', premiumPitch: 'Spesa senza stress, ogni settimana.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Spesa senza stress, ogni settimana.',
     perk1: 'Piani settimanali per tutta la famiglia, con la dieta di ognuno', perk2: 'Liste della spesa per il tuo supermercato, con le quantità',
     perk3: 'Prodotti e prezzi reali del tuo negozio', perk4: 'Ricette delle cucine che ami',
     planMonthly: 'Mensile', planYearly: 'Annuale', perMonth: '/mese', perYear: '/anno', savePct: (n) => `Risparmi il ${n}%`,
@@ -224,5 +224,49 @@
     referralJoined: (name) => `Iscritto con il link di ${name}`,
     referralBad: 'Questo codice invito non è valido.',
     referralAlready: 'Un’offerta invito è già applicata.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.it, {
+    needs: 'Esigenze di salute e stile di vita (facoltativo, insieme alla dieta)',
+    need_low_histamine: 'Povera di istamina',
+    need_low_fodmap: 'Povera di FODMAP (intestino sensibile / IBS)',
+    need_mind: 'MIND (salute del cervello)',
+    need_dash: 'DASH (cuore e pressione)',
+    need_blood_sugar: 'Adatta alla glicemia',
+    need_anti_inflammatory: 'Antinfiammatoria',
+    need_halal: 'Halal',
+    need_kosher: 'Kosher',
+    needNote_low_histamine: 'Mangia i piatti freschi: congela gli avanzi invece di tenerli in frigo, perché l’istamina aumenta col tempo.',
+    needNote_halal: 'Scegli carne certificata halal quando fai la spesa.',
+    needNote_kosher: 'Scegli carne e prodotti certificati kosher quando fai la spesa.',
+    needNote_medical: 'È un aiuto per pianificare, non un consiglio medico. Se hai una condizione medica, segui il tuo medico o dietista.',
+    theme: 'Aspetto',
+    theme_system: 'Automatico',
+    theme_light: 'Chiaro',
+    theme_dark: 'Scuro',
+  });
+  Object.assign(MP.NAMES.it.ing, {
+    blueberries: 'Mirtilli surgelati',
+    butternut: 'Zucca butternut',
+    mozzarella: 'Mozzarella fresca',
+    garlic_oil: 'Olio d’oliva aromatizzato all’aglio',
+    maple_syrup: 'Sciroppo d’acero',
+  });
+  Object.assign(MP.NAMES.it.recipe, {
+    blueberry_porridge: 'Porridge d’avena ai mirtilli',
+    zucchini_scramble: 'Uova strapazzate con zucchine ed erbe',
+    coconut_rice_pudding: 'Budino di riso al cocco con mirtilli',
+    sweet_potato_hash: 'Padella di patate dolci con uova',
+    herb_chicken_rice: 'Pollo alle erbe con riso, zucchine e carote',
+    salmon_dill_potatoes: 'Salmone con patate all’aneto e broccoli',
+    turkey_quinoa_peppers: 'Peperoni ripieni di tacchino e quinoa',
+    mild_coconut_curry: 'Curry di pollo al cocco delicato',
+    butternut_risotto: 'Risotto alla zucca butternut',
+    ginger_fish_noodles: 'Pesce allo zenzero con noodles di riso',
+    mozzarella_zucchini_bake: 'Teglia di zucchine e patate con mozzarella',
+    beef_sweet_potato_skillet: 'Padella di manzo e patate dolci',
+    quinoa_veg_bowl: 'Bowl di quinoa con verdure croccanti',
+    blueberry_chia_pudding: 'Budino di chia ai mirtilli',
+    mozzarella_cucumber: 'Mozzarella con cetriolo ed erbe',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

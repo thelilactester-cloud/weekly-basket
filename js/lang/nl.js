@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.nl = {
-    appName: 'Weekmand', tagline: 'Jouw supermarkt, jouw dieet, jouw gezin. Elke week gepland.',
+    appName: 'Prepcart', tagline: 'Jouw supermarkt, jouw dieet, jouw gezin. Elke week gepland.',
     next: 'Volgende', back: 'Terug', close: 'Sluiten', remove: 'Verwijderen', stepOf: (a, b) => `${a} van ${b}`,
     placeTitle: 'Waar doe je boodschappen?', placeHint: 'Winkels, prijzen, taal en eenheden volgen jouw keuze.',
     language: 'Taal', country: 'Land', units: 'Eenheden', metric: 'Metrisch (g, kg, l)', imperial: 'VS (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Recepten zoeken…', allRecipes: 'Alle', ingredients: 'Ingrediënten', method: 'Bereiding', perServing: 'Per portie',
     cookFor: (n) => `Hoeveelheden voor ${n} porties`, favorite: 'Favoriet', notForHousehold: 'Past bij niemands dieet of allergieën',
     stepsInEnglish: 'De bereidingsstappen staan in het Engels.',
-    premiumTitle: 'Weekmand Premium', premiumPitch: 'Boodschappen zonder stress, elke week.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Boodschappen zonder stress, elke week.',
     perk1: 'Weekplannen voor het hele gezin, met ieders dieet', perk2: 'Boodschappenlijsten voor jouw supermarkt, met hoeveelheden',
     perk3: 'Echte producten en prijzen uit jouw winkel', perk4: 'Recepten uit de keukens waar je van houdt',
     planMonthly: 'Maandelijks', planYearly: 'Jaarlijks', perMonth: '/maand', perYear: '/jaar', savePct: (n) => `Bespaar ${n}%`,
@@ -193,5 +193,49 @@
     referralJoined: (name) => `Lid geworden via de link van ${name}`,
     referralBad: 'Deze uitnodigingscode is niet geldig.',
     referralAlready: 'Er is al een uitnodigingsaanbod actief.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.nl, {
+    needs: 'Gezondheid en leefstijl (optioneel, naast het dieet)',
+    need_low_histamine: 'Histaminearm',
+    need_low_fodmap: 'FODMAP-arm (gevoelige darmen / PDS)',
+    need_mind: 'MIND (gezondheid van de hersenen)',
+    need_dash: 'DASH (hart en bloeddruk)',
+    need_blood_sugar: 'Bloedsuikervriendelijk',
+    need_anti_inflammatory: 'Ontstekingsremmend',
+    need_halal: 'Halal',
+    need_kosher: 'Koosjer',
+    needNote_low_histamine: 'Eet gerechten vers: vries restjes in in plaats van ze in de koelkast te bewaren, want histamine neemt toe.',
+    needNote_halal: 'Kies halal-gecertificeerd vlees bij het boodschappen doen.',
+    needNote_kosher: 'Kies koosjer-gecertificeerd vlees en producten bij het boodschappen doen.',
+    needNote_medical: 'Dit is hulp bij het plannen, geen medisch advies. Heb je een aandoening, volg dan het advies van je arts of diëtist.',
+    theme: 'Weergave',
+    theme_system: 'Automatisch',
+    theme_light: 'Licht',
+    theme_dark: 'Donker',
+  });
+  Object.assign(MP.NAMES.nl.ing, {
+    blueberries: 'Diepvriesblauwe bessen',
+    butternut: 'Flespompoen',
+    mozzarella: 'Verse mozzarella',
+    garlic_oil: 'Olijfolie met knoflooksmaak',
+    maple_syrup: 'Ahornsiroop',
+  });
+  Object.assign(MP.NAMES.nl.recipe, {
+    blueberry_porridge: 'Havermoutpap met blauwe bessen',
+    zucchini_scramble: 'Roerei met courgette en kruiden',
+    coconut_rice_pudding: 'Kokos-rijstpudding met blauwe bessen',
+    sweet_potato_hash: 'Zoete-aardappelpan met eieren',
+    herb_chicken_rice: 'Kruidenkip met rijst, courgette en wortel',
+    salmon_dill_potatoes: 'Zalm met dilleaardappelen en broccoli',
+    turkey_quinoa_peppers: 'Paprika’s gevuld met kalkoen en quinoa',
+    mild_coconut_curry: 'Milde kokos-kipcurry',
+    butternut_risotto: 'Risotto met flespompoen',
+    ginger_fish_noodles: 'Gemberbis met rijstnoedels',
+    mozzarella_zucchini_bake: 'Ovenschotel van courgette en aardappel met mozzarella',
+    beef_sweet_potato_skillet: 'Pan met rundvlees en zoete aardappel',
+    quinoa_veg_bowl: 'Quinoabowl met knapperige groenten',
+    blueberry_chia_pudding: 'Chiapudding met blauwe bessen',
+    mozzarella_cucumber: 'Mozzarella met komkommer en kruiden',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

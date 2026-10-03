@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.pt = {
-    appName: 'Cesta da Semana', tagline: 'O seu mercado, a sua dieta, a sua semana, planejada.',
+    appName: 'Prepcart', tagline: 'O seu mercado, a sua dieta, a sua semana, planejada.',
     next: 'Avançar', back: 'Voltar', remove: 'Remover', close: 'Fechar',
     stepOf: (a, b) => `${a} de ${b}`,
     country: 'País', 
@@ -133,7 +133,7 @@
     mealPrep: 'O que cozinhar esta semana', newWeek: 'Começar uma nova semana',
     newWeekConfirm: 'Começar uma nova semana? As receitas, marcações e itens extras desta semana serão apagados.',
     allRecipes: 'Todas', notForHousehold: 'Não serve para a dieta ou alergias de ninguém',
-    premiumTitle: 'Cesta da Semana Premium', premiumPitch: 'Compras sem estresse, toda semana.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Compras sem estresse, toda semana.',
     perk1: 'Planos semanais para toda a família, com a dieta de cada um', perk2: 'Listas de compras para o seu mercado, com quantidades',
     perk3: 'Produtos e preços reais da sua loja', perk4: 'Receitas das cozinhas que você ama',
     planMonthly: 'Mensal', planYearly: 'Anual', perMonth: '/mês', perYear: '/ano', savePct: (n) => `Economize ${n}%`,
@@ -224,5 +224,49 @@
     referralJoined: (name) => `Entrou com o link de ${name}`,
     referralBad: 'Este código de convite não é válido.',
     referralAlready: 'Já tem uma oferta de convite aplicada.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.pt, {
+    needs: 'Necessidades de saúde e estilo de vida (opcional, junto com a dieta)',
+    need_low_histamine: 'Baixa em histamina',
+    need_low_fodmap: 'Baixa em FODMAP (intestino sensível / SII)',
+    need_mind: 'MIND (saúde do cérebro)',
+    need_dash: 'DASH (coração e tensão)',
+    need_blood_sugar: 'Amiga do açúcar no sangue',
+    need_anti_inflammatory: 'Anti-inflamatória',
+    need_halal: 'Halal',
+    need_kosher: 'Kosher',
+    needNote_low_histamine: 'Coma os pratos frescos: congele as sobras em vez de as guardar no frigorífico, porque a histamina aumenta com o tempo.',
+    needNote_halal: 'Escolha carne com certificação halal nas compras.',
+    needNote_kosher: 'Escolha carne e produtos com certificação kosher nas compras.',
+    needNote_medical: 'É uma ajuda para planear, não um conselho médico. Se tem uma condição de saúde, siga o seu médico ou nutricionista.',
+    theme: 'Aparência',
+    theme_system: 'Automático',
+    theme_light: 'Claro',
+    theme_dark: 'Escuro',
+  });
+  Object.assign(MP.NAMES.pt.ing, {
+    blueberries: 'Mirtilos congelados',
+    butternut: 'Abóbora butternut',
+    mozzarella: 'Mozzarella fresca',
+    garlic_oil: 'Azeite aromatizado com alho',
+    maple_syrup: 'Xarope de ácer',
+  });
+  Object.assign(MP.NAMES.pt.recipe, {
+    blueberry_porridge: 'Papas de aveia com mirtilos',
+    zucchini_scramble: 'Ovos mexidos com curgete e ervas',
+    coconut_rice_pudding: 'Arroz-doce de coco com mirtilos',
+    sweet_potato_hash: 'Salteado de batata-doce com ovos',
+    herb_chicken_rice: 'Frango com ervas, arroz, curgete e cenoura',
+    salmon_dill_potatoes: 'Salmão com batatas ao endro e brócolos',
+    turkey_quinoa_peppers: 'Pimentos recheados com peru e quinoa',
+    mild_coconut_curry: 'Caril suave de frango com coco',
+    butternut_risotto: 'Risoto de abóbora butternut',
+    ginger_fish_noodles: 'Peixe com gengibre e massa de arroz',
+    mozzarella_zucchini_bake: 'Gratinado de curgete e batata com mozzarella',
+    beef_sweet_potato_skillet: 'Salteado de vaca e batata-doce',
+    quinoa_veg_bowl: 'Taça de quinoa com legumes crocantes',
+    blueberry_chia_pudding: 'Pudim de chia com mirtilos',
+    mozzarella_cucumber: 'Mozzarella com pepino e ervas',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

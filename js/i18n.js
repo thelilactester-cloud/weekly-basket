@@ -10,7 +10,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.en = {
-    appName: 'Weekly Basket', tagline: 'Your supermarket, your diet, your family. Planned every week.',
+    appName: 'Prepcart', tagline: 'Your supermarket, your diet, your family. Planned every week.',
     next: 'Next', back: 'Back', close: 'Close', remove: 'Remove', stepOf: (a, b) => `${a} of ${b}`,
     // setup steps
     placeTitle: 'Where do you shop?', placeHint: 'Shops, prices, language and units follow your choice.',
@@ -84,7 +84,7 @@
     cookFor: (n) => `Quantities for ${n} servings`, favorite: 'Favourite', notForHousehold: 'Doesn’t suit anyone’s diet or allergies',
     stepsInEnglish: 'Recipe steps are shown in English.',
     // subscription
-    premiumTitle: 'Weekly Basket Premium', premiumPitch: 'Take the pressure off shopping, every week.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Take the pressure off shopping, every week.',
     perk1: 'Weekly plans for the whole family, with each person’s diet', perk2: 'Shopping lists for your supermarket, with quantities',
     perk3: 'Real products and prices from your shop', perk4: 'Recipes from the cuisines you love',
     planMonthly: 'Monthly', planYearly: 'Yearly', perMonth: '/month', perYear: '/year', savePct: (n) => `Save ${n}%`,
@@ -121,11 +121,21 @@
     errTooMany: 'Too many attempts. Please wait a few minutes and try again.', errNetwork: 'No connection. Check your internet and try again.',
     errRecentLogin: 'For your security, please sign in again first.', errOtherMethod: 'This email is already used with another sign-in method. Use that one.',
     errMethodOff: 'This sign-in method isn’t available yet.', errGeneric: 'Something went wrong. Please try again.',
+    // health and lifestyle needs (planner.js NEED_RULES)
+    needs: 'Health & lifestyle needs (optional, combine with the diet)',
+    need_low_histamine: 'Low histamine', need_low_fodmap: 'Low FODMAP (sensitive gut / IBS)', need_mind: 'MIND (brain health)',
+    need_dash: 'DASH (heart & blood pressure)', need_blood_sugar: 'Blood-sugar friendly', need_anti_inflammatory: 'Anti-inflammatory',
+    need_halal: 'Halal', need_kosher: 'Kosher',
+    needNote_low_histamine: 'Eat dishes fresh: freeze leftovers instead of keeping them in the fridge, because histamine builds up over time.',
+    needNote_halal: 'Choose halal-certified meat when you shop.', needNote_kosher: 'Choose kosher-certified meat and products when you shop.',
+    needNote_medical: 'This is planning help, not medical advice. If you have a medical condition, follow your doctor’s or dietitian’s advice.',
+    // appearance
+    theme: 'Appearance', theme_system: 'Automatic', theme_light: 'Light', theme_dark: 'Dark',
     // affiliates
     referralBanner: (name, months) => `${name}’s link: ${months} months free`, referralJoined: (name) => `Joined with ${name}’s link`,
     referralBad: 'This referral code isn’t valid.', referralAlready: 'A referral offer is already applied.',
     trialOver: 'Your free trial has ended. Subscribe to keep planning your weeks.',
-    subscribeInApp: 'Subscriptions are available in the Weekly Basket app for iPhone and Android.',
+    subscribeInApp: 'Subscriptions are available in the Prepcart app for iPhone and Android.',
     premiumActive: 'Premium is active', subscription: 'Subscription', manageSub: 'Manage subscription',
     // privacy
     privacyTitle: 'Privacy & your data', encryptedOn: 'Your data is encrypted and stored only on this device.',

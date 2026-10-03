@@ -18,7 +18,7 @@ plus waiting for Apple / Google approvals.
 
 ## 1. Firebase (accounts and the server part)
 
-1. Go to <https://console.firebase.google.com> → **Add project** (e.g. `weekly-basket`). Google Analytics: **off** (we don't track).
+1. Go to <https://console.firebase.google.com> → **Add project** (e.g. `prepcart`). Google Analytics: **off** (we don't track).
 2. **Build → Authentication → Get started → Sign-in method**, enable:
    - **Email/Password**
    - **Google**
@@ -69,18 +69,18 @@ Everyone gets **1 month free** (the stores' *introductory offer / free trial*). 
 1. Join the **Apple Developer Program** (<https://developer.apple.com/programs/>, $99/year).
 2. In **App Store Connect → Agreements, Tax and Banking**: accept the **Paid Apps** agreement, add your bank and tax forms.
    Join the **App Store Small Business Program** so Apple keeps 15% instead of 30%.
-3. **Certificates, IDs & Profiles → Identifiers → App IDs** → `com.weeklybasket.app` (or your own id; change `appId` in
+3. **Certificates, IDs & Profiles → Identifiers → App IDs** → `com.prepcart.app` (or your own id; change `appId` in
    `capacitor.config.json` and `androidPackage` in `js/config.js` to match) → tick **Sign in with Apple**.
 4. **App Store Connect → My Apps → +** → new app, bundle id from step 3. Copy its **Apple ID** (a number, App Information page)
    into `js/config.js` → `appleAppId`.
 5. **Monetization → Subscriptions** → subscription group **Premium** → add two subscriptions:
-   - `weeklybasket_premium_monthly`, 1 month, prices from section 2
-   - `weeklybasket_premium_yearly`, 1 year
+   - `prepcart_premium_monthly`, 1 month, prices from section 2
+   - `prepcart_premium_yearly`, 1 year
    - For each, add an **Introductory Offer**: *Free*, **1 month**, all countries.
    - **Affiliate offer:** on each subscription → **Offer Codes → Create** → *Free*, **2 months**, customer eligibility
      *New subscribers*, then **Custom codes** → one code per affiliate (e.g. `MARIA2M`, with a redemption limit and an end date). Put that code in the admin page → affiliate → *App Store offer code*. Their invite link then opens the
      App Store with the offer filled in.
-6. **Sign in with Apple for Firebase:** Identifiers → **Services IDs** → new (e.g. `com.weeklybasket.signin`) → enable Sign in
+6. **Sign in with Apple for Firebase:** Identifiers → **Services IDs** → new (e.g. `com.prepcart.signin`) → enable Sign in
    with Apple → domain `YOUR-PROJECT.firebaseapp.com`, return URL `https://YOUR-PROJECT.firebaseapp.com/__/auth/handler`.
    Keys → new key with *Sign in with Apple* → download. Enter Services ID, Team ID, Key ID and the key in Firebase → Apple provider.
 7. **Firebase → Project settings → Add app → iOS** with your bundle id → download `GoogleService-Info.plist` (keep it out of GitHub).
@@ -104,7 +104,7 @@ Everyone gets **1 month free** (the stores' *introductory offer / free trial*). 
 1. **Play Console** (<https://play.google.com/console>, $25 once) → create an account. Choose *Organisation* if you have a company
    (a new *Personal* account has to run a **closed test with at least 12 testers for 14 days** before it can publish).
 2. **Payments profile** → add your bank. Google keeps 15% of subscriptions.
-3. **Create app** → package name `com.weeklybasket.app`. Then:
+3. **Create app** → package name `com.prepcart.app`. Then:
    **Upload key:** on your computer (once), keep the file and passwords safe:
    ```bash
    keytool -genkeypair -v -keystore upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
@@ -112,9 +112,9 @@ Everyone gets **1 month free** (the stores' *introductory offer / free trial*). 
    ```
    GitHub → this repository → **Settings → Secrets and variables → Actions** → add:
    `ANDROID_KEYSTORE_BASE64` (the base64 text), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`upload`), `ANDROID_KEY_PASSWORD`.
-   Every push to `main` then builds **weekly-basket-play.aab** (Actions → latest run → Artifacts). Upload that to Play.
+   Every push to `main` then builds **prepcart-play.aab** (Actions → latest run → Artifacts). Upload that to Play.
    Use **Play App Signing** (the default).
-4. **Monetize → Subscriptions** → create `weeklybasket_premium_monthly` and `weeklybasket_premium_yearly`, each with a base plan
+4. **Monetize → Subscriptions** → create `prepcart_premium_monthly` and `prepcart_premium_yearly`, each with a base plan
    (auto-renewing, 1 month / 1 year, prices from section 2). On each base plan add two **offers**:
    - `free-month`: *New customer acquisition*, phase **Free trial 1 month**.
    - `affiliate`: eligibility **Developer determined**, phase **Free trial 2 months**, and the tag **`affiliate`**. The app picks

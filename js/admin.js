@@ -77,7 +77,7 @@
   }
   $('copyLink').addEventListener('click', () => copy('link'));
   $('copyCode').addEventListener('click', () => copy('code'));
-  $('share').addEventListener('click', () => navigator.share({ title: 'Weekly Basket', text: 'Your free access to Weekly Basket:', url: $('link').value }).catch(() => {}));
+  $('share').addEventListener('click', () => navigator.share({ title: 'Prepcart', text: 'Your free access to Prepcart:', url: $('link').value }).catch(() => {}));
 
   const freeText = (d) => (d ? `${d} days` : 'forever');
 
@@ -109,7 +109,7 @@
     const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
     const rows = [['made', 'type', 'name', 'free', 'use by', 'id', 'link']]
       .concat(made.map((m) => [new Date().toISOString().slice(0, 10), m.data.t, m.data.n, freeText(m.data.d), m.data.e, m.data.i, m.link]));
-    download('weekly-basket-codes.csv', rows.map((r) => r.map(q).join(',')).join('\n'), 'text/csv');
+    download('prepcart-codes.csv', rows.map((r) => r.map(q).join(',')).join('\n'), 'text/csv');
   });
 
   $('newKey').addEventListener('click', async () => {
@@ -118,7 +118,7 @@
     const kid = 'k' + (Math.max(0, ...used) + 1);
     const pair = await MP.access.newKeyPair(kid);
     download('weekly-basket-admin-key.json', JSON.stringify({
-      about: 'Weekly Basket admin key. KEEP PRIVATE: anyone with this file can create free-access codes. Load it in admin.html to make codes.',
+      about: 'Prepcart admin key. KEEP PRIVATE: anyone with this file can create free-access codes. Load it in admin.html to make codes.',
       kid, privateKey: pair.privateKey,
     }, null, 2), 'application/json');
     $('pubKey').value = `${kid}: ${JSON.stringify(pair.publicKey)},`;

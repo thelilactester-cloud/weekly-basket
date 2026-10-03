@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.bg = {
-    appName: 'Кошница на седмицата', tagline: 'Твоят магазин, твоят режим, твоето семейство. Планирани всяка седмица.',
+    appName: 'Prepcart', tagline: 'Твоят магазин, твоят режим, твоето семейство. Планирани всяка седмица.',
     next: 'Напред', back: 'Назад', close: 'Затвори', remove: 'Премахни', stepOf: (a, b) => `${a} от ${b}`,
     placeTitle: 'Къде пазаруваш?', placeHint: 'Магазините, цените, езикът и мерните единици следват избора ти.',
     language: 'Език', country: 'Държава', units: 'Мерни единици', metric: 'Метрични (г, кг, л)', imperial: 'САЩ (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Търси рецепти…', allRecipes: 'Всички', ingredients: 'Съставки', method: 'Начин на приготвяне', perServing: 'На порция',
     cookFor: (n) => `Количества за ${n} порции`, favorite: 'Любимо', notForHousehold: 'Не подхожда на никого по режим или алергии',
     stepsInEnglish: 'Стъпките на рецептата са на английски.',
-    premiumTitle: 'Кошница на седмицата Премиум', premiumPitch: 'Пазаруване без стрес, всяка седмица.',
+    premiumTitle: 'Prepcart Премиум', premiumPitch: 'Пазаруване без стрес, всяка седмица.',
     perk1: 'Седмични планове за цялото семейство с режима на всеки', perk2: 'Списъци за пазаруване за твоя супермаркет с количества',
     perk3: 'Реални продукти и цени от твоя магазин', perk4: 'Рецепти от любимите ти кухни',
     planMonthly: 'Месечно', planYearly: 'Годишно', perMonth: '/месец', perYear: '/година', savePct: (n) => `Спести ${n}%`,
@@ -193,5 +193,49 @@
     referralJoined: (name) => `Присъединихте се чрез линка на ${name}`,
     referralBad: 'Този код за покана не е валиден.',
     referralAlready: 'Вече имате приложена оферта по покана.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.bg, {
+    needs: 'Здравни нужди и начин на живот (по избор, заедно с диетата)',
+    need_low_histamine: 'С ниско съдържание на хистамин',
+    need_low_fodmap: 'Нисък FODMAP (чувствителен стомах / СРЧ)',
+    need_mind: 'MIND (здраве на мозъка)',
+    need_dash: 'DASH (сърце и кръвно)',
+    need_blood_sugar: 'Подходяща за кръвната захар',
+    need_anti_inflammatory: 'Противовъзпалителна',
+    need_halal: 'Халал',
+    need_kosher: 'Кашер',
+    needNote_low_histamine: 'Яжте ястията прясно: замразявайте остатъците, вместо да ги държите в хладилника, защото хистаминът се увеличава с времето.',
+    needNote_halal: 'Купувайте месо със сертификат халал.',
+    needNote_kosher: 'Купувайте месо и продукти със сертификат кашер.',
+    needNote_medical: 'Това е помощ за планиране, не медицински съвет. Ако имате заболяване, следвайте съветите на лекаря или диетолога си.',
+    theme: 'Изглед',
+    theme_system: 'Автоматично',
+    theme_light: 'Светъл',
+    theme_dark: 'Тъмен',
+  });
+  Object.assign(MP.NAMES.bg.ing, {
+    blueberries: 'Замразени боровинки',
+    butternut: 'Тиква бътърнът',
+    mozzarella: 'Прясна моцарела',
+    garlic_oil: 'Зехтин с аромат на чесън',
+    maple_syrup: 'Кленов сироп',
+  });
+  Object.assign(MP.NAMES.bg.recipe, {
+    blueberry_porridge: 'Овесена каша с боровинки',
+    zucchini_scramble: 'Бъркани яйца с тиквичка и билки',
+    coconut_rice_pudding: 'Оризов пудинг с кокос и боровинки',
+    sweet_potato_hash: 'Тиган със сладки картофи и яйца',
+    herb_chicken_rice: 'Пиле с билки, ориз, тиквичка и моркови',
+    salmon_dill_potatoes: 'Сьомга с картофи с копър и броколи',
+    turkey_quinoa_peppers: 'Чушки, пълнени с пуйка и киноа',
+    mild_coconut_curry: 'Меко кокосово пилешко къри',
+    butternut_risotto: 'Ризото с тиква бътърнът',
+    ginger_fish_noodles: 'Риба с джинджифил и оризови нудли',
+    mozzarella_zucchini_bake: 'Запеканка с тиквички, картофи и моцарела',
+    beef_sweet_potato_skillet: 'Тиган с телешко и сладки картофи',
+    quinoa_veg_bowl: 'Купа с киноа и хрупкави зеленчуци',
+    blueberry_chia_pudding: 'Чиа пудинг с боровинки',
+    mozzarella_cucumber: 'Моцарела с краставица и билки',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.th = {
-    appName: 'ตะกร้าประจำสัปดาห์', tagline: 'ซูเปอร์มาร์เก็ตของคุณ อาหารของคุณ ครอบครัวของคุณ วางแผนให้ทุกสัปดาห์',
+    appName: 'Prepcart', tagline: 'ซูเปอร์มาร์เก็ตของคุณ อาหารของคุณ ครอบครัวของคุณ วางแผนให้ทุกสัปดาห์',
     next: 'ถัดไป', back: 'ย้อนกลับ', close: 'ปิด', remove: 'ลบ', stepOf: (a, b) => `${a} จาก ${b}`,
     placeTitle: 'คุณซื้อของที่ไหน?', placeHint: 'ร้านค้า ราคา ภาษา และหน่วยวัดจะเปลี่ยนตามที่คุณเลือก',
     language: 'ภาษา', country: 'ประเทศ', units: 'หน่วยวัด', metric: 'เมตริก (กรัม กก. ลิตร)', imperial: 'แบบสหรัฐฯ (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'ค้นหาสูตร…', allRecipes: 'ทั้งหมด', ingredients: 'วัตถุดิบ', method: 'วิธีทำ', perServing: 'ต่อที่',
     cookFor: (n) => `ปริมาณสำหรับ ${n} ที่`, favorite: 'รายการโปรด', notForHousehold: 'ไม่เหมาะกับรูปแบบอาหารหรืออาการแพ้ของใครเลย',
     stepsInEnglish: 'ขั้นตอนการทำแสดงเป็นภาษาอังกฤษ',
-    premiumTitle: 'ตะกร้าประจำสัปดาห์ พรีเมียม', premiumPitch: 'ซื้อของสบาย ๆ ไม่เครียด ทุกสัปดาห์',
+    premiumTitle: 'Prepcart พรีเมียม', premiumPitch: 'ซื้อของสบาย ๆ ไม่เครียด ทุกสัปดาห์',
     perk1: 'แผนอาหารรายสัปดาห์ทั้งครอบครัว ตามรูปแบบอาหารของแต่ละคน', perk2: 'รายการซื้อของสำหรับซูเปอร์มาร์เก็ตของคุณ พร้อมปริมาณ',
     perk3: 'สินค้าและราคาจริงจากร้านของคุณ', perk4: 'สูตรจากอาหารที่คุณชอบ',
     planMonthly: 'รายเดือน', planYearly: 'รายปี', perMonth: '/เดือน', perYear: '/ปี', savePct: (n) => `ประหยัด ${n}%`,
@@ -191,5 +191,49 @@
     referralJoined: (name) => `เข้าร่วมผ่านลิงก์ของ ${name}`,
     referralBad: 'รหัสแนะนำนี้ไม่ถูกต้อง',
     referralAlready: 'ใช้ข้อเสนอจากการแนะนำแล้ว',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.th, {
+    needs: 'ความต้องการด้านสุขภาพและไลฟ์สไตล์ (ไม่บังคับ ใช้ร่วมกับรูปแบบอาหารได้)',
+    need_low_histamine: 'ฮีสตามีนต่ำ',
+    need_low_fodmap: 'FODMAP ต่ำ (ลำไส้ไวต่อสิ่งกระตุ้น / IBS)',
+    need_mind: 'MIND (สุขภาพสมอง)',
+    need_dash: 'DASH (หัวใจและความดัน)',
+    need_blood_sugar: 'เป็นมิตรต่อระดับน้ำตาลในเลือด',
+    need_anti_inflammatory: 'ต้านการอักเสบ',
+    need_halal: 'ฮาลาล',
+    need_kosher: 'โคเชอร์',
+    needNote_low_histamine: 'กินอาหารตอนสด: ของเหลือให้แช่แข็งแทนการเก็บในตู้เย็น เพราะฮีสตามีนจะเพิ่มขึ้นตามเวลา',
+    needNote_halal: 'เลือกเนื้อสัตว์ที่ได้รับรองฮาลาลเมื่อซื้อของ',
+    needNote_kosher: 'เลือกเนื้อสัตว์และสินค้าที่ได้รับรองโคเชอร์เมื่อซื้อของ',
+    needNote_medical: 'นี่เป็นตัวช่วยวางแผน ไม่ใช่คำแนะนำทางการแพทย์ หากมีโรคประจำตัว โปรดทำตามคำแนะนำของแพทย์หรือนักโภชนาการ',
+    theme: 'ลักษณะ',
+    theme_system: 'อัตโนมัติ',
+    theme_light: 'สว่าง',
+    theme_dark: 'มืด',
+  });
+  Object.assign(MP.NAMES.th.ing, {
+    blueberries: 'บลูเบอร์รี่แช่แข็ง',
+    butternut: 'ฟักทองบัตเตอร์นัท',
+    mozzarella: 'มอซซาเรลลาสด',
+    garlic_oil: 'น้ำมันมะกอกกลิ่นกระเทียม',
+    maple_syrup: 'เมเปิลไซรัป',
+  });
+  Object.assign(MP.NAMES.th.recipe, {
+    blueberry_porridge: 'โจ๊กข้าวโอ๊ตบลูเบอร์รี่',
+    zucchini_scramble: 'ไข่คนซูกินีและสมุนไพร',
+    coconut_rice_pudding: 'พุดดิ้งข้าวกะทิกับบลูเบอร์รี่',
+    sweet_potato_hash: 'มันหวานผัดกับไข่',
+    herb_chicken_rice: 'ไก่สมุนไพรกับข้าว ซูกินี และแครอท',
+    salmon_dill_potatoes: 'แซลมอนกับมันฝรั่งผักชีลาวและบร็อคโคลี',
+    turkey_quinoa_peppers: 'พริกหยวกยัดไส้ไก่งวงและคีนัว',
+    mild_coconut_curry: 'แกงกะหรี่ไก่กะทิรสอ่อน',
+    butternut_risotto: 'ริซอตโต้ฟักทองบัตเตอร์นัท',
+    ginger_fish_noodles: 'ปลาผัดขิงกับเส้นหมี่ข้าว',
+    mozzarella_zucchini_bake: 'ซูกินีและมันฝรั่งอบมอซซาเรลลา',
+    beef_sweet_potato_skillet: 'กระทะเนื้อวัวกับมันหวาน',
+    quinoa_veg_bowl: 'ชามคีนัวผักกรอบ',
+    blueberry_chia_pudding: 'พุดดิ้งเจียบลูเบอร์รี่',
+    mozzarella_cucumber: 'มอซซาเรลลากับแตงกวาและสมุนไพร',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -12,6 +12,10 @@
   const $app = document.getElementById('app');
   const $modal = document.getElementById('modal');
   const $toast = document.getElementById('toast');
+  try { // show the chosen light/dark theme straight away
+    const theme = localStorage.getItem('prepcart-theme');
+    if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+  } catch (e) { /* private mode */ }
   const DAY = 864e5;
 
   // ---------- state ----------
@@ -30,7 +34,7 @@
       prefs: { mealsPerDay: 3, maxTime: 60, budget: 'balanced', weeklyBudget: '', cuisines: [] },
       week: { startedAt: Date.now(), items: [] }, lastWeek: null,
       favorites: [], checked: {}, products: {}, extras: [],
-      trialStart: null, premiumCachedUntil: 0, access: null, referral: null,
+      trialStart: null, premiumCachedUntil: 0, access: null, referral: null, theme: 'system',
     };
   }
 
@@ -180,7 +184,7 @@
       $modal.innerHTML = `
         <div class="sheet account-sheet" role="dialog" aria-modal="true" aria-label="${esc(t(mode === 'signin' ? 'signIn' : mode === 'reset' ? 'forgotPassword' : 'signUp'))}">
           <button type="button" class="icon-btn close" data-close aria-label="${t('close')}">✕</button>
-          <div class="logo center">🧺</div>
+          <div class="logo center"><img class="logo-img" src="icon.svg" alt=""></div>
           <h2 class="center">${t(mode === 'signin' ? 'signIn' : mode === 'reset' ? 'forgotPassword' : 'signUp')}</h2>
           ${mode === 'signup' && opts.intro ? `<p class="muted small center">${t('accountWhy')}</p>` : ''}
           ${state.referral && mode === 'signup' ? `<p class="good small center">🎁 ${esc(t('referralBanner', state.referral.name, Math.round(MP.BILLING_CONFIG.affiliateTrialDays / 30)))}</p>` : ''}
@@ -350,6 +354,12 @@
         <p class="note" data-child-note ${isChild ? '' : 'hidden'}>${t('childNote')}</p>
         <label class="field" data-goal ${isChild ? 'hidden' : ''}><span>${t('goal')}</span>${select('goal', m.goal, opt('goal_', MP.GOALS))}</label>
         <label class="field"><span>${t('diet')}</span>${select('diet', m.diet, opt('diet_', MP.DIETS))}</label>
+        <div class="field"><span>${t('needs')}</span>
+          <div class="chips">${MP.NEEDS.map((n) => `
+            <button type="button" class="chip ${(m.needs || []).includes(n) ? 'on' : ''}" data-need="${n}">${t('need_' + n)}</button>`).join('')}
+          </div>
+          ${needNotes(m.needs || [])}
+        </div>
         <div class="field"><span>${t('allergies')}</span>
           <div class="chips">${MP.ALLERGENS.map((a) => `
             <button type="button" class="chip ${m.allergies.includes(a) ? 'on' : ''}" data-allergy="${a}">${t('al_' + a)}</button>`).join('')}
@@ -357,6 +367,16 @@
         </div>
         <label class="field"><span>${t('dislikes')}</span><input data-f="dislikes" value="${esc(m.dislikes)}" placeholder="${t('dislikesHint')}" autocomplete="off" maxlength="200"></label>
       </div>`;
+  }
+
+  // Short practical notes for the needs a person has ticked.
+  function needNotes(needs) {
+    const notes = [];
+    if (needs.includes('low_histamine')) notes.push(t('needNote_low_histamine'));
+    if (needs.includes('halal')) notes.push(t('needNote_halal'));
+    if (needs.includes('kosher')) notes.push(t('needNote_kosher'));
+    if (needs.some((n) => ['low_histamine', 'low_fodmap', 'blood_sugar', 'dash'].includes(n))) notes.push(t('needNote_medical'));
+    return notes.map((x) => `<p class="note">${esc(x)}</p>`).join('');
   }
 
   function peopleFields() {
@@ -473,7 +493,7 @@
     const last = state.step === STEPS.length - 1;
     $app.innerHTML = `
       <div class="screen onboarding">
-        ${state.step === 0 ? `<div class="hero"><div class="logo">🧺</div><h1>${t('appName')}</h1><p>${t('tagline')}</p></div>` : ''}
+        ${state.step === 0 ? `<div class="hero"><div class="logo"><img class="logo-img" src="icon.svg" alt=""></div><h1>${t('appName')}</h1><p>${t('tagline')}</p></div>` : ''}
         ${progress(state.step + 1, STEPS.length)}
         <h2>${esc(titles[step])}</h2>
         ${hints[step] ? `<p class="muted">${hints[step]}</p>` : ''}
@@ -518,7 +538,7 @@
     const daysLeft = premium.reason === 'trial' && premium.trialEndsAt ? Math.max(0, Math.ceil((premium.trialEndsAt - Date.now()) / DAY)) : null;
     $app.innerHTML = `
       <header class="topbar">
-        <div class="brand">🧺 ${t('appName')}</div>
+        <div class="brand"><img class="brand-logo" src="icon.svg" alt="">${t('appName')}</div>
         <button type="button" class="pill" data-tab="profile">${MP.flag(state.country)} ${esc(store.name)}</button>
       </header>
       ${daysLeft !== null && !locked ? `<button type="button" class="trial-bar" data-tab="paywall">⏳ ${esc(t('trialLeft', daysLeft))} · ${t('seePlans')}</button>` : ''}
@@ -719,6 +739,8 @@
         ${manage ? `<a class="btn ghost wide" href="${esc(manage)}" target="_blank" rel="noopener">${t('manageSub')}</a>` : ''}
         ${MP.billing.provider === 'store' ? `<button type="button" class="btn ghost wide" data-restore>${t('restore')}</button>` : ''}
       </div>
+      <h2>${t('theme')}</h2>
+      <div class="card form">${segmented('theme', state.theme || 'system', [['system', t('theme_system')], ['light', t('theme_light')], ['dark', t('theme_dark')]])}</div>
       <h2>${t('privacyTitle')}</h2>
       <div class="card form">
         <p>${MP.secureStore.encrypted ? '🔒 ' + t('encryptedOn') : '⚠ ' + t('encryptedOff')}</p>
@@ -745,7 +767,7 @@
     const days = MP.trialDaysFor(state);
     return `
       <div class="paywall">
-        <div class="logo">🧺</div>
+        <div class="logo"><img class="logo-img" src="icon.svg" alt=""></div>
         <h2>${t('premiumTitle')}</h2>
         ${trialOver ? `<p class="bad">${t('trialOver')}</p>` : ''}
         <p class="muted">${t('premiumPitch')}</p>
@@ -1112,6 +1134,13 @@
     if (d.set) return setOption(d.set, d.v);
     if (d.count) { setMemberCount(state.members.length + Number(d.count)); save(); return render(); }
     if (d.memberTab) { ui.member = Number(d.memberTab); return render(); }
+    if (d.need) {
+      const m = memberAt(b);
+      m.needs = m.needs || [];
+      const i = m.needs.indexOf(d.need);
+      if (i >= 0) m.needs.splice(i, 1); else m.needs.push(d.need);
+      save(); return render();
+    }
     if (d.allergy) {
       const m = memberAt(b);
       const i = m.allergies.indexOf(d.allergy);
@@ -1244,7 +1273,7 @@
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'weekly-basket-my-data.json';
+    a.download = 'prepcart-my-data.json';
     document.body.appendChild(a);
     a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -1252,6 +1281,7 @@
 
   function setOption(field, v) {
     if (field === 'units') state.units = v;
+    else if (field === 'theme') { state.theme = v; applyTheme(); }
     else if (field === 'weekView') ui.weekView = v;
     else if (field === 'household') {
       state.household = v;
@@ -1266,7 +1296,19 @@
     if (e.key === 'Escape' && $modal.classList.contains('open')) closeModal();
   });
 
+  // Light / dark / follow the phone. Also remembered outside the encrypted store so the next start
+  // shows the right colours before the data is decrypted.
+  function applyTheme() {
+    const theme = state.theme || 'system';
+    if (theme === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem('prepcart-theme', theme); } catch (e) { /* private mode */ }
+    const dark = theme === 'dark' || (theme === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = dark ? '#14121a' : '#7e5bc2';
+  }
+
   function render() {
+    applyTheme();
     document.documentElement.lang = state.lang;
     document.documentElement.dir = MP.RTL_LANGUAGES.includes(state.lang) ? 'rtl' : 'ltr';
     document.title = t('appName');

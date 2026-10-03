@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.ru = {
-    appName: 'Корзина недели', tagline: 'Ваш магазин, ваше питание, ваша семья. Спланировано на каждую неделю.',
+    appName: 'Prepcart', tagline: 'Ваш магазин, ваше питание, ваша семья. Спланировано на каждую неделю.',
     next: 'Далее', back: 'Назад', close: 'Закрыть', remove: 'Удалить', stepOf: (a, b) => `${a} из ${b}`,
     placeTitle: 'Где вы делаете покупки?', placeHint: 'Магазины, цены, язык и единицы измерения зависят от вашего выбора.',
     language: 'Язык', country: 'Страна', units: 'Единицы', metric: 'Метрические (г, кг, л)', imperial: 'США (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Поиск рецептов…', allRecipes: 'Все', ingredients: 'Ингредиенты', method: 'Приготовление', perServing: 'На порцию',
     cookFor: (n) => `Количество на ${n} порц.`, favorite: 'Избранное', notForHousehold: 'Не подходит никому по питанию или аллергиям',
     stepsInEnglish: 'Шаги рецепта показаны на английском.',
-    premiumTitle: 'Корзина недели Премиум', premiumPitch: 'Покупки без стресса — каждую неделю.',
+    premiumTitle: 'Prepcart Премиум', premiumPitch: 'Покупки без стресса — каждую неделю.',
     perk1: 'Планы на неделю для всей семьи с учётом питания каждого', perk2: 'Списки покупок для вашего супермаркета с количествами',
     perk3: 'Реальные товары и цены вашего магазина', perk4: 'Рецепты любимых кухонь',
     planMonthly: 'Ежемесячно', planYearly: 'Ежегодно', perMonth: '/мес.', perYear: '/год', savePct: (n) => `Экономия ${n}%`,
@@ -195,5 +195,49 @@
     referralJoined: (name) => `Вы присоединились по ссылке ${name}`,
     referralBad: 'Этот реферальный код недействителен.',
     referralAlready: 'Реферальное предложение уже применено.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.ru, {
+    needs: 'Здоровье и образ жизни (по желанию, вместе с типом питания)',
+    need_low_histamine: 'С низким содержанием гистамина',
+    need_low_fodmap: 'Low FODMAP (чувствительный кишечник / СРК)',
+    need_mind: 'MIND (здоровье мозга)',
+    need_dash: 'DASH (сердце и давление)',
+    need_blood_sugar: 'Для стабильного сахара в крови',
+    need_anti_inflammatory: 'Противовоспалительное',
+    need_halal: 'Халяль',
+    need_kosher: 'Кошер',
+    needNote_low_histamine: 'Ешьте блюда свежими: остатки замораживайте, а не храните в холодильнике, потому что гистамин со временем накапливается.',
+    needNote_halal: 'Покупайте мясо с сертификатом халяль.',
+    needNote_kosher: 'Покупайте мясо и продукты с кошерным сертификатом.',
+    needNote_medical: 'Это помощь в планировании, а не медицинский совет. При заболеваниях следуйте рекомендациям врача или диетолога.',
+    theme: 'Оформление',
+    theme_system: 'Автоматически',
+    theme_light: 'Светлое',
+    theme_dark: 'Тёмное',
+  });
+  Object.assign(MP.NAMES.ru.ing, {
+    blueberries: 'Замороженная голубика',
+    butternut: 'Мускатная тыква (баттернат)',
+    mozzarella: 'Свежая моцарелла',
+    garlic_oil: 'Оливковое масло со вкусом чеснока',
+    maple_syrup: 'Кленовый сироп',
+  });
+  Object.assign(MP.NAMES.ru.recipe, {
+    blueberry_porridge: 'Овсяная каша с голубикой',
+    zucchini_scramble: 'Яичница-болтунья с кабачком и зеленью',
+    coconut_rice_pudding: 'Рисовый пудинг на кокосовом молоке с голубикой',
+    sweet_potato_hash: 'Сковорода с бататом и яйцами',
+    herb_chicken_rice: 'Курица с травами, рисом, кабачком и морковью',
+    salmon_dill_potatoes: 'Лосось с картофелем с укропом и брокколи',
+    turkey_quinoa_peppers: 'Перцы, фаршированные индейкой и киноа',
+    mild_coconut_curry: 'Мягкое кокосовое карри с курицей',
+    butternut_risotto: 'Ризотто с тыквой баттернат',
+    ginger_fish_noodles: 'Рыба с имбирём и рисовой лапшой',
+    mozzarella_zucchini_bake: 'Запеканка из кабачков и картофеля с моцареллой',
+    beef_sweet_potato_skillet: 'Сковорода с говядиной и бататом',
+    quinoa_veg_bowl: 'Боул с киноа и хрустящими овощами',
+    blueberry_chia_pudding: 'Чиа-пудинг с голубикой',
+    mozzarella_cucumber: 'Моцарелла с огурцом и зеленью',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

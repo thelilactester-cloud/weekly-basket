@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.hi = {
-    appName: 'साप्ताहिक टोकरी', tagline: 'आपकी दुकान, आपकी डाइट, आपका हफ़्ता — सब प्लान किया हुआ।',
+    appName: 'Prepcart', tagline: 'आपकी दुकान, आपकी डाइट, आपका हफ़्ता — सब प्लान किया हुआ।',
     next: 'आगे', back: 'पीछे', remove: 'हटाएँ', close: 'बंद करें',
     stepOf: (a, b) => `${b} में से ${a}`,
     country: 'देश', 
@@ -133,7 +133,7 @@
     mealPrep: 'इस हफ़्ते क्या पकाना है', newWeek: 'नया हफ़्ता शुरू करें',
     newWeekConfirm: 'नया हफ़्ता शुरू करें? इस हफ़्ते की रेसिपी, टिक और अतिरिक्त सामान हट जाएँगे।',
     allRecipes: 'सभी', notForHousehold: 'किसी की डाइट या एलर्जी से मेल नहीं खाता',
-    premiumTitle: 'साप्ताहिक टोकरी प्रीमियम', premiumPitch: 'हर हफ़्ते बिना तनाव की खरीदारी।',
+    premiumTitle: 'Prepcart प्रीमियम', premiumPitch: 'हर हफ़्ते बिना तनाव की खरीदारी।',
     perk1: 'पूरे परिवार के लिए साप्ताहिक प्लान, हर व्यक्ति की डाइट के साथ', perk2: 'आपके सुपरमार्केट के लिए मात्रा सहित खरीदारी सूची',
     perk3: 'आपकी दुकान के असली प्रोडक्ट और कीमतें', perk4: 'आपकी पसंदीदा व्यंजन शैलियों की रेसिपी',
     planMonthly: 'मासिक', planYearly: 'वार्षिक', perMonth: '/महीना', perYear: '/साल', savePct: (n) => `${n}% बचाएँ`,
@@ -224,5 +224,49 @@
     referralJoined: (name) => `${name} के लिंक से जुड़े`,
     referralBad: 'यह रेफ़रल कोड मान्य नहीं है।',
     referralAlready: 'रेफ़रल ऑफ़र पहले से लागू है।',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.hi, {
+    needs: 'सेहत और जीवनशैली की ज़रूरतें (वैकल्पिक, डाइट के साथ)',
+    need_low_histamine: 'कम हिस्टामिन',
+    need_low_fodmap: 'लो FODMAP (संवेदनशील पेट / IBS)',
+    need_mind: 'MIND (दिमाग़ की सेहत)',
+    need_dash: 'DASH (दिल और ब्लड प्रेशर)',
+    need_blood_sugar: 'ब्लड शुगर के अनुकूल',
+    need_anti_inflammatory: 'सूजन-रोधी',
+    need_halal: 'हलाल',
+    need_kosher: 'कोशर',
+    needNote_low_histamine: 'खाना ताज़ा खाएँ: बचा हुआ खाना फ़्रिज में रखने के बजाय फ़्रीज़ करें, क्योंकि समय के साथ हिस्टामिन बढ़ता है।',
+    needNote_halal: 'खरीदारी में हलाल-प्रमाणित मांस चुनें।',
+    needNote_kosher: 'खरीदारी में कोशर-प्रमाणित मांस और उत्पाद चुनें।',
+    needNote_medical: 'यह योजना बनाने में मदद है, चिकित्सा सलाह नहीं। अगर आपको कोई बीमारी है, तो अपने डॉक्टर या डाइटीशियन की सलाह मानें।',
+    theme: 'दिखावट',
+    theme_system: 'स्वचालित',
+    theme_light: 'हल्का',
+    theme_dark: 'गहरा',
+  });
+  Object.assign(MP.NAMES.hi.ing, {
+    blueberries: 'फ़्रोज़न ब्लूबेरी',
+    butternut: 'बटरनट स्क्वैश',
+    mozzarella: 'ताज़ा मोज़ेरेला',
+    garlic_oil: 'लहसुन-सुगंधित जैतून तेल',
+    maple_syrup: 'मेपल सिरप',
+  });
+  Object.assign(MP.NAMES.hi.recipe, {
+    blueberry_porridge: 'ब्लूबेरी ओट्स दलिया',
+    zucchini_scramble: 'तोरी और हर्ब्स के साथ भुर्जी',
+    coconut_rice_pudding: 'नारियल चावल की खीर ब्लूबेरी के साथ',
+    sweet_potato_hash: 'शकरकंद और अंडे की भुजिया',
+    herb_chicken_rice: 'हर्ब चिकन चावल, तोरी और गाजर के साथ',
+    salmon_dill_potatoes: 'सोए वाले आलू और ब्रोकली के साथ सैल्मन',
+    turkey_quinoa_peppers: 'टर्की और क्विनोआ से भरी शिमला मिर्च',
+    mild_coconut_curry: 'हल्की नारियल चिकन करी',
+    butternut_risotto: 'बटरनट स्क्वैश रिसोट्टो',
+    ginger_fish_noodles: 'अदरक वाली मछली और राइस नूडल्स',
+    mozzarella_zucchini_bake: 'मोज़ेरेला के साथ तोरी-आलू बेक',
+    beef_sweet_potato_skillet: 'बीफ़ और शकरकंद स्किलेट',
+    quinoa_veg_bowl: 'कुरकुरी सब्ज़ियों वाला क्विनोआ बाउल',
+    blueberry_chia_pudding: 'ब्लूबेरी चिया पुडिंग',
+    mozzarella_cucumber: 'मोज़ेरेला, खीरा और हर्ब्स',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

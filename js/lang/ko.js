@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.ko = {
-    appName: '위클리 바스켓', tagline: '내 마트, 내 식단, 내 가족. 매주 계획해 드려요.',
+    appName: 'Prepcart', tagline: '내 마트, 내 식단, 내 가족. 매주 계획해 드려요.',
     next: '다음', back: '이전', close: '닫기', remove: '삭제', stepOf: (a, b) => `${a} / ${b}`,
     placeTitle: '어디서 장을 보세요?', placeHint: '매장, 가격, 언어와 단위가 선택에 맞춰 바뀌어요.',
     language: '언어', country: '국가', units: '단위', metric: '미터법 (g, kg, L)', imperial: '미국식 (oz, lb)',
@@ -72,7 +72,7 @@
     search: '레시피 검색…', allRecipes: '전체', ingredients: '재료', method: '만드는 법', perServing: '1인분 기준',
     cookFor: (n) => `${n}인분 분량`, favorite: '즐겨찾기', notForHousehold: '누구의 식단·알레르기에도 맞지 않아요',
     stepsInEnglish: '만드는 법은 영어로 표시돼요.',
-    premiumTitle: '위클리 바스켓 프리미엄', premiumPitch: '매주 장보기 부담을 덜어 드려요.',
+    premiumTitle: 'Prepcart 프리미엄', premiumPitch: '매주 장보기 부담을 덜어 드려요.',
     perk1: '가족 모두의 주간 식단, 각자의 식단까지 반영', perk2: '내 마트에 맞춘 분량 포함 장보기 목록',
     perk3: '내 매장의 실제 상품과 가격', perk4: '좋아하는 요리의 레시피',
     planMonthly: '월간', planYearly: '연간', perMonth: '/월', perYear: '/년', savePct: (n) => `${n}% 할인`,
@@ -190,5 +190,49 @@
     referralJoined: (name) => `${name} 님의 링크로 가입`,
     referralBad: '유효하지 않은 추천 코드예요.',
     referralAlready: '추천 혜택이 이미 적용되어 있어요.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.ko, {
+    needs: '건강·생활 방식 필요(선택, 식단과 함께)',
+    need_low_histamine: '저히스타민',
+    need_low_fodmap: '저포드맵(예민한 장 / 과민성 대장)',
+    need_mind: 'MIND 식단(뇌 건강)',
+    need_dash: 'DASH 식단(심장·혈압)',
+    need_blood_sugar: '혈당 친화',
+    need_anti_inflammatory: '항염',
+    need_halal: '할랄',
+    need_kosher: '코셔',
+    needNote_low_histamine: '음식은 신선할 때 드세요. 히스타민은 시간이 지나면 늘어나므로 남은 음식은 냉장 대신 냉동하세요.',
+    needNote_halal: '장볼 때 할랄 인증 고기를 고르세요.',
+    needNote_kosher: '장볼 때 코셔 인증 고기와 식품을 고르세요.',
+    needNote_medical: '계획을 돕는 정보일 뿐 의학적 조언이 아니에요. 질환이 있다면 의사나 영양사의 조언을 따르세요.',
+    theme: '화면 모드',
+    theme_system: '자동',
+    theme_light: '라이트',
+    theme_dark: '다크',
+  });
+  Object.assign(MP.NAMES.ko.ing, {
+    blueberries: '냉동 블루베리',
+    butternut: '버터넛 스쿼시',
+    mozzarella: '생 모차렐라',
+    garlic_oil: '마늘향 올리브유',
+    maple_syrup: '메이플 시럽',
+  });
+  Object.assign(MP.NAMES.ko.recipe, {
+    blueberry_porridge: '블루베리 오트밀 죽',
+    zucchini_scramble: '애호박 허브 스크램블 에그',
+    coconut_rice_pudding: '코코넛 라이스 푸딩과 블루베리',
+    sweet_potato_hash: '고구마 달걀 볶음',
+    herb_chicken_rice: '허브 치킨과 밥, 애호박, 당근',
+    salmon_dill_potatoes: '딜 감자와 브로콜리를 곁들인 연어',
+    turkey_quinoa_peppers: '칠면조와 퀴노아를 채운 파프리카',
+    mild_coconut_curry: '순한 코코넛 치킨 커리',
+    butternut_risotto: '버터넛 스쿼시 리소토',
+    ginger_fish_noodles: '생강 생선과 쌀국수',
+    mozzarella_zucchini_bake: '모차렐라 애호박 감자 오븐 구이',
+    beef_sweet_potato_skillet: '소고기 고구마 팬 요리',
+    quinoa_veg_bowl: '아삭한 채소 퀴노아 볼',
+    blueberry_chia_pudding: '블루베리 치아 푸딩',
+    mozzarella_cucumber: '모차렐라 오이 허브 샐러드',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

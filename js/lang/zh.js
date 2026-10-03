@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.zh = {
-    appName: '每周菜篮', tagline: '你的超市、你的饮食、你的一周，全都规划好。',
+    appName: 'Prepcart', tagline: '你的超市、你的饮食、你的一周，全都规划好。',
     next: '下一步', back: '返回', remove: '删除', close: '关闭',
     stepOf: (a, b) => `第 ${a} 步，共 ${b} 步`,
     country: '国家/地区', 
@@ -133,7 +133,7 @@
     mealPrep: '本周要做的菜', newWeek: '开始新的一周',
     newWeekConfirm: '开始新的一周？本周的食谱、勾选和额外商品将被清空。',
     allRecipes: '全部', notForHousehold: '不符合任何成员的饮食或过敏要求',
-    premiumTitle: '每周菜篮 高级版', premiumPitch: '每周购物，轻松无压力。',
+    premiumTitle: 'Prepcart 高级版', premiumPitch: '每周购物，轻松无压力。',
     perk1: '全家每周计划，照顾每个人的饮食', perk2: '按你的超市生成带数量的购物清单',
     perk3: '你常去商店的真实商品和价格', perk4: '来自你喜爱菜系的食谱',
     planMonthly: '按月', planYearly: '按年', perMonth: '/月', perYear: '/年', savePct: (n) => `省 ${n}%`,
@@ -224,5 +224,49 @@
     referralJoined: (name) => `通过 ${name} 的链接加入`,
     referralBad: '此邀请码无效。',
     referralAlready: '已使用邀请优惠。',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.zh, {
+    needs: '健康与生活方式需求（可选，可与饮食类型组合）',
+    need_low_histamine: '低组胺',
+    need_low_fodmap: '低 FODMAP（肠道敏感 / 肠易激）',
+    need_mind: 'MIND 饮食（大脑健康）',
+    need_dash: 'DASH 饮食（心脏与血压）',
+    need_blood_sugar: '稳定血糖',
+    need_anti_inflammatory: '抗炎',
+    need_halal: '清真',
+    need_kosher: '犹太洁食',
+    needNote_low_histamine: '菜要现做现吃：剩菜请冷冻，不要放冰箱冷藏，因为组胺会随时间增加。',
+    needNote_halal: '购物时请选择清真认证的肉类。',
+    needNote_kosher: '购物时请选择犹太洁食认证的肉类和食品。',
+    needNote_medical: '这只是规划帮助，不是医疗建议。如有疾病，请遵循医生或营养师的建议。',
+    theme: '外观',
+    theme_system: '自动',
+    theme_light: '浅色',
+    theme_dark: '深色',
+  });
+  Object.assign(MP.NAMES.zh.ing, {
+    blueberries: '冷冻蓝莓',
+    butternut: '奶油南瓜',
+    mozzarella: '新鲜马苏里拉奶酪',
+    garlic_oil: '蒜香橄榄油',
+    maple_syrup: '枫糖浆',
+  });
+  Object.assign(MP.NAMES.zh.recipe, {
+    blueberry_porridge: '蓝莓燕麦粥',
+    zucchini_scramble: '西葫芦香草炒蛋',
+    coconut_rice_pudding: '椰香蓝莓米布丁',
+    sweet_potato_hash: '红薯炒蛋',
+    herb_chicken_rice: '香草鸡肉配米饭、西葫芦和胡萝卜',
+    salmon_dill_potatoes: '莳萝土豆配三文鱼和西兰花',
+    turkey_quinoa_peppers: '火鸡藜麦酿彩椒',
+    mild_coconut_curry: '温和椰香咖喱鸡',
+    butternut_risotto: '奶油南瓜烩饭',
+    ginger_fish_noodles: '姜味鱼片米粉',
+    mozzarella_zucchini_bake: '马苏里拉西葫芦土豆焗',
+    beef_sweet_potato_skillet: '牛肉红薯锅',
+    quinoa_veg_bowl: '藜麦脆蔬碗',
+    blueberry_chia_pudding: '蓝莓奇亚籽布丁',
+    mozzarella_cucumber: '马苏里拉配黄瓜香草',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,31 +1,33 @@
 :root {
-  --bg: #f6f4ef;
+  /* Prepcart: lilac + green */
+  --bg: #f7f5fb;
   --card: #ffffff;
-  --ink: #1d1f1c;
-  --muted: #6b6f68;
-  --line: #e4e1d8;
-  --accent: #1f9d55;
+  --ink: #231f2e;
+  --muted: #6b6478;
+  --line: #e6e0f0;
+  --accent: #2f9a5c;
   --accent-ink: #ffffff;
-  --accent-soft: #e3f4ea;
+  --accent-soft: #e6f4ec;
+  --brand: #7e5bc2;
+  --brand-soft: #efe8fa;
   --bad: #c0392b;
   --good: #1f7a45;
   --radius: 18px;
-  --shadow: 0 6px 24px rgba(30, 30, 20, 0.08);
+  --shadow: 0 6px 24px rgba(50, 30, 80, 0.08);
+  color-scheme: light;
 }
+/* Dark: follows the phone unless the person picked Light or Dark in Profile → Appearance. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121412;
-    --card: #1c1f1c;
-    --ink: #eef0ec;
-    --muted: #9aa097;
-    --line: #2c302b;
-    --accent: #3cc47a;
-    --accent-ink: #0b1a10;
-    --accent-soft: #183324;
-    --bad: #ff7b6b;
-    --good: #5fd894;
-    --shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  :root:not([data-theme="light"]) {
+    --bg: #14121a; --card: #1e1b26; --ink: #efecf5; --muted: #a39db0; --line: #2e2a38;
+    --accent: #4cc37f; --accent-ink: #0b1a10; --accent-soft: #1a3326; --brand: #b9a2e3; --brand-soft: #2a2338;
+    --bad: #ff7b6b; --good: #5fd894; --shadow: 0 6px 24px rgba(0, 0, 0, 0.4); color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #14121a; --card: #1e1b26; --ink: #efecf5; --muted: #a39db0; --line: #2e2a38;
+  --accent: #4cc37f; --accent-ink: #0b1a10; --accent-soft: #1a3326; --brand: #b9a2e3; --brand-soft: #2a2338;
+  --bad: #ff7b6b; --good: #5fd894; --shadow: 0 6px 24px rgba(0, 0, 0, 0.4); color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -88,7 +90,7 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accen
 .chip {
   border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 0.9rem;
 }
-.chip.on { background: var(--accent-soft); border-color: var(--accent); }
+.chip.on { background: var(--brand-soft); border-color: var(--brand); }
 .chip.small { padding: 3px 10px; font-size: 0.78rem; }
 .stores { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
 .store {
@@ -109,7 +111,7 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accen
 .hero .lang { max-width: 260px; margin: 0 auto; }
 .progress { display: flex; gap: 6px; align-items: center; margin: 14px 0 18px; }
 .progress i { flex: 1; height: 4px; border-radius: 4px; background: var(--line); }
-.progress i.on { background: var(--accent); }
+.progress i.on { background: var(--brand); }
 .progress small { color: var(--muted); margin-inline-start: 6px; white-space: nowrap; }
 .progress.dashes { gap: 4px; margin: 8px 0 18px; }
 .actions { display: flex; justify-content: space-between; gap: 12px; }
@@ -146,7 +148,7 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accen
   font-size: 0.75rem; color: var(--muted); padding: 6px; cursor: pointer;
 }
 .tabs button span { font-size: 1.3rem; }
-.tabs button.on { color: var(--accent); font-weight: 700; }
+.tabs button.on { color: var(--brand); font-weight: 700; }
 .section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 
 /* plan */
@@ -359,3 +361,11 @@ a.btn { display: block; text-align: center; text-decoration: none; color: inheri
 .or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.85rem; margin: 14px 0 4px; }
 .or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .account-sheet .link { color: var(--accent); font: inherit; padding: 6px; }
+
+/* brand */
+.brand { color: var(--brand); }
+.brand .brand-logo { width: 26px; height: 26px; border-radius: 7px; vertical-align: -6px; margin-inline-end: 6px; }
+.logo-img { width: 72px; height: 72px; border-radius: 18px; display: inline-block; }
+.hero .logo-img { width: 88px; height: 88px; border-radius: 22px; }
+.account-sheet .logo-img { width: 56px; height: 56px; border-radius: 14px; }
+.splash img { border-radius: 24px; }

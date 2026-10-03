@@ -443,3 +443,35 @@ test('free-access codes: signed codes work, changed / expired / revoked / unknow
   MP.REVOKED_CODES.pop();
   delete MP.ACCESS_KEYS.test;
 });
+
+// ───────── health and lifestyle needs ─────────
+
+test('health needs filter recipes and every need has breakfasts, mains and snacks', () => {
+  for (const need of MP.NEEDS) {
+    for (const id of [...MP.NEED_RULES[need].avoid, ...(MP.NEED_RULES[need].favour || [])]) assert.ok(MP.INGREDIENTS[id], `${need}: unknown ${id}`);
+    for (const meal of ['breakfast', 'main', 'snack']) {
+      assert.ok(MP.RECIPES.some((r) => r.meal.includes(meal) && MP.fitsNeeds(r, [need])), `${need} has no ${meal}`);
+    }
+  }
+  const hasTomato = MP.RECIPES.find((r) => r.ing.some(([id]) => id === 'tomato'));
+  assert.equal(MP.fitsNeeds(hasTomato, ['low_histamine']), false);
+  const garlicky = MP.RECIPES.find((r) => r.ing.some(([id]) => id === 'garlic'));
+  assert.equal(MP.fitsNeeds(garlicky, ['low_fodmap']), false);
+  assert.equal(MP.fitsNeeds(MP.RECIPE_BY_ID.turkey_quinoa_peppers, ['kosher']), false, 'meat with dairy is not kosher');
+  assert.equal(MP.fitsNeeds(MP.RECIPE_BY_ID.herb_chicken_rice, ['kosher', 'low_histamine', 'low_fodmap']), true);
+  for (const r of MP.RECIPES) if (MP.fitsNeeds(r, ['blood_sugar'])) assert.ok(MP.recipeNutrition(r).carbs <= 55, r.id);
+});
+
+test('a family member on low-histamine + low-FODMAP still gets a full week, separate from the others', () => {
+  const st = household([
+    MP.newMember({ name: 'Ana', diet: 'omnivore', needs: ['low_histamine', 'low_fodmap'] }),
+    MP.newMember({ name: 'Ion', diet: 'omnivore' }),
+  ]);
+  MP.autoFillWeek(st, 7);
+  const ana = st.members[0].id;
+  const cov = MP.coverage(st);
+  for (const slot of ['breakfast', 'lunch', 'dinner']) assert.equal(cov[slot][ana], 7, `Ana ${slot}`);
+  for (const it of st.week.items) {
+    if (it.eaters.includes(ana)) assert.ok(MP.fitsNeeds(MP.RECIPE_BY_ID[it.recipeId], ['low_histamine', 'low_fodmap']), it.recipeId);
+  }
+});

@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.cs = {
-    appName: 'Košík týdne', tagline: 'Tvůj obchod, tvoje strava, tvoje rodina. Naplánováno každý týden.',
+    appName: 'Prepcart', tagline: 'Tvůj obchod, tvoje strava, tvoje rodina. Naplánováno každý týden.',
     next: 'Dál', back: 'Zpět', close: 'Zavřít', remove: 'Odebrat', stepOf: (a, b) => `${a} z ${b}`,
     placeTitle: 'Kde nakupuješ?', placeHint: 'Obchody, ceny, jazyk a jednotky se řídí tvou volbou.',
     language: 'Jazyk', country: 'Země', units: 'Jednotky', metric: 'Metrické (g, kg, l)', imperial: 'USA (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Hledat recepty…', allRecipes: 'Vše', ingredients: 'Suroviny', method: 'Postup', perServing: 'Na porci',
     cookFor: (n) => `Množství pro ${n} porcí`, favorite: 'Oblíbené', notForHousehold: 'Nehodí se k ničí stravě ani alergiím',
     stepsInEnglish: 'Postup receptu je v angličtině.',
-    premiumTitle: 'Košík týdne Premium', premiumPitch: 'Nákupy bez stresu, každý týden.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Nákupy bez stresu, každý týden.',
     perk1: 'Týdenní plány pro celou rodinu se stravou každého', perk2: 'Nákupní seznamy pro tvůj supermarket i s množstvím',
     perk3: 'Skutečné produkty a ceny z tvého obchodu', perk4: 'Recepty z kuchyní, které máš rád',
     planMonthly: 'Měsíčně', planYearly: 'Ročně', perMonth: '/měs.', perYear: '/rok', savePct: (n) => `Ušetříš ${n} %`,
@@ -193,5 +193,49 @@
     referralJoined: (name) => `Připojeno přes odkaz od ${name}`,
     referralBad: 'Tento kód doporučení není platný.',
     referralAlready: 'Nabídka z doporučení už je použitá.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.cs, {
+    needs: 'Zdravotní potřeby a životní styl (volitelné, ke zvolené stravě)',
+    need_low_histamine: 'Nízkohistaminová',
+    need_low_fodmap: 'Low FODMAP (citlivé střevo / IBS)',
+    need_mind: 'MIND (zdraví mozku)',
+    need_dash: 'DASH (srdce a tlak)',
+    need_blood_sugar: 'Šetrná k hladině cukru',
+    need_anti_inflammatory: 'Protizánětlivá',
+    need_halal: 'Halal',
+    need_kosher: 'Košer',
+    needNote_low_histamine: 'Jezte jídla čerstvá: zbytky zamrazte místo uchovávání v lednici, protože histamin časem přibývá.',
+    needNote_halal: 'Při nákupu vybírejte maso s certifikací halal.',
+    needNote_kosher: 'Při nákupu vybírejte maso a výrobky s certifikací košer.',
+    needNote_medical: 'Jde o pomoc s plánováním, ne o lékařskou radu. Máte-li onemocnění, řiďte se radou lékaře nebo nutričního terapeuta.',
+    theme: 'Vzhled',
+    theme_system: 'Automaticky',
+    theme_light: 'Světlý',
+    theme_dark: 'Tmavý',
+  });
+  Object.assign(MP.NAMES.cs.ing, {
+    blueberries: 'Mražené borůvky',
+    butternut: 'Dýně máslová',
+    mozzarella: 'Čerstvá mozzarella',
+    garlic_oil: 'Olivový olej s česnekem',
+    maple_syrup: 'Javorový sirup',
+  });
+  Object.assign(MP.NAMES.cs.recipe, {
+    blueberry_porridge: 'Ovesná kaše s borůvkami',
+    zucchini_scramble: 'Míchaná vajíčka s cuketou a bylinkami',
+    coconut_rice_pudding: 'Kokosová rýžová kaše s borůvkami',
+    sweet_potato_hash: 'Pánev se sladkými bramborami a vejci',
+    herb_chicken_rice: 'Bylinkové kuře s rýží, cuketou a mrkví',
+    salmon_dill_potatoes: 'Losos s koprovými bramborami a brokolicí',
+    turkey_quinoa_peppers: 'Papriky plněné krůtím masem a quinoou',
+    mild_coconut_curry: 'Jemné kokosové kuřecí kari',
+    butternut_risotto: 'Rizoto z máslové dýně',
+    ginger_fish_noodles: 'Zázvorová ryba s rýžovými nudlemi',
+    mozzarella_zucchini_bake: 'Zapečená cuketa s bramborami a mozzarellou',
+    beef_sweet_potato_skillet: 'Pánev s hovězím a sladkými bramborami',
+    quinoa_veg_bowl: 'Quinoa bowl s křupavou zeleninou',
+    blueberry_chia_pudding: 'Chia pudink s borůvkami',
+    mozzarella_cucumber: 'Mozzarella s okurkou a bylinkami',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

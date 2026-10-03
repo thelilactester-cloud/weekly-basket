@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.uk = {
-    appName: 'Кошик тижня', tagline: 'Ваш магазин, ваше харчування, ваша родина. Сплановано щотижня.',
+    appName: 'Prepcart', tagline: 'Ваш магазин, ваше харчування, ваша родина. Сплановано щотижня.',
     next: 'Далі', back: 'Назад', close: 'Закрити', remove: 'Видалити', stepOf: (a, b) => `${a} з ${b}`,
     placeTitle: 'Де ви купуєте продукти?', placeHint: 'Магазини, ціни, мова та одиниці виміру залежать від вашого вибору.',
     language: 'Мова', country: 'Країна', units: 'Одиниці', metric: 'Метричні (г, кг, л)', imperial: 'США (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Пошук рецептів…', allRecipes: 'Усі', ingredients: 'Інгредієнти', method: 'Приготування', perServing: 'На порцію',
     cookFor: (n) => `Кількість на ${n} порц.`, favorite: 'Обране', notForHousehold: 'Нікому не підходить за харчуванням чи алергіями',
     stepsInEnglish: 'Кроки рецепта показано англійською.',
-    premiumTitle: 'Кошик тижня Преміум', premiumPitch: 'Покупки без стресу — щотижня.',
+    premiumTitle: 'Prepcart Преміум', premiumPitch: 'Покупки без стресу — щотижня.',
     perk1: 'Плани на тиждень для всієї родини з урахуванням харчування кожного', perk2: 'Списки покупок для вашого супермаркету з кількостями',
     perk3: 'Справжні товари та ціни вашого магазину', perk4: 'Рецепти улюблених кухонь',
     planMonthly: 'Щомісяця', planYearly: 'Щороку', perMonth: '/міс.', perYear: '/рік', savePct: (n) => `Економія ${n}%`,
@@ -195,5 +195,49 @@
     referralJoined: (name) => `Ви приєдналися за посиланням від ${name}`,
     referralBad: 'Цей реферальний код недійсний.',
     referralAlready: 'Реферальну пропозицію вже застосовано.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.uk, {
+    needs: 'Потреби здоров’я та способу життя (необов’язково, разом із харчуванням)',
+    need_low_histamine: 'З низьким вмістом гістаміну',
+    need_low_fodmap: 'Low FODMAP (чутливий кишечник / СПК)',
+    need_mind: 'MIND (здоров’я мозку)',
+    need_dash: 'DASH (серце й тиск)',
+    need_blood_sugar: 'Для стабільного цукру в крові',
+    need_anti_inflammatory: 'Протизапальне',
+    need_halal: 'Халяль',
+    need_kosher: 'Кошер',
+    needNote_low_histamine: 'Їжте страви свіжими: залишки заморожуйте, а не зберігайте в холодильнику, бо гістамін з часом накопичується.',
+    needNote_halal: 'Купуйте м’ясо з сертифікатом халяль.',
+    needNote_kosher: 'Купуйте м’ясо та продукти з кошерним сертифікатом.',
+    needNote_medical: 'Це допомога в плануванні, а не медична порада. Якщо маєте захворювання, дотримуйтеся порад лікаря або дієтолога.',
+    theme: 'Вигляд',
+    theme_system: 'Автоматично',
+    theme_light: 'Світлий',
+    theme_dark: 'Темний',
+  });
+  Object.assign(MP.NAMES.uk.ing, {
+    blueberries: 'Заморожена лохина',
+    butternut: 'Мускатний гарбуз (батернат)',
+    mozzarella: 'Свіжа моцарела',
+    garlic_oil: 'Оливкова олія з ароматом часнику',
+    maple_syrup: 'Кленовий сироп',
+  });
+  Object.assign(MP.NAMES.uk.recipe, {
+    blueberry_porridge: 'Вівсяна каша з лохиною',
+    zucchini_scramble: 'Яєчня-бовтанка з кабачком і зеленню',
+    coconut_rice_pudding: 'Рисовий пудинг на кокосовому молоці з лохиною',
+    sweet_potato_hash: 'Сковорідка з бататом і яйцями',
+    herb_chicken_rice: 'Курка з травами, рисом, кабачком і морквою',
+    salmon_dill_potatoes: 'Лосось із картоплею з кропом і броколі',
+    turkey_quinoa_peppers: 'Перці, фаршировані індичкою та кіноа',
+    mild_coconut_curry: 'М’яке кокосове карі з куркою',
+    butternut_risotto: 'Різото з гарбузом батернат',
+    ginger_fish_noodles: 'Риба з імбиром і рисовою локшиною',
+    mozzarella_zucchini_bake: 'Запіканка з кабачків і картоплі з моцарелою',
+    beef_sweet_potato_skillet: 'Сковорідка з яловичиною та бататом',
+    quinoa_veg_bowl: 'Боул із кіноа та хрусткими овочами',
+    blueberry_chia_pudding: 'Чіа-пудинг із лохиною',
+    mozzarella_cucumber: 'Моцарела з огірком і зеленню',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

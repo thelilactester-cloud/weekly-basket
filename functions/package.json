@@ -1,8 +1,10 @@
 {
-  "name": "weekly-basket-functions",
+  "name": "prepcart-functions",
   "private": true,
   "main": "index.js",
-  "engines": { "node": "22" },
+  "engines": {
+    "node": "22"
+  },
   "scripts": {
     "test": "node --test test/*.test.js"
   },

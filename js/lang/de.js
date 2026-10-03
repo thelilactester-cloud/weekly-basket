@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.de = {
-    appName: 'Wochenkorb', tagline: 'Dein Markt, deine Ernährung, deine Woche, geplant.',
+    appName: 'Prepcart', tagline: 'Dein Markt, deine Ernährung, deine Woche, geplant.',
     next: 'Weiter', back: 'Zurück', remove: 'Entfernen', close: 'Schließen',
     stepOf: (a, b) => `${a} von ${b}`,
     country: 'Land', 
@@ -133,7 +133,7 @@
     mealPrep: 'Diese Woche kochen', newWeek: 'Neue Woche beginnen',
     newWeekConfirm: 'Neue Woche beginnen? Rezepte, Haken und zusätzliche Artikel dieser Woche werden gelöscht.',
     allRecipes: 'Alle', notForHousehold: 'Passt zu niemandes Ernährung oder Allergien',
-    premiumTitle: 'Wochenkorb Premium', premiumPitch: 'Einkaufen ohne Stress, jede Woche.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Einkaufen ohne Stress, jede Woche.',
     perk1: 'Wochenpläne für die ganze Familie, mit der Ernährung jeder Person', perk2: 'Einkaufslisten für deinen Supermarkt, mit Mengen',
     perk3: 'Echte Produkte und Preise aus deinem Markt', perk4: 'Rezepte aus deinen Lieblingsküchen',
     planMonthly: 'Monatlich', planYearly: 'Jährlich', perMonth: '/Monat', perYear: '/Jahr', savePct: (n) => `${n} % sparen`,
@@ -143,7 +143,7 @@
     terms: 'Nutzungsbedingungen', privacyPolicy: 'Datenschutzerklärung', primeCompare: (p) => `Günstiger als Amazon Prime (${p}/Monat)`,
     trialLeft: (n) => (n === 1 ? 'Testphase: noch 1 Tag' : `Testphase: noch ${n} Tage`), seePlans: 'Abos ansehen',
     trialOver: 'Deine kostenlose Testphase ist vorbei. Abonniere, um deine Wochen weiter zu planen.',
-    subscribeInApp: 'Abos gibt es in der Wochenkorb-App für iPhone und Android.',
+    subscribeInApp: 'Abos gibt es in der Prepcart-App für iPhone und Android.',
     premiumActive: 'Premium ist aktiv', subscription: 'Abo', manageSub: 'Abo verwalten',
     privacyTitle: 'Datenschutz & deine Daten', encryptedOn: 'Deine Daten sind verschlüsselt und nur auf diesem Gerät gespeichert.',
     encryptedOff: 'Dieser Browser kann Daten nicht verschlüsseln; sie bleiben nur auf diesem Gerät.',
@@ -224,5 +224,49 @@
     referralJoined: (name) => `Über den Link von ${name} beigetreten`,
     referralBad: 'Dieser Empfehlungscode ist ungültig.',
     referralAlready: 'Ein Empfehlungsangebot ist bereits aktiv.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.de, {
+    needs: 'Gesundheit und Lebensstil (optional, zusätzlich zur Ernährungsform)',
+    need_low_histamine: 'Histaminarm',
+    need_low_fodmap: 'FODMAP-arm (empfindlicher Darm / Reizdarm)',
+    need_mind: 'MIND (Gehirngesundheit)',
+    need_dash: 'DASH (Herz und Blutdruck)',
+    need_blood_sugar: 'Blutzuckerfreundlich',
+    need_anti_inflammatory: 'Entzündungshemmend',
+    need_halal: 'Halal',
+    need_kosher: 'Koscher',
+    needNote_low_histamine: 'Gerichte frisch essen: Reste lieber einfrieren statt im Kühlschrank aufbewahren, weil Histamin mit der Zeit zunimmt.',
+    needNote_halal: 'Beim Einkaufen halal-zertifiziertes Fleisch wählen.',
+    needNote_kosher: 'Beim Einkaufen koscher-zertifiziertes Fleisch und Produkte wählen.',
+    needNote_medical: 'Das ist eine Planungshilfe, kein medizinischer Rat. Bei Erkrankungen folge dem Rat deiner Ärztin, deines Arztes oder deiner Ernährungsberatung.',
+    theme: 'Darstellung',
+    theme_system: 'Automatisch',
+    theme_light: 'Hell',
+    theme_dark: 'Dunkel',
+  });
+  Object.assign(MP.NAMES.de.ing, {
+    blueberries: 'Tiefkühl-Heidelbeeren',
+    butternut: 'Butternut-Kürbis',
+    mozzarella: 'Frischer Mozzarella',
+    garlic_oil: 'Olivenöl mit Knoblaucharoma',
+    maple_syrup: 'Ahornsirup',
+  });
+  Object.assign(MP.NAMES.de.recipe, {
+    blueberry_porridge: 'Haferbrei mit Heidelbeeren',
+    zucchini_scramble: 'Rührei mit Zucchini und Kräutern',
+    coconut_rice_pudding: 'Kokos-Milchreis mit Heidelbeeren',
+    sweet_potato_hash: 'Süßkartoffel-Pfanne mit Eiern',
+    herb_chicken_rice: 'Kräuterhähnchen mit Reis, Zucchini und Karotten',
+    salmon_dill_potatoes: 'Lachs mit Dillkartoffeln und Brokkoli',
+    turkey_quinoa_peppers: 'Mit Pute und Quinoa gefüllte Paprika',
+    mild_coconut_curry: 'Mildes Kokos-Hähnchen-Curry',
+    butternut_risotto: 'Butternut-Risotto',
+    ginger_fish_noodles: 'Ingwer-Fisch mit Reisnudeln',
+    mozzarella_zucchini_bake: 'Zucchini-Kartoffel-Auflauf mit Mozzarella',
+    beef_sweet_potato_skillet: 'Rind-Süßkartoffel-Pfanne',
+    quinoa_veg_bowl: 'Quinoa-Bowl mit knackigem Gemüse',
+    blueberry_chia_pudding: 'Chia-Pudding mit Heidelbeeren',
+    mozzarella_cucumber: 'Mozzarella mit Gurke und Kräutern',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

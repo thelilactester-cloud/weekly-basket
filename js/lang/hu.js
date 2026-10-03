@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.hu = {
-    appName: 'Heti Kosár', tagline: 'A boltod, az étrended, a családod. Minden héten megtervezve.',
+    appName: 'Prepcart', tagline: 'A boltod, az étrended, a családod. Minden héten megtervezve.',
     next: 'Tovább', back: 'Vissza', close: 'Bezárás', remove: 'Eltávolítás', stepOf: (a, b) => `${a}/${b}`,
     placeTitle: 'Hol vásárolsz?', placeHint: 'A boltok, árak, a nyelv és a mértékegységek a választásodhoz igazodnak.',
     language: 'Nyelv', country: 'Ország', units: 'Mértékegység', metric: 'Metrikus (g, kg, l)', imperial: 'USA (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Receptek keresése…', allRecipes: 'Mind', ingredients: 'Hozzávalók', method: 'Elkészítés', perServing: 'Adagonként',
     cookFor: (n) => `Mennyiségek ${n} adagra`, favorite: 'Kedvenc', notForHousehold: 'Senki étrendjének vagy allergiájának nem felel meg',
     stepsInEnglish: 'A recept lépései angolul jelennek meg.',
-    premiumTitle: 'Heti Kosár Prémium', premiumPitch: 'Stresszmentes bevásárlás, minden héten.',
+    premiumTitle: 'Prepcart Prémium', premiumPitch: 'Stresszmentes bevásárlás, minden héten.',
     perk1: 'Heti tervek az egész családnak, mindenki étrendjével', perk2: 'Bevásárlólisták a szupermarketedhez, mennyiségekkel',
     perk3: 'Valódi termékek és árak a boltodból', perk4: 'Receptek a kedvenc konyháidból',
     planMonthly: 'Havi', planYearly: 'Éves', perMonth: '/hó', perYear: '/év', savePct: (n) => `${n}% megtakarítás`,
@@ -194,5 +194,49 @@
     referralJoined: (name) => `${name} linkjével csatlakoztál`,
     referralBad: 'Ez az ajánlókód nem érvényes.',
     referralAlready: 'Már van aktív ajánlói kedvezményed.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.hu, {
+    needs: 'Egészségi és életmódbeli igények (nem kötelező, az étrend mellé)',
+    need_low_histamine: 'Alacsony hisztamintartalmú',
+    need_low_fodmap: 'Alacsony FODMAP (érzékeny bél / IBS)',
+    need_mind: 'MIND (agyegészség)',
+    need_dash: 'DASH (szív és vérnyomás)',
+    need_blood_sugar: 'Vércukorbarát',
+    need_anti_inflammatory: 'Gyulladáscsökkentő',
+    need_halal: 'Halal',
+    need_kosher: 'Kóser',
+    needNote_low_histamine: 'Az ételeket frissen fogyaszd: a maradékot fagyaszd le, ne a hűtőben tárold, mert a hisztamin idővel nő.',
+    needNote_halal: 'Vásárláskor halal minősítésű húst válassz.',
+    needNote_kosher: 'Vásárláskor kóser minősítésű húst és termékeket válassz.',
+    needNote_medical: 'Ez tervezési segítség, nem orvosi tanács. Ha betegséged van, kövesd orvosod vagy dietetikusod tanácsát.',
+    theme: 'Megjelenés',
+    theme_system: 'Automatikus',
+    theme_light: 'Világos',
+    theme_dark: 'Sötét',
+  });
+  Object.assign(MP.NAMES.hu.ing, {
+    blueberries: 'Fagyasztott áfonya',
+    butternut: 'Vajtök',
+    mozzarella: 'Friss mozzarella',
+    garlic_oil: 'Fokhagymás olívaolaj',
+    maple_syrup: 'Juharszirup',
+  });
+  Object.assign(MP.NAMES.hu.recipe, {
+    blueberry_porridge: 'Áfonyás zabkása',
+    zucchini_scramble: 'Rántotta cukkinivel és fűszernövényekkel',
+    coconut_rice_pudding: 'Kókuszos tejberizs áfonyával',
+    sweet_potato_hash: 'Édesburgonyás serpenyő tojással',
+    herb_chicken_rice: 'Fűszeres csirke rizzsel, cukkinivel és répával',
+    salmon_dill_potatoes: 'Lazac kapros burgonyával és brokkolival',
+    turkey_quinoa_peppers: 'Pulykával és quinoával töltött paprika',
+    mild_coconut_curry: 'Enyhe kókuszos csirkecurry',
+    butternut_risotto: 'Vajtökös rizottó',
+    ginger_fish_noodles: 'Gyömbéres hal rizstésztával',
+    mozzarella_zucchini_bake: 'Cukkinis-burgonyás rakott mozzarellával',
+    beef_sweet_potato_skillet: 'Marhahúsos-édesburgonyás serpenyő',
+    quinoa_veg_bowl: 'Quinoás tál ropogós zöldségekkel',
+    blueberry_chia_pudding: 'Áfonyás chiapuding',
+    mozzarella_cucumber: 'Mozzarella uborkával és fűszernövényekkel',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

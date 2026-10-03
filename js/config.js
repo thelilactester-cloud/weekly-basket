@@ -23,7 +23,7 @@
     // App Store app id (numbers, from App Store Connect → App Information), for affiliate offer-code links.
     appleAppId: '',
     // Google Play package name (= appId in capacitor.config.json), and whether the app is live on Google Play yet.
-    androidPackage: 'com.weeklybasket.app',
+    androidPackage: 'com.prepcart.app',
     playStoreLive: false,
     // Where the web app lives; used to build affiliate links.
     webUrl: 'https://thelilactester-cloud.github.io/weekly-basket/',

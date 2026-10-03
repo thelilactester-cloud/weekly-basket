@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.bn = {
-    appName: 'সাপ্তাহিক ঝুড়ি', tagline: 'আপনার দোকান, আপনার খাদ্যাভ্যাস, আপনার পরিবার — প্রতি সপ্তাহে পরিকল্পিত।',
+    appName: 'Prepcart', tagline: 'আপনার দোকান, আপনার খাদ্যাভ্যাস, আপনার পরিবার — প্রতি সপ্তাহে পরিকল্পিত।',
     next: 'পরবর্তী', back: 'পেছনে', close: 'বন্ধ করুন', remove: 'সরান', stepOf: (a, b) => `${b} এর মধ্যে ${a}`,
     placeTitle: 'আপনি কোথায় বাজার করেন?', placeHint: 'দোকান, দাম, ভাষা ও একক আপনার পছন্দ অনুযায়ী হবে।',
     language: 'ভাষা', country: 'দেশ', units: 'একক', metric: 'মেট্রিক (গ্রাম, কেজি, লিটার)', imperial: 'মার্কিন (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'রেসিপি খুঁজুন…', allRecipes: 'সব', ingredients: 'উপকরণ', method: 'প্রণালী', perServing: 'প্রতি পরিবেশনে',
     cookFor: (n) => `${n} জনের পরিমাণ`, favorite: 'প্রিয়', notForHousehold: 'কারও খাদ্যাভ্যাস বা অ্যালার্জির সঙ্গে মেলে না',
     stepsInEnglish: 'রেসিপির ধাপগুলো ইংরেজিতে দেখানো হয়েছে।',
-    premiumTitle: 'সাপ্তাহিক ঝুড়ি প্রিমিয়াম', premiumPitch: 'প্রতি সপ্তাহে চাপমুক্ত বাজার।',
+    premiumTitle: 'Prepcart প্রিমিয়াম', premiumPitch: 'প্রতি সপ্তাহে চাপমুক্ত বাজার।',
     perk1: 'পুরো পরিবারের সাপ্তাহিক পরিকল্পনা, প্রত্যেকের খাদ্যাভ্যাস মেনে', perk2: 'আপনার সুপারমার্কেটের জন্য পরিমাণসহ বাজারের তালিকা',
     perk3: 'আপনার দোকানের আসল পণ্য ও দাম', perk4: 'আপনার প্রিয় রান্নার রেসিপি',
     planMonthly: 'মাসিক', planYearly: 'বার্ষিক', perMonth: '/মাস', perYear: '/বছর', savePct: (n) => `${n}% সাশ্রয়`,
@@ -190,5 +190,49 @@
     referralJoined: (name) => `${name}-এর লিংকে যোগ দিয়েছেন`,
     referralBad: 'এই রেফারেল কোডটি সঠিক নয়।',
     referralAlready: 'একটি রেফারেল অফার আগেই চালু আছে।',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.bn, {
+    needs: 'স্বাস্থ্য ও জীবনধারার প্রয়োজন (ঐচ্ছিক, ডায়েটের সাথে)',
+    need_low_histamine: 'কম হিস্টামিন',
+    need_low_fodmap: 'লো FODMAP (সংবেদনশীল পেট / IBS)',
+    need_mind: 'MIND (মস্তিষ্কের স্বাস্থ্য)',
+    need_dash: 'DASH (হৃদয় ও রক্তচাপ)',
+    need_blood_sugar: 'ব্লাড সুগার-বান্ধব',
+    need_anti_inflammatory: 'প্রদাহবিরোধী',
+    need_halal: 'হালাল',
+    need_kosher: 'কোশার',
+    needNote_low_histamine: 'খাবার টাটকা খান: বাকি খাবার ফ্রিজে না রেখে ফ্রিজারে রাখুন, কারণ সময়ের সাথে হিস্টামিন বাড়ে।',
+    needNote_halal: 'কেনাকাটার সময় হালাল-সার্টিফায়েড মাংস বেছে নিন।',
+    needNote_kosher: 'কেনাকাটার সময় কোশার-সার্টিফায়েড মাংস ও পণ্য বেছে নিন।',
+    needNote_medical: 'এটি পরিকল্পনার সহায়তা, চিকিৎসা পরামর্শ নয়। কোনো অসুস্থতা থাকলে আপনার ডাক্তার বা পুষ্টিবিদের পরামর্শ মানুন।',
+    theme: 'চেহারা',
+    theme_system: 'স্বয়ংক্রিয়',
+    theme_light: 'হালকা',
+    theme_dark: 'গাঢ়',
+  });
+  Object.assign(MP.NAMES.bn.ing, {
+    blueberries: 'হিমায়িত ব্লুবেরি',
+    butternut: 'বাটারনাট স্কোয়াশ',
+    mozzarella: 'তাজা মোজারেলা',
+    garlic_oil: 'রসুন-সুগন্ধি অলিভ অয়েল',
+    maple_syrup: 'ম্যাপল সিরাপ',
+  });
+  Object.assign(MP.NAMES.bn.recipe, {
+    blueberry_porridge: 'ব্লুবেরি ওটস পরিজ',
+    zucchini_scramble: 'জুকিনি ও হার্বসহ ডিম ভাজা',
+    coconut_rice_pudding: 'নারকেল চালের পায়েস ব্লুবেরিসহ',
+    sweet_potato_hash: 'মিষ্টি আলু ও ডিমের ভাজি',
+    herb_chicken_rice: 'ভাত, জুকিনি ও গাজরসহ হার্ব চিকেন',
+    salmon_dill_potatoes: 'ডিল আলু ও ব্রকলিসহ স্যামন',
+    turkey_quinoa_peppers: 'টার্কি ও কিনোয়া ভরা ক্যাপসিকাম',
+    mild_coconut_curry: 'হালকা নারকেল চিকেন কারি',
+    butternut_risotto: 'বাটারনাট স্কোয়াশ রিসোটো',
+    ginger_fish_noodles: 'আদা মাছ ও রাইস নুডলস',
+    mozzarella_zucchini_bake: 'মোজারেলাসহ জুকিনি-আলুর বেক',
+    beef_sweet_potato_skillet: 'গরুর মাংস ও মিষ্টি আলুর স্কিলেট',
+    quinoa_veg_bowl: 'মচমচে সবজির কিনোয়া বাটি',
+    blueberry_chia_pudding: 'ব্লুবেরি চিয়া পুডিং',
+    mozzarella_cucumber: 'মোজারেলা, শসা ও হার্বস',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

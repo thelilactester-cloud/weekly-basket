@@ -1,5 +1,5 @@
 /*
- * Weekly Basket server functions (Firebase Cloud Functions, 2nd gen).
+ * Prepcart server functions (Firebase Cloud Functions, 2nd gen).
  *
  *  revenuecatWebhook  RevenueCat → every subscription payment / refund. Records affiliate commissions.
  *  deleteAccount      The app's "Delete my account": removes the account, its data and its RevenueCat record.

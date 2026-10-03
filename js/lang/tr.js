@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.tr = {
-    appName: 'Haftalık Sepet', tagline: 'Marketin, beslenmen, ailen. Her hafta planlanmış.',
+    appName: 'Prepcart', tagline: 'Marketin, beslenmen, ailen. Her hafta planlanmış.',
     next: 'İleri', back: 'Geri', close: 'Kapat', remove: 'Kaldır', stepOf: (a, b) => `${a} / ${b}`,
     placeTitle: 'Nereden alışveriş yapıyorsun?', placeHint: 'Marketler, fiyatlar, dil ve birimler seçimine göre ayarlanır.',
     language: 'Dil', country: 'Ülke', units: 'Birimler', metric: 'Metrik (g, kg, l)', imperial: 'ABD (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Tarif ara…', allRecipes: 'Tümü', ingredients: 'Malzemeler', method: 'Hazırlanışı', perServing: 'Porsiyon başına',
     cookFor: (n) => `${n} porsiyon için miktarlar`, favorite: 'Favori', notForHousehold: 'Kimsenin beslenmesine veya alerjisine uymuyor',
     stepsInEnglish: 'Tarif adımları İngilizce gösterilir.',
-    premiumTitle: 'Haftalık Sepet Premium', premiumPitch: 'Her hafta stressiz alışveriş.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Her hafta stressiz alışveriş.',
     perk1: 'Tüm aile için, herkesin beslenmesine uygun haftalık planlar', perk2: 'Marketine göre miktarlı alışveriş listeleri',
     perk3: 'Marketinden gerçek ürünler ve fiyatlar', perk4: 'Sevdiğin mutfaklardan tarifler',
     planMonthly: 'Aylık', planYearly: 'Yıllık', perMonth: '/ay', perYear: '/yıl', savePct: (n) => `%${n} tasarruf`,
@@ -193,5 +193,49 @@
     referralJoined: (name) => `${name} bağlantısıyla katıldın`,
     referralBad: 'Bu davet kodu geçerli değil.',
     referralAlready: 'Bir davet teklifi zaten uygulanmış.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.tr, {
+    needs: 'Sağlık ve yaşam tarzı ihtiyaçları (isteğe bağlı, diyetle birlikte)',
+    need_low_histamine: 'Düşük histamin',
+    need_low_fodmap: 'Düşük FODMAP (hassas bağırsak / IBS)',
+    need_mind: 'MIND (beyin sağlığı)',
+    need_dash: 'DASH (kalp ve tansiyon)',
+    need_blood_sugar: 'Kan şekeri dostu',
+    need_anti_inflammatory: 'İltihap karşıtı',
+    need_halal: 'Helal',
+    need_kosher: 'Koşer',
+    needNote_low_histamine: 'Yemekleri taze yiyin: histamin zamanla arttığı için artanları buzdolabında tutmak yerine dondurun.',
+    needNote_halal: 'Alışverişte helal sertifikalı et seçin.',
+    needNote_kosher: 'Alışverişte koşer sertifikalı et ve ürünler seçin.',
+    needNote_medical: 'Bu bir planlama yardımıdır, tıbbi tavsiye değildir. Bir rahatsızlığınız varsa doktorunuzun veya diyetisyeninizin önerilerine uyun.',
+    theme: 'Görünüm',
+    theme_system: 'Otomatik',
+    theme_light: 'Açık',
+    theme_dark: 'Koyu',
+  });
+  Object.assign(MP.NAMES.tr.ing, {
+    blueberries: 'Dondurulmuş yaban mersini',
+    butternut: 'Balkabağı (butternut)',
+    mozzarella: 'Taze mozzarella',
+    garlic_oil: 'Sarımsak aromalı zeytinyağı',
+    maple_syrup: 'Akçaağaç şurubu',
+  });
+  Object.assign(MP.NAMES.tr.recipe, {
+    blueberry_porridge: 'Yaban mersinli yulaf lapası',
+    zucchini_scramble: 'Kabaklı ve otlu çırpılmış yumurta',
+    coconut_rice_pudding: 'Hindistan cevizli sütlaç ve yaban mersini',
+    sweet_potato_hash: 'Tatlı patatesli yumurtalı tava',
+    herb_chicken_rice: 'Otlu tavuk, pilav, kabak ve havuç',
+    salmon_dill_potatoes: 'Dereotlu patates ve brokoli ile somon',
+    turkey_quinoa_peppers: 'Hindi ve kinoa dolgulu biber',
+    mild_coconut_curry: 'Hafif hindistan cevizli tavuk köri',
+    butternut_risotto: 'Balkabaklı risotto',
+    ginger_fish_noodles: 'Zencefilli balık ve pirinç eriştesi',
+    mozzarella_zucchini_bake: 'Mozzarellalı kabak ve patates fırını',
+    beef_sweet_potato_skillet: 'Dana kıyma ve tatlı patates tavası',
+    quinoa_veg_bowl: 'Çıtır sebzeli kinoa kasesi',
+    blueberry_chia_pudding: 'Yaban mersinli chia puding',
+    mozzarella_cucumber: 'Salatalık ve otlarla mozzarella',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

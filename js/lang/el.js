@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.el = {
-    appName: 'Καλάθι της Εβδομάδας', tagline: 'Το σούπερ μάρκετ σου, η διατροφή σου, η οικογένειά σου. Προγραμματισμένα κάθε εβδομάδα.',
+    appName: 'Prepcart', tagline: 'Το σούπερ μάρκετ σου, η διατροφή σου, η οικογένειά σου. Προγραμματισμένα κάθε εβδομάδα.',
     next: 'Επόμενο', back: 'Πίσω', close: 'Κλείσιμο', remove: 'Αφαίρεση', stepOf: (a, b) => `${a} από ${b}`,
     placeTitle: 'Πού ψωνίζεις;', placeHint: 'Καταστήματα, τιμές, γλώσσα και μονάδες ακολουθούν την επιλογή σου.',
     language: 'Γλώσσα', country: 'Χώρα', units: 'Μονάδες', metric: 'Μετρικό (g, kg, l)', imperial: 'ΗΠΑ (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Αναζήτηση συνταγών…', allRecipes: 'Όλες', ingredients: 'Υλικά', method: 'Εκτέλεση', perServing: 'Ανά μερίδα',
     cookFor: (n) => `Ποσότητες για ${n} μερίδες`, favorite: 'Αγαπημένη', notForHousehold: 'Δεν ταιριάζει στη διατροφή ή τις αλλεργίες κανενός',
     stepsInEnglish: 'Τα βήματα της συνταγής εμφανίζονται στα αγγλικά.',
-    premiumTitle: 'Καλάθι της Εβδομάδας Premium', premiumPitch: 'Ψώνια χωρίς άγχος, κάθε εβδομάδα.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Ψώνια χωρίς άγχος, κάθε εβδομάδα.',
     perk1: 'Εβδομαδιαία προγράμματα για όλη την οικογένεια, με τη διατροφή του καθενός', perk2: 'Λίστες αγορών για το σούπερ μάρκετ σου, με ποσότητες',
     perk3: 'Πραγματικά προϊόντα και τιμές από το κατάστημά σου', perk4: 'Συνταγές από τις κουζίνες που αγαπάς',
     planMonthly: 'Μηνιαία', planYearly: 'Ετήσια', perMonth: '/μήνα', perYear: '/έτος', savePct: (n) => `Κέρδισε ${n}%`,
@@ -193,5 +193,49 @@
     referralJoined: (name) => `Εγγραφήκατε μέσω του συνδέσμου του/της ${name}`,
     referralBad: 'Αυτός ο κωδικός πρόσκλησης δεν είναι έγκυρος.',
     referralAlready: 'Έχει ήδη εφαρμοστεί προσφορά πρόσκλησης.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.el, {
+    needs: 'Ανάγκες υγείας και τρόπου ζωής (προαιρετικά, μαζί με τη διατροφή)',
+    need_low_histamine: 'Χαμηλή σε ισταμίνη',
+    need_low_fodmap: 'Χαμηλή σε FODMAP (ευαίσθητο έντερο / IBS)',
+    need_mind: 'MIND (υγεία εγκεφάλου)',
+    need_dash: 'DASH (καρδιά και πίεση)',
+    need_blood_sugar: 'Φιλική προς το σάκχαρο',
+    need_anti_inflammatory: 'Αντιφλεγμονώδης',
+    need_halal: 'Χαλάλ',
+    need_kosher: 'Κοσέρ',
+    needNote_low_histamine: 'Τρώτε τα φαγητά φρέσκα: καταψύξτε τα περισσεύματα αντί να τα κρατάτε στο ψυγείο, γιατί η ισταμίνη αυξάνεται με τον χρόνο.',
+    needNote_halal: 'Επιλέξτε κρέας με πιστοποίηση χαλάλ στα ψώνια.',
+    needNote_kosher: 'Επιλέξτε κρέας και προϊόντα με πιστοποίηση κοσέρ στα ψώνια.',
+    needNote_medical: 'Είναι βοήθεια προγραμματισμού, όχι ιατρική συμβουλή. Αν έχετε πάθηση, ακολουθήστε τον γιατρό ή τον διαιτολόγο σας.',
+    theme: 'Εμφάνιση',
+    theme_system: 'Αυτόματα',
+    theme_light: 'Φωτεινό',
+    theme_dark: 'Σκούρο',
+  });
+  Object.assign(MP.NAMES.el.ing, {
+    blueberries: 'Κατεψυγμένα μύρτιλα',
+    butternut: 'Κολοκύθα butternut',
+    mozzarella: 'Φρέσκια μοτσαρέλα',
+    garlic_oil: 'Ελαιόλαδο με άρωμα σκόρδου',
+    maple_syrup: 'Σιρόπι σφενδάμου',
+  });
+  Object.assign(MP.NAMES.el.recipe, {
+    blueberry_porridge: 'Χυλός βρώμης με μύρτιλα',
+    zucchini_scramble: 'Αυγά χτυπητά με κολοκυθάκι και μυρωδικά',
+    coconut_rice_pudding: 'Ρυζόγαλο καρύδας με μύρτιλα',
+    sweet_potato_hash: 'Τηγάνι με γλυκοπατάτα και αυγά',
+    herb_chicken_rice: 'Κοτόπουλο με μυρωδικά, ρύζι, κολοκυθάκι και καρότα',
+    salmon_dill_potatoes: 'Σολομός με πατάτες με άνηθο και μπρόκολο',
+    turkey_quinoa_peppers: 'Πιπεριές γεμιστές με γαλοπούλα και κινόα',
+    mild_coconut_curry: 'Ήπιο κάρι κοτόπουλου με καρύδα',
+    butternut_risotto: 'Ριζότο με κολοκύθα butternut',
+    ginger_fish_noodles: 'Ψάρι με τζίντζερ και νουντλς ρυζιού',
+    mozzarella_zucchini_bake: 'Κολοκυθάκια και πατάτες στον φούρνο με μοτσαρέλα',
+    beef_sweet_potato_skillet: 'Τηγάνι με μοσχάρι και γλυκοπατάτα',
+    quinoa_veg_bowl: 'Μπολ κινόα με τραγανά λαχανικά',
+    blueberry_chia_pudding: 'Πουτίγκα τσία με μύρτιλα',
+    mozzarella_cucumber: 'Μοτσαρέλα με αγγούρι και μυρωδικά',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

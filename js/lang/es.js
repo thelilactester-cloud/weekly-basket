@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.es = {
-    appName: 'Cesta Semanal', tagline: 'Tu súper, tu dieta, tu semana, planificada.',
+    appName: 'Prepcart', tagline: 'Tu súper, tu dieta, tu semana, planificada.',
     next: 'Siguiente', back: 'Atrás', remove: 'Eliminar', close: 'Cerrar',
     stepOf: (a, b) => `${a} de ${b}`,
     country: 'País', 
@@ -133,7 +133,7 @@
     mealPrep: 'Qué cocinar esta semana', newWeek: 'Empezar una semana nueva',
     newWeekConfirm: '¿Empezar una semana nueva? Se borrarán las recetas, las marcas y los artículos extra de esta semana.',
     allRecipes: 'Todas', notForHousehold: 'No encaja con la dieta o las alergias de nadie',
-    premiumTitle: 'Cesta Semanal Premium', premiumPitch: 'Quítate el estrés de la compra, cada semana.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Quítate el estrés de la compra, cada semana.',
     perk1: 'Planes semanales para toda la familia, con la dieta de cada uno', perk2: 'Listas de la compra para tu súper, con cantidades',
     perk3: 'Productos y precios reales de tu tienda', perk4: 'Recetas de las cocinas que te gustan',
     planMonthly: 'Mensual', planYearly: 'Anual', perMonth: '/mes', perYear: '/año', savePct: (n) => `Ahorra un ${n}%`,
@@ -143,7 +143,7 @@
     terms: 'Condiciones de uso', privacyPolicy: 'Política de privacidad', primeCompare: (p) => `Cuesta menos que Amazon Prime (${p}/mes)`,
     trialLeft: (n) => (n === 1 ? 'Prueba gratis: queda 1 día' : `Prueba gratis: quedan ${n} días`), seePlans: 'Ver planes',
     trialOver: 'Tu prueba gratis ha terminado. Suscríbete para seguir planificando tus semanas.',
-    subscribeInApp: 'Las suscripciones están disponibles en la app Cesta Semanal para iPhone y Android.',
+    subscribeInApp: 'Las suscripciones están disponibles en la app Prepcart para iPhone y Android.',
     premiumActive: 'Premium está activo', subscription: 'Suscripción', manageSub: 'Gestionar suscripción',
     privacyTitle: 'Privacidad y tus datos', encryptedOn: 'Tus datos están cifrados y se guardan solo en este dispositivo.',
     encryptedOff: 'Este navegador no puede cifrar datos; se guardan solo en este dispositivo.',
@@ -224,5 +224,49 @@
     referralJoined: (name) => `Te uniste con el enlace de ${name}`,
     referralBad: 'Este código de invitación no es válido.',
     referralAlready: 'Ya tienes una oferta de invitación aplicada.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.es, {
+    needs: 'Necesidades de salud y estilo de vida (opcional, se combinan con la dieta)',
+    need_low_histamine: 'Baja en histamina',
+    need_low_fodmap: 'Baja en FODMAP (intestino sensible / SII)',
+    need_mind: 'MIND (salud cerebral)',
+    need_dash: 'DASH (corazón y tensión)',
+    need_blood_sugar: 'Amigable con el azúcar en sangre',
+    need_anti_inflammatory: 'Antiinflamatoria',
+    need_halal: 'Halal',
+    need_kosher: 'Kosher',
+    needNote_low_histamine: 'Come los platos frescos: congela las sobras en vez de guardarlas en la nevera, porque la histamina aumenta con el tiempo.',
+    needNote_halal: 'Elige carne con certificado halal al comprar.',
+    needNote_kosher: 'Elige carne y productos con certificado kosher al comprar.',
+    needNote_medical: 'Es una ayuda para planificar, no consejo médico. Si tienes una condición médica, sigue los consejos de tu médico o dietista.',
+    theme: 'Apariencia',
+    theme_system: 'Automático',
+    theme_light: 'Claro',
+    theme_dark: 'Oscuro',
+  });
+  Object.assign(MP.NAMES.es.ing, {
+    blueberries: 'Arándanos congelados',
+    butternut: 'Calabaza butternut',
+    mozzarella: 'Mozzarella fresca',
+    garlic_oil: 'Aceite de oliva aromatizado con ajo',
+    maple_syrup: 'Sirope de arce',
+  });
+  Object.assign(MP.NAMES.es.recipe, {
+    blueberry_porridge: 'Porridge de avena con arándanos',
+    zucchini_scramble: 'Huevos revueltos con calabacín y hierbas',
+    coconut_rice_pudding: 'Arroz con leche de coco y arándanos',
+    sweet_potato_hash: 'Salteado de boniato con huevos',
+    herb_chicken_rice: 'Pollo a las hierbas con arroz, calabacín y zanahoria',
+    salmon_dill_potatoes: 'Salmón con patatas al eneldo y brócoli',
+    turkey_quinoa_peppers: 'Pimientos rellenos de pavo y quinoa',
+    mild_coconut_curry: 'Curry suave de pollo con coco',
+    butternut_risotto: 'Risotto de calabaza butternut',
+    ginger_fish_noodles: 'Pescado al jengibre con fideos de arroz',
+    mozzarella_zucchini_bake: 'Gratinado de calabacín y patata con mozzarella',
+    beef_sweet_potato_skillet: 'Sartén de ternera y boniato',
+    quinoa_veg_bowl: 'Bol de quinoa con verduras crujientes',
+    blueberry_chia_pudding: 'Pudin de chía con arándanos',
+    mozzarella_cucumber: 'Mozzarella con pepino y hierbas',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

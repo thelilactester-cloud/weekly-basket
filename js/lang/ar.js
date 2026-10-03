@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.ar = {
-    appName: 'سلة الأسبوع', tagline: 'متجرك، نظامك الغذائي، عائلتك. مخطط لها كل أسبوع.',
+    appName: 'Prepcart', tagline: 'متجرك، نظامك الغذائي، عائلتك. مخطط لها كل أسبوع.',
     next: 'التالي', back: 'رجوع', close: 'إغلاق', remove: 'إزالة', stepOf: (a, b) => `${a} من ${b}`,
     placeTitle: 'أين تتسوق؟', placeHint: 'المتاجر والأسعار واللغة ووحدات القياس تتبع اختيارك.',
     language: 'اللغة', country: 'الدولة', units: 'وحدات القياس', metric: 'متري (غ، كغ، لتر)', imperial: 'أمريكي (أونصة، رطل)',
@@ -72,7 +72,7 @@
     search: 'ابحث في الوصفات…', allRecipes: 'الكل', ingredients: 'المكونات', method: 'طريقة التحضير', perServing: 'لكل حصة',
     cookFor: (n) => `الكميات لـ ${n} حصص`, favorite: 'المفضلة', notForHousehold: 'لا يناسب النظام الغذائي أو حساسية أي أحد',
     stepsInEnglish: 'خطوات الوصفة معروضة بالإنجليزية.',
-    premiumTitle: 'سلة الأسبوع المميزة', premiumPitch: 'تسوّق بلا ضغط، كل أسبوع.',
+    premiumTitle: 'Prepcart المميزة', premiumPitch: 'تسوّق بلا ضغط، كل أسبوع.',
     perk1: 'خطط أسبوعية لكل العائلة مع نظام كل شخص', perk2: 'قوائم تسوق لمتجرك مع الكميات',
     perk3: 'منتجات وأسعار حقيقية من متجرك', perk4: 'وصفات من المطابخ التي تحبها',
     planMonthly: 'شهري', planYearly: 'سنوي', perMonth: '/شهر', perYear: '/سنة', savePct: (n) => `وفّر ${n}٪`,
@@ -82,7 +82,7 @@
     terms: 'شروط الاستخدام', privacyPolicy: 'سياسة الخصوصية', primeCompare: (p) => `أرخص من Amazon Prime (${p}/شهر)`,
     trialLeft: (n) => `التجربة المجانية: متبقٍ ${n} أيام`, seePlans: 'عرض الخطط',
     trialOver: 'انتهت تجربتك المجانية. اشترك لمواصلة تخطيط أسابيعك.',
-    subscribeInApp: 'الاشتراكات متاحة في تطبيق سلة الأسبوع على iPhone وAndroid.',
+    subscribeInApp: 'الاشتراكات متاحة في تطبيق Prepcart على iPhone وAndroid.',
     premiumActive: 'النسخة المميزة مفعّلة', subscription: 'الاشتراك', manageSub: 'إدارة الاشتراك',
     privacyTitle: 'الخصوصية وبياناتك', encryptedOn: 'بياناتك مشفّرة ومحفوظة على هذا الجهاز فقط.',
     encryptedOff: 'هذا المتصفح لا يستطيع تشفير البيانات؛ وهي محفوظة على هذا الجهاز فقط.',
@@ -194,5 +194,49 @@
     referralJoined: (name) => `انضممت عبر رابط ${name}`,
     referralBad: 'رمز الدعوة هذا غير صالح.',
     referralAlready: 'عرض الدعوة مطبّق بالفعل.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.ar, {
+    needs: 'احتياجات صحية ونمط حياة (اختياري، مع النظام الغذائي)',
+    need_low_histamine: 'قليل الهيستامين',
+    need_low_fodmap: 'قليل الفودماب (أمعاء حساسة / القولون العصبي)',
+    need_mind: 'MIND (صحة الدماغ)',
+    need_dash: 'DASH (القلب وضغط الدم)',
+    need_blood_sugar: 'مناسب لسكر الدم',
+    need_anti_inflammatory: 'مضاد للالتهابات',
+    need_halal: 'حلال',
+    need_kosher: 'كوشر',
+    needNote_low_histamine: 'تناول الأطباق طازجة: جمّد البقايا بدل حفظها في الثلاجة، لأن الهيستامين يزداد مع الوقت.',
+    needNote_halal: 'اختر لحمًا حلالًا معتمدًا عند التسوق.',
+    needNote_kosher: 'اختر لحمًا ومنتجات كوشر معتمدة عند التسوق.',
+    needNote_medical: 'هذه مساعدة في التخطيط وليست نصيحة طبية. إذا كانت لديك حالة صحية، فاتبع نصيحة طبيبك أو أخصائي التغذية.',
+    theme: 'المظهر',
+    theme_system: 'تلقائي',
+    theme_light: 'فاتح',
+    theme_dark: 'داكن',
+  });
+  Object.assign(MP.NAMES.ar.ing, {
+    blueberries: 'توت أزرق مجمد',
+    butternut: 'قرع بترنات',
+    mozzarella: 'موزاريلا طازجة',
+    garlic_oil: 'زيت زيتون بنكهة الثوم',
+    maple_syrup: 'شراب القيقب',
+  });
+  Object.assign(MP.NAMES.ar.recipe, {
+    blueberry_porridge: 'عصيدة الشوفان بالتوت الأزرق',
+    zucchini_scramble: 'بيض مخفوق بالكوسا والأعشاب',
+    coconut_rice_pudding: 'أرز بحليب جوز الهند والتوت الأزرق',
+    sweet_potato_hash: 'مقلاة البطاطا الحلوة بالبيض',
+    herb_chicken_rice: 'دجاج بالأعشاب مع أرز وكوسا وجزر',
+    salmon_dill_potatoes: 'سلمون مع بطاطس بالشبت وبروكلي',
+    turkey_quinoa_peppers: 'فلفل محشي بالديك الرومي والكينوا',
+    mild_coconut_curry: 'كاري دجاج خفيف بجوز الهند',
+    butternut_risotto: 'ريزوتو قرع البترنات',
+    ginger_fish_noodles: 'سمك بالزنجبيل مع نودلز الأرز',
+    mozzarella_zucchini_bake: 'صينية كوسا وبطاطس بالموزاريلا',
+    beef_sweet_potato_skillet: 'مقلاة لحم بقري وبطاطا حلوة',
+    quinoa_veg_bowl: 'وعاء كينوا بخضار مقرمشة',
+    blueberry_chia_pudding: 'بودينغ الشيا بالتوت الأزرق',
+    mozzarella_cucumber: 'موزاريلا مع خيار وأعشاب',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

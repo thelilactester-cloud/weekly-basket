@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.pl = {
-    appName: 'Koszyk Tygodnia', tagline: 'Twój sklep, twoja dieta, twoja rodzina. Zaplanowane co tydzień.',
+    appName: 'Prepcart', tagline: 'Twój sklep, twoja dieta, twoja rodzina. Zaplanowane co tydzień.',
     next: 'Dalej', back: 'Wstecz', close: 'Zamknij', remove: 'Usuń', stepOf: (a, b) => `${a} z ${b}`,
     placeTitle: 'Gdzie robisz zakupy?', placeHint: 'Sklepy, ceny, język i jednostki zależą od twojego wyboru.',
     language: 'Język', country: 'Kraj', units: 'Jednostki', metric: 'Metryczne (g, kg, l)', imperial: 'USA (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Szukaj przepisów…', allRecipes: 'Wszystkie', ingredients: 'Składniki', method: 'Przygotowanie', perServing: 'Na porcję',
     cookFor: (n) => `Ilości na ${n} porcji`, favorite: 'Ulubione', notForHousehold: 'Nie pasuje do niczyjej diety ani alergii',
     stepsInEnglish: 'Kroki przepisu są po angielsku.',
-    premiumTitle: 'Koszyk Tygodnia Premium', premiumPitch: 'Zakupy bez stresu, co tydzień.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Zakupy bez stresu, co tydzień.',
     perk1: 'Plany tygodniowe dla całej rodziny z dietą każdej osoby', perk2: 'Listy zakupów do twojego supermarketu z ilościami',
     perk3: 'Prawdziwe produkty i ceny z twojego sklepu', perk4: 'Przepisy z ulubionych kuchni',
     planMonthly: 'Miesięcznie', planYearly: 'Rocznie', perMonth: '/mies.', perYear: '/rok', savePct: (n) => `Oszczędzasz ${n}%`,
@@ -194,5 +194,49 @@
     referralJoined: (name) => `Dołączono przez link od ${name}`,
     referralBad: 'Ten kod polecający jest nieprawidłowy.',
     referralAlready: 'Oferta z polecenia jest już aktywna.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.pl, {
+    needs: 'Potrzeby zdrowotne i styl życia (opcjonalnie, razem z dietą)',
+    need_low_histamine: 'Niskohistaminowa',
+    need_low_fodmap: 'Low FODMAP (wrażliwe jelita / IBS)',
+    need_mind: 'MIND (zdrowie mózgu)',
+    need_dash: 'DASH (serce i ciśnienie)',
+    need_blood_sugar: 'Przyjazna dla poziomu cukru',
+    need_anti_inflammatory: 'Przeciwzapalna',
+    need_halal: 'Halal',
+    need_kosher: 'Koszerna',
+    needNote_low_histamine: 'Jedz potrawy na świeżo: resztki zamrażaj zamiast trzymać w lodówce, bo histaminy z czasem przybywa.',
+    needNote_halal: 'Na zakupach wybieraj mięso z certyfikatem halal.',
+    needNote_kosher: 'Na zakupach wybieraj mięso i produkty z certyfikatem koszerności.',
+    needNote_medical: 'To pomoc w planowaniu, nie porada medyczna. Jeśli masz chorobę, stosuj się do zaleceń lekarza lub dietetyka.',
+    theme: 'Wygląd',
+    theme_system: 'Automatycznie',
+    theme_light: 'Jasny',
+    theme_dark: 'Ciemny',
+  });
+  Object.assign(MP.NAMES.pl.ing, {
+    blueberries: 'Mrożone borówki',
+    butternut: 'Dynia piżmowa',
+    mozzarella: 'Świeża mozzarella',
+    garlic_oil: 'Oliwa aromatyzowana czosnkiem',
+    maple_syrup: 'Syrop klonowy',
+  });
+  Object.assign(MP.NAMES.pl.recipe, {
+    blueberry_porridge: 'Owsianka z borówkami',
+    zucchini_scramble: 'Jajecznica z cukinią i ziołami',
+    coconut_rice_pudding: 'Pudding ryżowy na mleku kokosowym z borówkami',
+    sweet_potato_hash: 'Patelnia z batatów z jajkami',
+    herb_chicken_rice: 'Kurczak z ziołami, ryżem, cukinią i marchewką',
+    salmon_dill_potatoes: 'Łosoś z ziemniakami z koperkiem i brokułem',
+    turkey_quinoa_peppers: 'Papryki faszerowane indykiem i komosą',
+    mild_coconut_curry: 'Łagodne curry z kurczaka z kokosem',
+    butternut_risotto: 'Risotto z dynią piżmową',
+    ginger_fish_noodles: 'Ryba z imbirem i makaronem ryżowym',
+    mozzarella_zucchini_bake: 'Zapiekanka z cukinii i ziemniaków z mozzarellą',
+    beef_sweet_potato_skillet: 'Patelnia z wołowiną i batatami',
+    quinoa_veg_bowl: 'Miska z komosą i chrupiącymi warzywami',
+    blueberry_chia_pudding: 'Pudding chia z borówkami',
+    mozzarella_cucumber: 'Mozzarella z ogórkiem i ziołami',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -20,7 +20,7 @@
     trialDays: 30, // one month free for everyone (the stores' introductory offer)
     affiliateTrialDays: 60, // two months free when someone joins through an affiliate's link
     // Product ids to create in App Store Connect / Google Play Console (and attach in RevenueCat).
-    products: { monthly: 'weeklybasket_premium_monthly', yearly: 'weeklybasket_premium_yearly' },
+    products: { monthly: 'prepcart_premium_monthly', yearly: 'prepcart_premium_yearly' },
     // Public SDK keys from RevenueCat → Project → API keys (safe to ship in the app).
     revenuecat: { ios: '', android: '' },
     // Optional, web only: Stripe Payment Links. Leave empty to show "available in the app" instead.

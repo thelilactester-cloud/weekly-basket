@@ -1,9 +1,9 @@
-# Weekly Basket
+# Prepcart
 
 A weekly meal planner and shopping list for **your supermarket**, **where you live**, **your diet** and **your family**.
 Made to be used every week to take the pressure off shopping.
 
-**27 languages · 58 countries · 67 recipes from 12 cuisines · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
+**27 languages · 58 countries · 82 recipes from 12 cuisines · 8 health needs (low histamine, MIND, DASH…) · light & dark mode · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
 
 ## How it works for the user
 
@@ -13,8 +13,10 @@ Made to be used every week to take the pressure off shopping.
    Lagos: Ebeano, Hubmart, Shoprite…). Anything else: **Other shop…** and type its name.
 3. **Who for:** just me, or my family. If family, how many people.
 4. **Diets and needs, per person:** age, sex, height, weight, activity, goal, diet (everything, vegetarian, vegan,
-   pescatarian, low-carb/keto, Mediterranean, high protein), allergies and foods to avoid (gluten, dairy, eggs,
-   peanuts, tree nuts, fish, shellfish, soy, sesame, beef) and anything else they don't eat, in any language.
+   pescatarian, low-carb/keto, Mediterranean, high protein), plus optional **health & lifestyle needs** that combine with
+   the diet: **low histamine**, **low FODMAP** (sensitive gut / IBS), **MIND** (brain health), **DASH** (heart & blood
+   pressure), **blood-sugar friendly**, **anti-inflammatory**, **halal**, **kosher**. Then allergies and foods to avoid
+   (gluten, dairy, eggs, peanuts, tree nuts, fish, shellfish, soy, sesame, beef) and anything else they don't eat, in any language.
 5. **Taste:** the cuisines you like (Romanian & Eastern European, Mediterranean, Italian, American & British,
    Mexican & Latin, Middle Eastern & Turkish, African, Indian, Chinese, Japanese & Korean, Thai & Vietnamese,
    Everyday & healthy), meals per day, cooking time, budget.
@@ -78,7 +80,7 @@ which are free, open and crowd-sourced. Coverage is best for big chains in Europ
 - **Download page (start here):** https://thelilactester-cloud.github.io/weekly-basket/download.html
 - **Web app (any phone or computer):** https://thelilactester-cloud.github.io/weekly-basket/
   (on a phone: *Share → Add to Home Screen* on iPhone, *⋮ → Install app* on Android).
-- **Android test app:** https://thelilactester-cloud.github.io/weekly-basket/download/weekly-basket.apk
+- **Android test app:** https://thelilactester-cloud.github.io/weekly-basket/download/prepcart.apk
   (open it on the phone and allow installing from this source). Also in the `android-test` release.
 - Both are rebuilt automatically when changes reach the main branch (`.github/workflows/publish.yml`).
   The web app needs a one-time setting: repository **Settings → Pages → Source: GitHub Actions**.
@@ -113,8 +115,8 @@ which are free, open and crowd-sourced. Coverage is best for big chains in Europ
 | File | What's inside |
 |---|---|
 | `js/app.js` | The screens: setup steps, recipe chooser, week, shopping list, product picker, store search, recipes, profile, paywall |
-| `js/planner.js` | Calorie targets, per-person diet & allergy filters, suggestions, auto-fill, the week, day-by-day schedule, shopping list, units & currency |
-| `js/data.js` | 94 ingredients (pack size, base price, nutrition, allergens) and 67 recipes with cuisine, steps in English and Romanian |
+| `js/planner.js` | Calorie targets, per-person diet, health-need (`NEED_RULES`) & allergy filters, suggestions, auto-fill, the week, day-by-day schedule, shopping list, units & currency |
+| `js/data.js` | 99 ingredients (pack size, base price, nutrition, allergens) and 82 recipes with cuisine, steps in English and Romanian |
 | `js/regions.js` | 58 countries → regions → supermarket chains, currency, regional price level, chain price index |
 | `js/products.js` | Open Food Facts / Open Prices client: search, quantity parsing, caching, rate limiting |
 | `js/storage.js` | Encrypted on-device storage, migration, delete-everything |

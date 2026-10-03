@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.id = {
-    appName: 'Keranjang Mingguan', tagline: 'Supermarketmu, pola makanmu, keluargamu. Direncanakan setiap minggu.',
+    appName: 'Prepcart', tagline: 'Supermarketmu, pola makanmu, keluargamu. Direncanakan setiap minggu.',
     next: 'Lanjut', back: 'Kembali', close: 'Tutup', remove: 'Hapus', stepOf: (a, b) => `${a} dari ${b}`,
     placeTitle: 'Di mana kamu belanja?', placeHint: 'Toko, harga, bahasa, dan satuan mengikuti pilihanmu.',
     language: 'Bahasa', country: 'Negara', units: 'Satuan', metric: 'Metrik (g, kg, l)', imperial: 'AS (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Cari resep…', allRecipes: 'Semua', ingredients: 'Bahan', method: 'Cara membuat', perServing: 'Per porsi',
     cookFor: (n) => `Takaran untuk ${n} porsi`, favorite: 'Favorit', notForHousehold: 'Tidak cocok untuk pola makan atau alergi siapa pun',
     stepsInEnglish: 'Langkah resep ditampilkan dalam bahasa Inggris.',
-    premiumTitle: 'Keranjang Mingguan Premium', premiumPitch: 'Belanja tanpa stres, setiap minggu.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Belanja tanpa stres, setiap minggu.',
     perk1: 'Rencana mingguan untuk seluruh keluarga, sesuai pola makan tiap orang', perk2: 'Daftar belanja untuk supermarketmu, lengkap dengan jumlahnya',
     perk3: 'Produk dan harga asli dari tokomu', perk4: 'Resep dari masakan favoritmu',
     planMonthly: 'Bulanan', planYearly: 'Tahunan', perMonth: '/bulan', perYear: '/tahun', savePct: (n) => `Hemat ${n}%`,
@@ -192,5 +192,49 @@
     referralJoined: (name) => `Bergabung lewat tautan ${name}`,
     referralBad: 'Kode referal ini tidak valid.',
     referralAlready: 'Penawaran referal sudah diterapkan.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.id, {
+    needs: 'Kebutuhan kesehatan & gaya hidup (opsional, digabung dengan diet)',
+    need_low_histamine: 'Rendah histamin',
+    need_low_fodmap: 'Rendah FODMAP (usus sensitif / IBS)',
+    need_mind: 'MIND (kesehatan otak)',
+    need_dash: 'DASH (jantung & tekanan darah)',
+    need_blood_sugar: 'Ramah gula darah',
+    need_anti_inflammatory: 'Anti-inflamasi',
+    need_halal: 'Halal',
+    need_kosher: 'Kosher',
+    needNote_low_histamine: 'Makan selagi segar: bekukan sisa makanan, jangan disimpan di kulkas, karena histamin bertambah seiring waktu.',
+    needNote_halal: 'Pilih daging bersertifikat halal saat berbelanja.',
+    needNote_kosher: 'Pilih daging dan produk bersertifikat kosher saat berbelanja.',
+    needNote_medical: 'Ini bantuan perencanaan, bukan saran medis. Jika punya kondisi medis, ikuti saran dokter atau ahli gizi Anda.',
+    theme: 'Tampilan',
+    theme_system: 'Otomatis',
+    theme_light: 'Terang',
+    theme_dark: 'Gelap',
+  });
+  Object.assign(MP.NAMES.id.ing, {
+    blueberries: 'Blueberry beku',
+    butternut: 'Labu butternut',
+    mozzarella: 'Mozzarella segar',
+    garlic_oil: 'Minyak zaitun beraroma bawang putih',
+    maple_syrup: 'Sirup maple',
+  });
+  Object.assign(MP.NAMES.id.recipe, {
+    blueberry_porridge: 'Bubur oat blueberry',
+    zucchini_scramble: 'Telur orak-arik dengan zukini dan herba',
+    coconut_rice_pudding: 'Puding nasi kelapa dengan blueberry',
+    sweet_potato_hash: 'Tumis ubi jalar dengan telur',
+    herb_chicken_rice: 'Ayam herba dengan nasi, zukini, dan wortel',
+    salmon_dill_potatoes: 'Salmon dengan kentang dill dan brokoli',
+    turkey_quinoa_peppers: 'Paprika isi kalkun dan quinoa',
+    mild_coconut_curry: 'Kari ayam santan yang lembut',
+    butternut_risotto: 'Risotto labu butternut',
+    ginger_fish_noodles: 'Ikan jahe dengan bihun beras',
+    mozzarella_zucchini_bake: 'Panggang zukini dan kentang dengan mozzarella',
+    beef_sweet_potato_skillet: 'Tumis daging sapi dan ubi jalar',
+    quinoa_veg_bowl: 'Mangkuk quinoa dengan sayur renyah',
+    blueberry_chia_pudding: 'Puding chia blueberry',
+    mozzarella_cucumber: 'Mozzarella dengan mentimun dan herba',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

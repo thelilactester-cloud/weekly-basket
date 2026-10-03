@@ -5,7 +5,7 @@
   MP.NAMES = MP.NAMES || {};
 
   MP.STRINGS.vi = {
-    appName: 'Giỏ Hàng Tuần', tagline: 'Siêu thị của bạn, chế độ ăn của bạn, gia đình bạn. Lên kế hoạch mỗi tuần.',
+    appName: 'Prepcart', tagline: 'Siêu thị của bạn, chế độ ăn của bạn, gia đình bạn. Lên kế hoạch mỗi tuần.',
     next: 'Tiếp', back: 'Quay lại', close: 'Đóng', remove: 'Xóa', stepOf: (a, b) => `${a}/${b}`,
     placeTitle: 'Bạn đi chợ ở đâu?', placeHint: 'Cửa hàng, giá, ngôn ngữ và đơn vị đo theo lựa chọn của bạn.',
     language: 'Ngôn ngữ', country: 'Quốc gia', units: 'Đơn vị', metric: 'Hệ mét (g, kg, l)', imperial: 'Mỹ (oz, lb)',
@@ -72,7 +72,7 @@
     search: 'Tìm công thức…', allRecipes: 'Tất cả', ingredients: 'Nguyên liệu', method: 'Cách làm', perServing: 'Mỗi phần',
     cookFor: (n) => `Định lượng cho ${n} phần`, favorite: 'Yêu thích', notForHousehold: 'Không hợp với chế độ ăn hay dị ứng của ai',
     stepsInEnglish: 'Các bước nấu được hiển thị bằng tiếng Anh.',
-    premiumTitle: 'Giỏ Hàng Tuần Premium', premiumPitch: 'Đi chợ nhẹ nhàng, mỗi tuần.',
+    premiumTitle: 'Prepcart Premium', premiumPitch: 'Đi chợ nhẹ nhàng, mỗi tuần.',
     perk1: 'Thực đơn tuần cho cả nhà, theo chế độ ăn của từng người', perk2: 'Danh sách mua sắm cho siêu thị của bạn, có số lượng',
     perk3: 'Sản phẩm và giá thật từ cửa hàng của bạn', perk4: 'Công thức từ những nền ẩm thực bạn yêu thích',
     planMonthly: 'Hằng tháng', planYearly: 'Hằng năm', perMonth: '/tháng', perYear: '/năm', savePct: (n) => `Tiết kiệm ${n}%`,
@@ -191,5 +191,49 @@
     referralJoined: (name) => `Tham gia qua liên kết của ${name}`,
     referralBad: 'Mã giới thiệu này không hợp lệ.',
     referralAlready: 'Đã áp dụng ưu đãi giới thiệu.',
+  });
+  // health needs and appearance
+  Object.assign(MP.STRINGS.vi, {
+    needs: 'Nhu cầu sức khỏe & lối sống (tùy chọn, kết hợp với chế độ ăn)',
+    need_low_histamine: 'Ít histamine',
+    need_low_fodmap: 'Ít FODMAP (đường ruột nhạy cảm / IBS)',
+    need_mind: 'MIND (sức khỏe não bộ)',
+    need_dash: 'DASH (tim mạch & huyết áp)',
+    need_blood_sugar: 'Thân thiện đường huyết',
+    need_anti_inflammatory: 'Chống viêm',
+    need_halal: 'Halal',
+    need_kosher: 'Kosher',
+    needNote_low_histamine: 'Hãy ăn món khi còn tươi: cấp đông đồ ăn thừa thay vì để tủ lạnh, vì histamine tăng dần theo thời gian.',
+    needNote_halal: 'Chọn thịt có chứng nhận halal khi đi chợ.',
+    needNote_kosher: 'Chọn thịt và sản phẩm có chứng nhận kosher khi đi chợ.',
+    needNote_medical: 'Đây là gợi ý lên thực đơn, không phải lời khuyên y tế. Nếu có bệnh lý, hãy làm theo hướng dẫn của bác sĩ hoặc chuyên gia dinh dưỡng.',
+    theme: 'Giao diện',
+    theme_system: 'Tự động',
+    theme_light: 'Sáng',
+    theme_dark: 'Tối',
+  });
+  Object.assign(MP.NAMES.vi.ing, {
+    blueberries: 'Việt quất đông lạnh',
+    butternut: 'Bí butternut',
+    mozzarella: 'Phô mai mozzarella tươi',
+    garlic_oil: 'Dầu ô liu hương tỏi',
+    maple_syrup: 'Siro phong',
+  });
+  Object.assign(MP.NAMES.vi.recipe, {
+    blueberry_porridge: 'Cháo yến mạch việt quất',
+    zucchini_scramble: 'Trứng bác bí ngòi và rau thơm',
+    coconut_rice_pudding: 'Pudding gạo nước cốt dừa với việt quất',
+    sweet_potato_hash: 'Khoai lang xào trứng',
+    herb_chicken_rice: 'Gà rau thơm với cơm, bí ngòi và cà rốt',
+    salmon_dill_potatoes: 'Cá hồi với khoai tây thì là và bông cải xanh',
+    turkey_quinoa_peppers: 'Ớt chuông nhồi gà tây và diêm mạch',
+    mild_coconut_curry: 'Cà ri gà nước cốt dừa vị nhẹ',
+    butternut_risotto: 'Risotto bí butternut',
+    ginger_fish_noodles: 'Cá gừng với bún gạo',
+    mozzarella_zucchini_bake: 'Bí ngòi và khoai tây nướng phô mai mozzarella',
+    beef_sweet_potato_skillet: 'Bò xào khoai lang',
+    quinoa_veg_bowl: 'Bát diêm mạch với rau giòn',
+    blueberry_chia_pudding: 'Pudding hạt chia việt quất',
+    mozzarella_cucumber: 'Mozzarella với dưa leo và rau thơm',
   });
 })(typeof window !== 'undefined' ? window : globalThis);

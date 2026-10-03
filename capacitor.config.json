@@ -1,6 +1,6 @@
 {
-  "appId": "com.weeklybasket.app",
-  "appName": "Weekly Basket",
+  "appId": "com.prepcart.app",
+  "appName": "Prepcart",
   "webDir": "dist",
   "ios": {
     "contentInset": "automatic"
