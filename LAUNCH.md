@@ -186,6 +186,12 @@ account first.
 - The iPhone app hides our own unlock codes and uses Apple offer codes (3.1.1). ✓
 - The app works without an account. ✓ Users can delete all their data. ✓
 
+**Accessibility (Apple's Accessibility Nutrition Labels, App Store Connect → App Accessibility):** the app supports
+**Dark Interface**, **Larger Text** (in-app text size up to 132%, and it follows the phone's text size on Android),
+**Sufficient Contrast** (WCAG AA, checked with axe-core, plus a high-contrast mode) and **Reduced Motion** (follows the phone,
+plus an in-app switch). Claim **VoiceOver** only after you have tried the main tasks (setup, choosing recipes, shopping list)
+with VoiceOver on an iPhone yourself. Store listing text and screenshots: `store/`.
+
 ## 9. Affiliates: day to day
 
 - **Add an affiliate:** `…/weekly-basket/admin.html` → sign in as admin → *Add or change an affiliate* → code (e.g. `MARIA`),

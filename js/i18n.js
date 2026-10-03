@@ -132,6 +132,18 @@
     newIdeas: 'New ideas',
     // appearance
     theme: 'Appearance', theme_system: 'Automatic', theme_light: 'Light', theme_dark: 'Dark',
+    mealsTitle: 'Meals at home', mealsHint: 'Only these meals are planned and shopped for. Leave out meals eaten at nursery, school or work, meals out, and fasting days.',
+    mealsSame: 'Same every day', mealsSplit: 'Weekdays / weekend', mealsEach: 'Day by day',
+    everyDay: 'Every day', monFri: 'Monday to Friday', satSun: 'Saturday and Sunday',
+    mealCount: 'Meals', mealsNone: 'None', snacks: 'Snacks',
+    mealsSummary: (n, snacks) => `${n} ${n === 1 ? 'meal' : 'meals'}${snacks ? ' + snacks' : ''}`,
+    noMealsDay: 'No meals at home (eating out or fasting)',
+    homeMealsOnly: (kcal) => `Meals at home only. Full day: ${kcal} kcal.`,
+    displayTitle: 'Display and reading', displaySummary: 'Dark mode, larger text, dyslexia-friendly font', textSize: 'Text size', text_normal: 'Normal', text_large: 'Large', text_xl: 'Extra large',
+    dyslexiaMode: 'Dyslexia-friendly', dyslexiaHint: 'A font made for dyslexia, with more space between letters, words and lines.',
+    moreReading: 'More reading options', readingFont: 'Font', font_standard: 'Standard', font_dyslexic: 'For dyslexia (OpenDyslexic)', font_legible: 'Atkinson Hyperlegible (low vision)',
+    spacing: 'Letter and line spacing', spacing_normal: 'Normal', spacing_wide: 'Wide',
+    contrast: 'High contrast', motion: 'Reduce motion', on: 'On', off: 'Off',
     // affiliates
     referralBanner: (name, months) => `${name}’s link: ${months} months free`, referralJoined: (name) => `Joined with ${name}’s link`,
     referralBad: 'This referral code isn’t valid.', referralAlready: 'A referral offer is already applied.',
