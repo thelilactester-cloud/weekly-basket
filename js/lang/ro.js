@@ -166,4 +166,6 @@
     theme_light: 'Luminos',
     theme_dark: 'Întunecat',
   });
+  // more recipes
+  Object.assign(MP.STRINGS.ro, { newIdeas: 'Idei noi' });
 })(typeof window !== 'undefined' ? window : globalThis);

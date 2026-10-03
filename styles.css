@@ -369,3 +369,5 @@ a.btn { display: block; text-align: center; text-decoration: none; color: inheri
 .hero .logo-img { width: 88px; height: 88px; border-radius: 22px; }
 .account-sheet .logo-img { width: 56px; height: 56px; border-radius: 14px; }
 .splash img { border-radius: 24px; }
+.row.between { justify-content: space-between; align-items: center; }
+.row.between h3 { margin: 0; }

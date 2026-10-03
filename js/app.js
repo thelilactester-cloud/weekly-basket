@@ -20,6 +20,8 @@
 
   // ---------- state ----------
   // Guess language and country from the device (e.g. es-US → Spanish, United States).
+  const newSeed = () => Math.floor(Math.random() * 1e9);
+
   function defaultState() {
     const prefs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en'];
     const lang = MP.detectLanguage(prefs);
@@ -32,7 +34,7 @@
       units: MP.COUNTRIES[country].units || 'metric', household: 'solo',
       members: [MP.newMember()],
       prefs: { mealsPerDay: 3, maxTime: 60, budget: 'balanced', weeklyBudget: '', cuisines: [] },
-      week: { startedAt: Date.now(), items: [] }, lastWeek: null,
+      week: { startedAt: Date.now(), items: [], seed: newSeed() }, lastWeek: null, recentWeeks: [],
       favorites: [], checked: {}, products: {}, extras: [],
       trialStart: null, premiumCachedUntil: 0, access: null, referral: null, theme: 'system',
     };
@@ -48,6 +50,7 @@
     const out = Object.assign(defaultState(), s, { v: 2 });
     out.prefs = Object.assign(defaultState().prefs, s.prefs || {});
     if (!out.week || !Array.isArray(out.week.items)) out.week = { startedAt: Date.now(), items: [] };
+    if (!out.week.seed) out.week.seed = newSeed();
     if (s.v === 1 && s.onboarded) { out.tab = 'week'; out.trialStart = out.trialStart || Date.now(); }
     delete out.plan; delete out.swipes; delete out.dirty;
     return out;
@@ -428,7 +431,7 @@
         ${slotDone(ui.slot) ? `<span class="good small">${t('allCovered')}</span>` : `<button type="button" class="btn small primary" data-autofill>✨ ${t('autoFill')}</button>`}
         ${items.length ? `<button type="button" class="btn small ghost" data-clear-slot>${t('clearWeek')}</button>` : ''}
       </div>
-      <h3>${t('suggestions')}</h3>
+      <div class="row between"><h3>${t('suggestions')}</h3><button type="button" class="btn small ghost" data-shuffle>🔀 ${t('newIdeas')}</button></div>
       <div class="suggestions">${sugg.slice(0, ui.sugLimit).map(suggestionCard).join('')}</div>
       ${sugg.length > ui.sugLimit ? `<button type="button" class="btn ghost wide" data-more>${t('showMore')}</button>` : ''}`;
   }
@@ -1178,12 +1181,15 @@
       return toast(t('addedToWeek'));
     }
     if (b.hasAttribute('data-clear-slot')) { state.week.items = state.week.items.filter((it) => it.slot !== ui.slot); save(); return render(); }
+    if (b.hasAttribute('data-shuffle')) { state.week.seed = newSeed(); ui.sugLimit = 12; save(); return render(); }
     if (b.hasAttribute('data-more')) { ui.sugLimit += 12; return render(); }
     if (b.hasAttribute('data-go-choose')) { state.tab = 'week'; ui.weekView = 'choose'; save(); return render(); }
     if (b.hasAttribute('data-new-week')) {
       if (!confirm(t('newWeekConfirm'))) return;
+      // Remember the last weeks' dishes so the new week suggests different ones.
+      if (state.lastWeek && state.lastWeek.length) state.recentWeeks = [state.lastWeek.map((it) => it.recipeId)].concat(state.recentWeeks || []).slice(0, 3);
       state.lastWeek = state.week.items.map((it) => Object.assign({}, it));
-      state.week = { startedAt: Date.now(), items: [] };
+      state.week = { startedAt: Date.now(), items: [], seed: newSeed() };
       state.checked = {};
       state.extras = [];
       ui.weekView = 'choose';

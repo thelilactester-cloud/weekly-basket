@@ -253,6 +253,21 @@
     return state.week.items;
   }
 
+  // ---------- variety ----------
+  // A number in [0, 1) that is fixed for a (week seed, recipe) pair, so suggestions stay put while
+  // you plan but change every new week, or when you tap "New ideas".
+  MP.varietyNoise = function (seed, id) {
+    let h = (seed >>> 0) ^ 0x9e3779b9;
+    for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 2654435761) >>> 0;
+    return MP.rng(h)();
+  };
+  // Recipes eaten in the last weeks (newest first), to avoid suggesting the same dishes again.
+  MP.recentRecipeIds = function (state) {
+    const last = (state.lastWeek || []).map((it) => it.recipeId);
+    const older = (state.recentWeeks || []).flat();
+    return { last: new Set(last), older: new Set(older) };
+  };
+
   // ---------- suggestions ----------
   // Recipes for one meal that at least one person in the household can eat, best first.
   // Score: fits more people > liked cuisines > favourites > diet preferences > budget > not already chosen.
@@ -264,6 +279,8 @@
     const chosen = {};
     for (const it of weekItems(state)) if (it.slot === slot) chosen[it.recipeId] = (chosen[it.recipeId] || 0) + it.days;
     const budgetWeight = { save: 1.5, balanced: 0.5, any: 0 }[prefs.budget || 'balanced'];
+    const seed = (state.week && state.week.seed) || 0;
+    const recent = MP.recentRecipeIds(state);
     const out = [];
     for (const r of MP.RECIPES) {
       if (!r.meal.includes(mealType)) continue;
@@ -282,6 +299,9 @@
       }
       score -= (MP.recipeCost(r) / medianCost() - 1) * budgetWeight;
       score -= (chosen[r.id] || 0) * 0.7;
+      // Variety: a little week-specific shuffle, and dishes from the last weeks move down.
+      score += MP.varietyNoise(seed, r.id) * 1.2;
+      if (!chosen[r.id]) score -= recent.last.has(r.id) ? 1 : recent.older.has(r.id) ? 0.5 : 0;
       out.push({ recipe: r, eaters: eaters.map((m) => m.id), score });
     }
     return out.sort((a, b) => b.score - a.score);

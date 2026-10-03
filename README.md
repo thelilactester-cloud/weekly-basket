@@ -3,7 +3,7 @@
 A weekly meal planner and shopping list for **your supermarket**, **where you live**, **your diet** and **your family**.
 Made to be used every week to take the pressure off shopping.
 
-**27 languages · 58 countries · 82 recipes from 12 cuisines · 8 health needs (low histamine, MIND, DASH…) · light & dark mode · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
+**27 languages · 58 countries · 122 recipes from 12 cuisines · 8 health needs (low histamine, MIND, DASH…) · light & dark mode · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
 
 ## How it works for the user
 
@@ -116,7 +116,7 @@ which are free, open and crowd-sourced. Coverage is best for big chains in Europ
 |---|---|
 | `js/app.js` | The screens: setup steps, recipe chooser, week, shopping list, product picker, store search, recipes, profile, paywall |
 | `js/planner.js` | Calorie targets, per-person diet, health-need (`NEED_RULES`) & allergy filters, suggestions, auto-fill, the week, day-by-day schedule, shopping list, units & currency |
-| `js/data.js` | 99 ingredients (pack size, base price, nutrition, allergens) and 82 recipes with cuisine, steps in English and Romanian |
+| `js/data.js` | 99 ingredients (pack size, base price, nutrition, allergens) and 122 recipes with cuisine, steps in English and Romanian |
 | `js/regions.js` | 58 countries → regions → supermarket chains, currency, regional price level, chain price index |
 | `js/products.js` | Open Food Facts / Open Prices client: search, quantity parsing, caching, rate limiting |
 | `js/storage.js` | Encrypted on-device storage, migration, delete-everything |
