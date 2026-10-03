@@ -18,7 +18,7 @@ jobs:
   android:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     env:
       HAS_UPLOAD_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
@@ -88,9 +88,49 @@ jobs:
         with:
           name: prepcart-google-play
           path: prepcart-play.aab
+  # Opens the Android app on an emulator to make sure it starts (catches crashes on launch).
+  android-smoke:
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: prepcart-android
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash scripts/android-smoke.sh prepcart.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-smoke
+          path: smoke/
+
+  # Publishes the test app for download only after it has been seen to start on the emulator.
+  release:
+    needs: android-smoke
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: prepcart-android
       - name: Publish the "android-test" release
-        if: github.event_name != 'pull_request'
         env:
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete android-test --yes --cleanup-tag || true
@@ -99,8 +139,9 @@ jobs:
             --title "Prepcart: Android test app" \
             --notes "Test build from commit ${GITHUB_SHA::7}. On your Android phone: download prepcart.apk, open it, and allow installing from this source when asked. Payments are off until the RevenueCat keys are added."
 
+
   website:
-    needs: android
+    needs: [android, android-smoke]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
