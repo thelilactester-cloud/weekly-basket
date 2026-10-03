@@ -554,3 +554,72 @@ test('a meal is the same size whatever else the person eats that day', () => {
   assert.equal(MP.portionFor(r, one, 'dinner'), MP.portionFor(r, three, 'dinner'));
   assert.ok(MP.memberDayShare({}, one, 0) < MP.memberDayShare({}, three, 0));
 });
+
+// ───────── traditional dishes ─────────
+
+test('every country has traditional dishes, and they come first when "local dishes" is on', () => {
+  for (const c of Object.keys(MP.COUNTRIES)) {
+    assert.ok(MP.RECIPES.filter((r) => (r.countries || []).includes(c)).length >= 2, `${c} has fewer than 2 local dishes`);
+  }
+  for (const r of MP.RECIPES) for (const c of r.countries || []) assert.ok(MP.COUNTRIES[c], `${r.id}: unknown country ${c}`);
+  const st = household([MP.newMember()], { local: true });
+  st.country = 'PT';
+  const top = MP.suggestRecipes(st, 'dinner').slice(0, 5);
+  assert.ok(top.filter((s) => s.recipe.countries && s.recipe.countries.includes('PT')).length >= 3, top.map((s) => s.recipe.id).join());
+});
+
+test('"mild" leaves out spicy dishes', () => {
+  for (const r of MP.RECIPES) if (r.tags.includes('spicy')) assert.equal(MP.fitsNeeds(r, ['mild']), false, r.id);
+  assert.ok(MP.RECIPES.filter((r) => MP.fitsNeeds(r, ['mild']) && r.meal.includes('main')).length > 100);
+});
+
+// ───────── adults and children ─────────
+
+test('children need no age or size: a portion size sets their target, and adults without details get typical values', () => {
+  const kid = MP.newMember({ kind: 'child', age: '', height: '', weight: '' });
+  assert.ok(MP.isChild(kid));
+  assert.equal(MP.memberTargets(kid).kcal, 1500);
+  assert.equal(MP.memberTargets(Object.assign({}, kid, { portion: 'small' })).kcal, 1100);
+  const adult = MP.newMember({ kind: 'adult', sex: '', age: '', height: '', weight: '' });
+  assert.equal(MP.isChild(adult), false);
+  const t = MP.memberTargets(adult).kcal;
+  const m = MP.memberTargets(Object.assign({}, adult, { sex: 'm' })).kcal;
+  const f = MP.memberTargets(Object.assign({}, adult, { sex: 'f' })).kcal;
+  assert.ok(t > f && t < m, `${f} < ${t} < ${m}`);
+  // older saved data without "kind" still works from the age
+  assert.ok(MP.isChild(MP.newMember({ age: 8 })));
+});
+
+// ───────── several shops ─────────
+
+test('with several shops, each item goes where it is the best value, and small savings are not worth a trip', () => {
+  const st = household([MP.newMember()]);
+  st.country = 'GB'; st.region = ''; st.store = 'tesco';
+  MP.addToWeek(st, 'chicken_traybake', 'dinner', 4);
+  MP.addToWeek(st, 'lentil_curry', 'lunch', 4);
+  // no other shop: one group, same as the normal list
+  let plan = MP.shopPlan(st);
+  assert.equal(plan.shops.length, 1);
+  assert.equal(Math.round(plan.total * 100), Math.round(MP.buildShoppingList(st).total * 100));
+  // Aldi is cheaper on estimates: everything moves there, and the plan says how much that saves
+  const aldi = MP.storesFor('GB', '').find((x) => x.id === 'aldi');
+  assert.ok(aldi && aldi.priceIndex < 1);
+  st.extraStores = ['aldi'];
+  plan = MP.shopPlan(st);
+  assert.ok(plan.saving > 0);
+  assert.ok(plan.shops.some((g) => g.store.id === 'aldi' && g.items.length));
+  assert.ok(plan.total < plan.single);
+  // a real price the user set at Tesco that beats Aldi keeps that item at Tesco
+  const first = plan.shops.find((g) => g.store.id === 'aldi').items[0];
+  st.products = { 'GB:tesco': { [first.id]: { name: 'Own brand', pack: first.pack, price: 0.01, priceSource: 'mine' } } };
+  plan = MP.shopPlan(st);
+  const tesco = plan.shops.find((g) => g.store.id === 'tesco');
+  assert.ok(tesco.items.some((x) => x.id === first.id));
+  // a shop that would save almost nothing is dropped
+  const sains = MP.storesFor('GB', '').find((x) => x.id === 'sainsbury-s');
+  if (sains) {
+    st.products = {}; st.extraStores = [sains.id];
+    plan = MP.shopPlan(st);
+    if (sains.priceIndex >= 1) assert.equal(plan.shops.length, 1);
+  }
+});

@@ -3,7 +3,7 @@
 A weekly meal planner and shopping list for **your supermarket**, **where you live**, **your diet** and **your family**.
 Made to be used every week to take the pressure off shopping.
 
-**27 languages · 58 countries · 122 recipes from 12 cuisines · 8 health needs (low histamine, MIND, DASH…) · light & dark mode · dyslexia-friendly reading mode · per-person meal schedules · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
+**27 languages · 58 countries · 192 recipes from 16 cuisines, with traditional dishes for every country · 9 health needs (low histamine, MIND, DASH, mild…) · light & dark mode · dyslexia-friendly reading mode · per-person meal schedules · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
 
 ## How it works for the user
 
@@ -17,12 +17,22 @@ Made to be used every week to take the pressure off shopping.
    the diet: **low histamine**, **low FODMAP** (sensitive gut / IBS), **MIND** (brain health), **DASH** (heart & blood
    pressure), **blood-sugar friendly**, **anti-inflammatory**, **halal**, **kosher**. Then allergies and foods to avoid
    (gluten, dairy, eggs, peanuts, tree nuts, fish, shellfish, soy, sesame, beef) and anything else they don't eat, in any language.
+   **Adults and children:** say how many adults and how many children. Children need no age, height or weight: just
+   their food preferences, allergies, a portion size (small / medium / large) and the meals they eat at home; they start
+   with *Mild (not spicy)*. For adults, sex, age, height, weight, activity and goal are optional.
    **Meals at home, per person:** 1, 2 or 3 meals and snacks (separately), the same every day, weekdays / weekend, or day by
    day. A child who has lunch at nursery, a parent who fasts on Mondays or eats out on Fridays: only the meals eaten at
    home are planned and bought.
 5. **Taste:** the cuisines you like (Romanian & Eastern European, Mediterranean, Italian, American & British,
    Mexican & Latin, Middle Eastern & Turkish, African, Indian, Chinese, Japanese & Korean, Thai & Vietnamese,
    Everyday & healthy), cooking time, budget.
+**Local dishes:** every one of the 58 countries has traditional recipes (at least two). *Traditional dishes from …* is
+on by default on the taste step, and the Recipes tab has a filter for them.
+
+**Several supermarkets:** pick your main shop and, optionally, others to compare. The shopping list then puts each
+product in the shop where it is the best value (price, with a small bonus for a better Nutri-Score when you chose a
+product), and only adds a shop if it saves at least 3 %. Switch to *Only <shop>* at any time.
+
 **Display and reading** (first screen, and Profile): light / dark / automatic, three text sizes, a **dyslexia-friendly**
 mode (OpenDyslexic font + wider letter, word and line spacing), Atkinson Hyperlegible for low vision, high contrast and
 reduced motion. Screens are checked with axe-core (WCAG 2.1 AA) in light and dark.
@@ -123,7 +133,7 @@ which are free, open and crowd-sourced. Coverage is best for big chains in Europ
 |---|---|
 | `js/app.js` | The screens: setup steps, recipe chooser, week, shopping list, product picker, store search, recipes, profile, paywall |
 | `js/planner.js` | Calorie targets, per-person diet, health-need (`NEED_RULES`) & allergy filters, suggestions, auto-fill, the week, day-by-day schedule, shopping list, units & currency |
-| `js/data.js` | 99 ingredients (pack size, base price, nutrition, allergens) and 122 recipes with cuisine, steps in English and Romanian |
+| `js/data.js` | 106 ingredients (pack size, base price, nutrition, allergens) and 192 recipes with cuisine, the countries where they are traditional, steps in English and Romanian |
 | `js/regions.js` | 58 countries → regions → supermarket chains, currency, regional price level, chain price index |
 | `js/products.js` | Open Food Facts / Open Prices client: search, quantity parsing, caching, rate limiting |
 | `js/storage.js` | Encrypted on-device storage, migration, delete-everything |

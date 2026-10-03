@@ -299,6 +299,7 @@ input:focus, select:focus, button:focus-visible, a:focus-visible, summary:focus-
 }
 .cuisine span { font-size: 1.4rem; }
 .cuisine.on { border-color: var(--accent); background: var(--accent-soft); }
+.cuisine.local { grid-column: 1 / -1; }
 .chips.scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; }
 .chips.scroll .chip { white-space: nowrap; }
 .slot-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 10px; }
@@ -428,3 +429,6 @@ a.btn { display: block; text-align: center; text-decoration: none; color: inheri
 .step-title { font-size: 1.35rem; margin-top: 8px; }
 h1.brand { margin: 0; font-size: 1.1rem; }
 .sub-h { font-size: 1.05rem; margin: 18px 0 12px; }
+.optional-details { border: 1px solid var(--line); border-radius: 14px; padding: 6px 12px; margin: 0 0 14px; }
+.optional-details > summary { cursor: pointer; font-weight: 600; padding: 8px 0; min-height: 44px; display: flex; align-items: center; }
+.shop-group h3 small { font-weight: 400; }
