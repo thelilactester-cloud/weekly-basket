@@ -33,6 +33,13 @@
   // Guess language and country from the device (e.g. es-US → Spanish, United States).
   const newSeed = () => Math.floor(Math.random() * 1e9);
 
+  const adultsOf = () => state.members.filter((m) => !MP.isChild(m));
+  const kidsOf = () => state.members.filter((m) => MP.isChild(m));
+  // New people start with nothing filled in: for adults the details are optional, children need none.
+  function newPerson(kind) {
+    return MP.newMember({ kind, sex: '', age: '', height: '', weight: '', needs: kind === 'child' ? ['mild'] : [] });
+  }
+
   function readDisplay() {
     try { return JSON.parse(localStorage.getItem('prepcart-display') || 'null') || {}; } catch (e) { return {}; }
   }
@@ -47,8 +54,8 @@
       v: 2, lang, onboarded: false, step: 0, tab: 'week',
       country, region: '', store: MP.storesFor(country, '')[0].id, customStore: '',
       units: MP.COUNTRIES[country].units || 'metric', household: 'solo',
-      members: [MP.newMember()],
-      prefs: { mealsPerDay: 3, maxTime: 60, budget: 'balanced', weeklyBudget: '', cuisines: [] },
+      members: [newPerson('adult')],
+      prefs: { mealsPerDay: 3, maxTime: 60, budget: 'balanced', weeklyBudget: '', cuisines: [], local: true },
       week: { startedAt: Date.now(), items: [], seed: newSeed() }, lastWeek: null, recentWeeks: [],
       favorites: [], checked: {}, products: {}, extras: [],
       trialStart: null, premiumCachedUntil: 0, access: null, referral: null, theme: 'system',
@@ -66,6 +73,11 @@
     const out = Object.assign(defaultState(), s, { v: 2 });
     out.prefs = Object.assign(defaultState().prefs, s.prefs || {});
     out.display = Object.assign({}, DISPLAY_DEFAULT, s.display || {});
+    if (s.prefs && s.prefs.local === undefined) out.prefs.local = true;
+    // People saved before adults / children were separate: decide from the age, adults first.
+    out.members = (out.members && out.members.length ? out.members : [newPerson('adult')]).map((m) => Object.assign(m, { kind: m.kind || (MP.isChild(m) ? 'child' : 'adult') }));
+    out.members.sort((x, y) => (x.kind === 'child') - (y.kind === 'child'));
+    if (!out.members.some((m) => m.kind === 'adult')) out.members.unshift(newPerson('adult'));
     if (!out.week || !Array.isArray(out.week.items)) out.week = { startedAt: Date.now(), items: [] };
     if (!out.week.seed) out.week.seed = newSeed();
     if (s.v === 1 && s.onboarded) { out.tab = 'week'; out.trialStart = out.trialStart || Date.now(); }
@@ -283,8 +295,11 @@
   const imperial = () => state.units === 'imperial';
   const members = () => MP.activeMembers(state);
   const memberName = (m) => {
-    const i = state.members.indexOf(m);
-    return esc(m.name || (i === 0 ? t('you') : t('personN', i + 1)));
+    if (m.name) return esc(m.name);
+    const same = state.members.filter((x) => MP.isChild(x) === MP.isChild(m));
+    const i = same.indexOf(m);
+    if (MP.isChild(m)) return esc(t('childN', i + 1));
+    return esc(state.members.indexOf(m) === 0 ? t('you') : t('adultN', i + 1));
   };
   const nameById = (id) => { const m = state.members.find((x) => x.id === id); return m ? memberName(m) : ''; };
   const round = (v) => Math.round(v);
@@ -292,7 +307,8 @@
   const safeImg = (url) => (/^https:\/\/(images|static)\.openfoodfacts\.org\//.test(url || '') ? url : '');
   // Search term for an ingredient: its name without "(bunch)", "(can)" etc.
   const searchTerm = (id, lang) => MP.ingName(id, lang).replace(/\s*[(（].*?[)）]/g, '').split('/')[0].trim();
-  const CUISINE_ICON = { international: '🌍', eastern_european: '🥟', mediterranean: '🫒', italian: '🍝', western: '🍔', latin: '🌮',
+  const CUISINE_ICON = { international: '🌍', eastern_european: '🥟', mediterranean: '🫒', italian: '🍝', french: '🥖', iberian: '🥘',
+    central_european: '🥨', nordic: '🐟', western: '🍔', latin: '🌮',
     middle_eastern: '🧆', african: '🍲', indian: '🍛', chinese: '🥢', japanese_korean: '🍱', southeast_asian: '🍜' };
 
   function toast(msg) {
@@ -355,17 +371,28 @@
         <button type="button" class="store other ${state.store === MP.CUSTOM_STORE_ID ? 'on' : ''}" data-store="${MP.CUSTOM_STORE_ID}">${t('otherStore')}</button>
       </div>
       ${state.store === MP.CUSTOM_STORE_ID ? `<label class="field top"><span>${t('customStoreName')}</span>
-        <input data-root="customStore" value="${esc(state.customStore)}" autocomplete="off" maxlength="60"><small class="muted">${t('customStoreHint')}</small></label>` : ''}`;
+        <input data-root="customStore" value="${esc(state.customStore)}" autocomplete="off" maxlength="60"><small class="muted">${t('customStoreHint')}</small></label>` : ''}
+      ${stores.length > 1 ? `
+      <div class="field top"><span>${t('compareShops')}</span>
+        <p class="muted small">${t('compareShopsHint')}</p>
+        <div class="chips">${stores.filter((st) => st.id !== state.store).map((st) => `
+          <button type="button" class="chip ${(state.extraStores || []).includes(st.id) ? 'on' : ''}" data-extra-store="${st.id}">${esc(st.name)}</button>`).join('')}
+        </div>
+      </div>` : ''}`;
   }
 
   function householdFields() {
-    const n = state.household === 'family' ? state.members.length : 1;
+    const step = (kind, n, label) => `
+        <div class="field top"><span id="lbl-${kind}">${label}</span>
+          <div class="stepper big" role="group" aria-labelledby="lbl-${kind}">
+            <button type="button" data-count="${kind}:-1" aria-label="${esc(t('fewer', label))}">−</button><b aria-live="polite">${n}</b><button type="button" data-count="${kind}:1" aria-label="${esc(t('more', label))}">＋</button>
+          </div>
+        </div>`;
     return `
       ${segmented('household', state.household, [['solo', '🙋 ' + t('justMe')], ['family', '👨‍👩‍👧 ' + t('family')]])}
       ${state.household === 'family' ? `
-        <div class="field top"><span>${t('howMany')}</span>
-          <div class="stepper big"><button type="button" data-count="-1" aria-label="−">−</button><b>${n}</b><button type="button" data-count="1" aria-label="+">＋</button></div>
-        </div>
+        ${step('adult', adultsOf().length, t('adults'))}
+        ${step('child', kidsOf().length, t('children'))}
         <p class="note">${t('peopleHint')}</p>` : ''}`;
   }
 
@@ -373,15 +400,23 @@
     const target = MP.memberTargets(m);
     const isChild = MP.isChild(m);
     const opt = (prefix, keys) => keys.map((k) => [k, t(prefix + k)]);
+    const hasDetails = ['age', 'height', 'weight'].some((k) => m[k] !== '' && m[k] != null) || m.sex === 'm' || m.sex === 'f';
     return `
       <div class="member" data-m="${i}">
         <div class="member-head">
-          <strong data-member-name>${memberName(m)}</strong>
-          <span class="pill">${t('daily')}: ${target.kcal} ${t('kcal')}</span>
+          <strong data-member-name>${isChild ? '🧒 ' : ''}${memberName(m)}</strong>
+          <span class="pill">${t('daily')}: ${hasDetails || isChild ? '' : '≈ '}${target.kcal} ${t('kcal')}</span>
         </div>
+        <label class="field"><span>${t('name')}</span><input data-f="name" value="${esc(m.name)}" autocomplete="off" maxlength="40" placeholder="${esc(t('optional'))}"></label>
+        ${isChild ? `
+        <div class="field"><span id="lbl-portion-${i}">${t('childPortion')}</span>
+          ${segmented('portion', m.portion || 'medium', [['small', t('portion_small')], ['medium', t('portion_medium')], ['large', t('portion_large')]]).replace('role="radiogroup"', `role="radiogroup" aria-labelledby="lbl-portion-${i}"`)}
+          <small class="muted">${t('childPortionHint')}</small>
+        </div>` : `
+        <details class="optional-details" ${hasDetails ? 'open' : ''}><summary>${t('adultDetails')}</summary>
+        <p class="muted small">${t('adultDetailsHint')}</p>
         <div class="grid2">
-          <label class="field"><span>${t('name')}</span><input data-f="name" value="${esc(m.name)}" autocomplete="off" maxlength="40"></label>
-          <label class="field"><span>${t('sex')}</span>${select('sex', m.sex, [['f', t('female')], ['m', t('male')]])}</label>
+          <label class="field"><span>${t('sex')}</span>${select('sex', m.sex || '', [['', t('notSay')], ['f', t('female')], ['m', t('male')]])}</label>
           <label class="field"><span>${t('age')}</span><input data-f="age" type="number" inputmode="numeric" min="1" max="110" value="${esc(m.age)}"></label>
           ${imperial() ? `
           <label class="field"><span>${t('heightIn')}</span><input data-f="height" data-conv="in" type="number" inputmode="numeric" min="20" max="90" value="${m.height === '' ? '' : Math.round(m.height / 2.54)}"></label>
@@ -390,8 +425,9 @@
           <label class="field"><span>${t('weight')}</span><input data-f="weight" type="number" inputmode="decimal" min="5" max="300" value="${esc(m.weight)}"></label>`}
           <label class="field"><span>${t('activity')}</span>${select('activity', m.activity, opt('activity_', Object.keys(MP.ACTIVITY)))}</label>
         </div>
-        <p class="note" data-child-note ${isChild ? '' : 'hidden'}>${t('childNote')}</p>
-        <label class="field" data-goal ${isChild ? 'hidden' : ''}><span>${t('goal')}</span>${select('goal', m.goal, opt('goal_', MP.GOALS))}</label>
+        <p class="note" data-child-note ${MP.isChild(m) ? '' : 'hidden'}>${t('childNote')}</p>
+        <label class="field" data-goal ${MP.isChild(m) ? 'hidden' : ''}><span>${t('goal')}</span>${select('goal', m.goal, opt('goal_', MP.GOALS))}</label>
+        </details>`}
         ${mealsFields(m)}
         <label class="field"><span>${t('diet')}</span>${select('diet', m.diet, opt('diet_', MP.DIETS))}</label>
         <div class="field"><span>${t('needs')}</span>
@@ -484,7 +520,9 @@
     const p = state.prefs;
     return `
       <div class="field"><span>${t('cuisinesTitle')}</span><p class="muted small">${t('cuisinesHint')}</p>
-        <div class="cuisines">${MP.CUISINES.map((c) => `
+        <div class="cuisines">
+          <button type="button" class="cuisine local ${p.local ? 'on' : ''}" data-local><span>${MP.flag(state.country)}</span>${esc(t('localDishes', MP.countryName(state.country, state.lang)))}</button>
+          ${MP.CUISINES.map((c) => `
           <button type="button" class="cuisine ${p.cuisines.includes(c) ? 'on' : ''}" data-cuisine="${c}"><span>${CUISINE_ICON[c]}</span>${t('cuisine_' + c)}</button>`).join('')}
         </div>
       </div>
@@ -545,7 +583,7 @@
           <span class="emoji tone-${r.tags[0]}">${r.emoji}</span>
           <span class="sugg-text">
             <span class="meal-name">${esc(rName(r))}</span>
-            <small class="muted">${CUISINE_ICON[r.cuisine]} ${t('cuisine_' + r.cuisine)} · ⏱ ${r.time}′ · ${round(n.kcal)} ${t('kcal')}</small>
+            <small class="muted">${(r.countries || []).includes(state.country) ? MP.flag(state.country) + ' ' : ''}${CUISINE_ICON[r.cuisine]} ${t('cuisine_' + r.cuisine)} · ⏱ ${r.time}′ · ${round(n.kcal)} ${t('kcal')}</small>
             ${fitsLine(s.eaters)}
           </span>
         </button>
@@ -720,6 +758,8 @@
       return `<div class="card empty-state"><p>${t('emptyWeek')}</p>
         <button type="button" class="btn primary wide" data-go-choose>${t('chooseRecipes')}</button></div>`;
     }
+    const multi = MP.selectedShops(state).length > 1;
+    if (multi && state.prefs.listMode !== 'one') return planView();
     const L = MP.buildShoppingList(state);
     const budget = Number(state.prefs.weeklyBudget) || 0;
     const groups = MP.CATEGORIES.map((c) => [c, L.groceries.filter((x) => x.cat === c)]).filter(([, xs]) => xs.length);
@@ -727,6 +767,7 @@
     const count = L.groceries.length + L.extras.length;
     return `
       <div class="section-head"><h2>${esc(t('shoppingAt', L.store))}</h2></div>
+      ${multi ? listModeSwitch() : ''}
       <div class="card total">
         <div><small class="muted">${t('estTotal')}</small><div class="big">${money(L.total)}</div></div>
         <div class="right">
@@ -747,16 +788,55 @@
       <p class="fine">${t('priceNote')}</p>`;
   }
 
-  function itemRow(x) {
+  function listModeSwitch() {
+    return `<div class="field">${segmented('listMode', state.prefs.listMode === 'one' ? 'one' : 'best', [['best', '🏪🏪 ' + t('listBest')], ['one', '🏪 ' + t('listOne', MP.storeOf(state).store.name)]])}</div>`;
+  }
+
+  // Shopping list split across the chosen shops (best price and quality per item).
+  function planView() {
+    const P = MP.shopPlan(state);
+    const budget = Number(state.prefs.weeklyBudget) || 0;
+    const all = P.shops.flatMap((g) => g.items);
+    const done = all.filter((x) => state.checked[x.id]).length + P.extras.filter((x) => state.checked['x:' + x.key]).length;
+    const count = all.length + P.extras.length;
+    const mainName = P.shops[0].store.name;
+    return `
+      <div class="section-head"><h2>${t('shoppingPlan')}</h2></div>
+      ${listModeSwitch()}
+      <div class="card total">
+        <div><small class="muted">${t('estTotal')}</small><div class="big">${money(P.total)}</div>
+          ${P.saving > 0 ? `<small class="good">${esc(t('planSaves', money(P.saving), mainName))}</small>` : `<small class="muted">${esc(t('planSame', mainName))}</small>`}</div>
+        <div class="right">
+          <div class="mono">${done}/${count} ✓</div>
+          ${budget ? `<small class="${P.total > budget ? 'bad' : 'good'}">${P.total > budget ? t('overBudget') : t('underBudget')} ${money(Math.abs(budget - P.total))}</small>` : ''}
+        </div>
+      </div>
+      <div class="list-actions">
+        <button type="button" class="btn small" data-copy>📋 ${t('copy')}</button>
+        ${navigator.share ? `<button type="button" class="btn small" data-share>📤 ${t('share')}</button>` : ''}
+        <button type="button" class="btn small" data-print>🖨 ${t('print')}</button>
+        <button type="button" class="btn small ghost" data-clear-checks>${t('clearChecks')}</button>
+      </div>
+      ${P.shops.map((g) => `
+        <section class="group shop-group"><h3>🏪 ${esc(g.store.name)} <small class="muted">· ${t('itemsCount', g.items.length)} · ${money(g.total)}</small></h3>
+          ${g.items.length ? g.items.map((x) => itemRow(x, g.store.id)).join('') : `<p class="muted small">${t('nothingHere')}</p>`}
+        </section>`).join('')}
+      ${P.extras.length ? `<section class="group"><h3>${t('extras')} <small class="muted">· ${esc(mainName)}</small></h3>${P.extras.map(extraRow).join('')}</section>` : ''}
+      <section class="group pantry"><h3>${t('pantryTitle')}</h3><p class="muted small">${t('pantryHint')}</p>${P.pantry.map((x) => itemRow(x)).join('')}</section>
+      <p class="fine">${t('planNote')} ${t('priceNote')}</p>`;
+  }
+
+  function itemRow(x, storeId) {
     const on = !!state.checked[x.id];
     const p = x.product;
     return `
       <div class="item ${on ? 'done' : ''}">
         <input type="checkbox" data-check="${x.id}" ${on ? 'checked' : ''} aria-label="${esc(iName(x.id))}">
-        <button type="button" class="item-main" data-pick="${x.id}">
+        <button type="button" class="item-main" data-pick="${x.id}" ${storeId ? `data-pick-store="${storeId}"` : ''}>
           <span class="item-name">${esc(iName(x.id))}
             ${p ? `<span class="prod">${p.brand ? esc(p.brand) + ' · ' : ''}${esc(p.name)}</span>` : ''}
             <small>${qty(x.qty, x.unit)} ${t('needed')} · ${t('packs', x.packs, qty(x.pack, x.unit))}</small>
+            ${x.others && x.others.length ? `<small class="muted">${esc(x.others.map((o) => `${o.store.name} ${money(o.cost)}`).join(' · '))}</small>` : ''}
           </span>
           <span class="item-cost">${x.staple ? '' : `${money(x.cost)}<small class="src src-${x.priceSource}">${t('src_' + x.priceSource)}</small>`}<i class="chev">›</i></span>
         </button>
@@ -775,6 +855,20 @@
   }
 
   function listText() {
+    if (MP.selectedShops(state).length > 1 && state.prefs.listMode !== 'one') {
+      const P = MP.shopPlan(state);
+      const lines = [`🛒 ${t('shoppingPlan')}`, ''];
+      for (const g of P.shops) {
+        if (!g.items.length) continue;
+        lines.push(`🏪 ${g.store.name.toUpperCase()} (${money(g.total)})`);
+        for (const x of g.items) lines.push(`${state.checked[x.id] ? '☑' : '☐'} ${iName(x.id)} — ${qty(x.qty, x.unit)} (${t('packs', x.packs, qty(x.pack, x.unit))})`);
+        lines.push('');
+      }
+      for (const x of P.extras) lines.push(`${state.checked['x:' + x.key] ? '☑' : '☐'} ${[x.brand, x.name, x.quantity].filter(Boolean).join(' ')}`);
+      lines.push(`${t('estTotal')}: ${money(P.total)}`);
+      lines.push('', t('pantryTitle').toUpperCase(), ...P.pantry.map((x) => `☐ ${iName(x.id)}`));
+      return lines.join('\n');
+    }
     const L = MP.buildShoppingList(state);
     const lines = [`🛒 ${t('shoppingAt', L.store)}`, ''];
     for (const c of MP.CATEGORIES) {
@@ -800,20 +894,22 @@
   function recipesView() {
     const ms = members();
     const q = MP.normalize(ui.recipeQuery);
-    const match = (r) => (!ui.cuisineFilter || r.cuisine === ui.cuisineFilter) &&
+    const local = (r) => (r.countries || []).includes(state.country);
+    const match = (r) => (!ui.cuisineFilter || (ui.cuisineFilter === 'local' ? local(r) : r.cuisine === ui.cuisineFilter)) &&
       (!q || MP.normalize([r.name.en, r.name.ro, rName(r), ...r.ing.map(([id]) => `${MP.INGREDIENTS[id].name.en} ${iName(id)}`)].join(' ')).includes(q));
     const tile = (r) => {
       const fits = MP.whoCanEat(r, ms).length > 0;
       const fav = state.favorites.includes(r.id);
       return `<button type="button" class="tile ${fits ? '' : 'dim'}" data-recipe="${r.id}">
         <span class="emoji">${r.emoji}</span><span class="tile-name">${esc(rName(r))}</span>
-        <small>${CUISINE_ICON[r.cuisine]} · ⏱ ${r.time}′ · ${round(MP.recipeNutrition(r).kcal)} ${t('kcal')}${fav ? ' · ♥' : ''}</small></button>`;
+        <small>${local(r) ? MP.flag(state.country) + ' ' : ''}${CUISINE_ICON[r.cuisine]} · ⏱ ${r.time}′ · ${round(MP.recipeNutrition(r).kcal)} ${t('kcal')}${fav ? ' · ♥' : ''}</small></button>`;
     };
     const list = MP.RECIPES.filter(match);
     return `
       <input class="search" type="search" placeholder="${t('search')}" value="${esc(ui.recipeQuery)}" data-search>
       <div class="chips scroll">
         <button type="button" class="chip small ${ui.cuisineFilter ? '' : 'on'}" data-cuisine-filter="">${t('allRecipes')}</button>
+        <button type="button" class="chip small ${ui.cuisineFilter === 'local' ? 'on' : ''}" data-cuisine-filter="local">${MP.flag(state.country)} ${esc(t('localShort', MP.countryName(state.country, state.lang)))}</button>
         ${MP.CUISINES.map((c) => `<button type="button" class="chip small ${ui.cuisineFilter === c ? 'on' : ''}" data-cuisine-filter="${c}">${CUISINE_ICON[c]} ${t('cuisine_' + c)}</button>`).join('')}
       </div>
       <div class="tiles">${list.map(tile).join('')}</div>`;
@@ -981,17 +1077,19 @@
   }
 
   // Sheet for one shopping-list ingredient: pick a real product and/or set your own price.
-  function openProductPicker(id) {
+  // storeId: one of the compared shops (default: the main shop).
+  function openProductPicker(id, storeId) {
+    const st = storeId && storeId !== state.store ? Object.assign({}, state, { store: storeId }) : state;
     const ing = MP.INGREDIENTS[id];
-    const key = MP.storeKey(state);
-    const { store, countryCode } = MP.storeOf(state);
+    const key = MP.storeKey(st);
+    const { store, countryCode } = MP.storeOf(st);
     const unitLabel = ing.unit === 'pcs' ? t('pcs') : ing.unit;
     const sheet = { q: searchTerm(id, state.lang), res: { loading: true }, prices: {}, seq: 0 };
     const isOpen = () => $modal.classList.contains('open') && $modal.dataset.pick === id;
 
     const draw = () => {
-      const chosen = MP.chosenProduct(state, id);
-      const est = MP.estimatedUnitPrice(state, id);
+      const chosen = MP.chosenProduct(st, id);
+      const est = MP.estimatedUnitPrice(st, id);
       const pack = chosen && chosen.pack > 0 ? chosen.pack : (chosen ? '' : ing.pack);
       const price = chosen && chosen.price > 0 ? chosen.price : '';
       $modal.innerHTML = `
@@ -1005,7 +1103,7 @@
             <div class="grid2">
               <label class="field"><span>${t('packSize')} (${esc(unitLabel)})</span>
                 <input name="pack" type="number" inputmode="decimal" min="0" step="any" value="${esc(pack)}"></label>
-              <label class="field"><span>${t('myPrice')} (${MP.storeOf(state).country.currency})</span>
+              <label class="field"><span>${t('myPrice')} (${MP.storeOf(st).country.currency})</span>
                 <input name="price" type="number" inputmode="decimal" min="0" step="any" value="${esc(price)}"
                   placeholder="≈ ${esc((est * (Number(pack) || ing.pack)).toFixed(2))}"></label>
             </div>
@@ -1069,7 +1167,7 @@
       const f = e.target;
       if (f.hasAttribute('data-sheet-search')) { sheet.q = f.q.value.trim() || sheet.q; return search(); }
       if (f.hasAttribute('data-price-form')) {
-        const chosen = MP.chosenProduct(state, id) || { name: iName(id) };
+        const chosen = MP.chosenProduct(st, id) || { name: iName(id) };
         const pack = Number(f.pack.value);
         const price = Number(f.price.value);
         const priceChanged = price > 0 && price !== chosen.price;
@@ -1144,14 +1242,19 @@
   }
   const itemByKey = (key) => state.week.items.find((it) => it.key === key);
 
-  function setMemberCount(n) {
-    n = Math.max(1, Math.min(12, n));
-    while (state.members.length < n) state.members.push(MP.newMember({ age: '', height: '', weight: '' }));
-    if (state.members.length > n) {
-      const removed = state.members.splice(n).map((m) => m.id);
-      for (const it of state.week.items) it.eaters = it.eaters.filter((id) => !removed.includes(id));
-      state.week.items = state.week.items.filter((it) => it.eaters.length);
-    }
+  // Adults first, then children. Removing someone also takes them off this week's dishes.
+  function setHousehold(nAdults, nKids) {
+    const a = adultsOf();
+    const k = kidsOf();
+    nAdults = Math.max(1, Math.min(8, nAdults));
+    nKids = Math.max(0, Math.min(8, nKids));
+    while (a.length < nAdults) a.push(newPerson('adult'));
+    while (k.length < nKids) k.push(newPerson('child'));
+    const keep = a.slice(0, nAdults).concat(k.slice(0, nKids));
+    const ids = new Set(keep.map((m) => m.id));
+    state.members = keep;
+    for (const it of state.week.items) it.eaters = it.eaters.filter((id) => ids.has(id));
+    state.week.items = state.week.items.filter((it) => it.eaters.length);
   }
 
   $app.addEventListener('input', (e) => {
@@ -1176,8 +1279,10 @@
       // when someone types and then taps a button straight away.
       const box = el.closest('.member');
       box.querySelector('.pill').textContent = `${t('daily')}: ${MP.memberTargets(m).kcal} ${t('kcal')}`;
-      box.querySelector('[data-child-note]').hidden = !MP.isChild(m);
-      box.querySelector('[data-goal]').hidden = MP.isChild(m);
+      const note = box.querySelector('[data-child-note]');
+      if (note) note.hidden = !MP.isChild(m);
+      const goal = box.querySelector('[data-goal]');
+      if (goal) goal.hidden = MP.isChild(m);
       if (el.dataset.f === 'name') {
         box.querySelector('[data-member-name]').textContent = m.name || memberName(m);
         const tab = $app.querySelector(`[data-member-tab="${box.dataset.m}"]`);
@@ -1199,6 +1304,7 @@
       if (el.dataset.f === 'country') {
         state.country = el.value;
         state.region = '';
+        state.extraStores = [];
         state.units = MP.COUNTRIES[el.value].units || 'metric';
         state.store = MP.storesFor(el.value, '')[0].id;
         plansCache = null;
@@ -1234,7 +1340,22 @@
     const d = b.dataset;
     if (d.step) return go(Number(d.step));
     if (b.hasAttribute('data-finish')) return finishOnboarding();
-    if (d.store) { state.store = d.store; storeSearch.res = null; save(); return render(); }
+    if (d.store) {
+      state.store = d.store;
+      state.extraStores = (state.extraStores || []).filter((id) => id !== d.store);
+      storeSearch.res = null; save(); return render();
+    }
+    if (d.extraStore) {
+      const xs = (state.extraStores = state.extraStores || []);
+      const i = xs.indexOf(d.extraStore);
+      if (i >= 0) xs.splice(i, 1); else xs.push(d.extraStore);
+      save(); return render();
+    }
+    if (d.set === 'portion') {
+      const m = memberAt(b);
+      if (m) { m.portion = d.v; save(); render(); }
+      return undefined;
+    }
     if (d.set === 'mealMode' || d.mealCount || d.mealSlot) {
       const m = memberAt(b);
       if (!m) return undefined;
@@ -1248,7 +1369,11 @@
       return undefined;
     }
     if (d.set) return setOption(d.set, d.v);
-    if (d.count) { setMemberCount(state.members.length + Number(d.count)); save(); return render(); }
+    if (d.count) {
+      const [kind, delta] = d.count.split(':');
+      setHousehold(adultsOf().length + (kind === 'adult' ? Number(delta) : 0), kidsOf().length + (kind === 'child' ? Number(delta) : 0));
+      save(); return render();
+    }
     if (d.memberTab) { ui.member = Number(d.memberTab); return render(); }
     if (d.need) {
       const m = memberAt(b);
@@ -1263,6 +1388,7 @@
       if (i >= 0) m.allergies.splice(i, 1); else m.allergies.push(d.allergy);
       save(); return render();
     }
+    if (b.hasAttribute('data-local')) { state.prefs.local = !state.prefs.local; save(); return render(); }
     if (d.cuisine) {
       const c = state.prefs.cuisines;
       const i = c.indexOf(d.cuisine);
@@ -1315,7 +1441,7 @@
       save(); return render();
     }
     if (d.tab) { state.tab = d.tab; save(); render(); return window.scrollTo(0, 0); }
-    if (d.pick) return openProductPicker(d.pick);
+    if (d.pick) return openProductPicker(d.pick, d.pickStore);
     if (d.addExtra) return addExtra(storeSearch.res.products[Number(d.addExtra)]);
     if (d.removeExtra) {
       state.extras = state.extras.filter((x) => x.key !== d.removeExtra);
@@ -1406,9 +1532,10 @@
       Object.assign(state.display, v === 'on' ? { font: 'dyslexic', spacing: 'wide' } : { font: 'standard', spacing: 'normal' });
     } else if (DISPLAY[field]) state.display[field] = v;
     else if (field === 'weekView') ui.weekView = v;
+    else if (field === 'listMode') state.prefs.listMode = v;
     else if (field === 'household') {
       state.household = v;
-      if (v === 'family' && state.members.length < 2) setMemberCount(2);
+      if (v === 'family' && state.members.length < 2) setHousehold(adultsOf().length, Math.max(1, kidsOf().length));
     } else {
       state.prefs[field] = ['mealsPerDay', 'maxTime'].includes(field) ? Number(v) : v;
     }

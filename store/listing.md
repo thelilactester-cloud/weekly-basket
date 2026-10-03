@@ -22,6 +22,7 @@ meal planner,meal prep,grocery list,shopping list,family,diet,recipes,low histam
 Prepcart plans your week of meals and turns it into a shopping list for your own supermarket, for one person or the whole family.
 
 EVERYONE EATS WHAT SUITS THEM
+• Adults and children: children need no age or weight, just their preferences, allergies, portion size and the meals they eat at home.
 • Each person has their own diet: everything, vegetarian, vegan, pescatarian, low-carb/keto, Mediterranean or high protein.
 • Health and lifestyle needs: low histamine, low FODMAP, MIND (brain health), DASH (heart and blood pressure), blood-sugar friendly, anti-inflammatory, halal and kosher.
 • Allergies and foods to avoid are always respected. Dishes that suit everyone are shared; anyone they don't suit gets their own.
@@ -32,13 +33,14 @@ ONLY THE MEALS YOU EAT AT HOME
 • Lunch at nursery, school or work, a meal out, a fasting day: leave it out, and nothing is cooked or bought for it.
 
 PLAN THE WEEK IN MINUTES
-• More than 120 recipes from 12 cuisines, with fresh ideas every week.
+• Over 190 recipes from 16 cuisines, including traditional dishes from your own country, with fresh ideas every week.
 • Choose dishes yourself or let Prepcart fill the week, then cook in batches.
 • Portions are sized for each person's age, size and activity.
 
 ONE SHOPPING LIST FOR YOUR SUPERMARKET
 • Quantities for the whole week, grouped by aisle, with estimated prices.
 • Shops in 58 countries; pick real products and prices for your shop.
+• Compare several supermarkets: each product goes on the list at the shop where it is the best value.
 
 EASY TO READ, FOR EVERYONE
 • Light and dark mode, three text sizes and high contrast.

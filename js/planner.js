@@ -83,12 +83,27 @@
   }
   const CHILD_ACTIVITY = { sedentary: 0.9, light: 0.95, moderate: 1, active: 1.1, very_active: 1.2 };
 
-  // A blank age counts as an adult (30) until it is filled in.
-  MP.isChild = (m) => (Number(m.age) || 30) < 18;
+  // People are adults or children (m.kind). Older saved data has only an age: under 18 is a child,
+  // and a blank age counts as an adult.
+  MP.isChild = (m) => (m.kind ? m.kind === 'child' : (Number(m.age) || 30) < 18);
 
-  // Daily calorie & protein targets. Adults: Mifflin-St Jeor × activity, adjusted for the goal.
-  // Children (< 18): age-based estimates, never a calorie deficit.
+  // Children need no age, height or weight: a portion size is enough (small ≈ toddler, medium ≈ school age,
+  // large ≈ teenager). Never a calorie deficit.
+  MP.CHILD_PORTIONS = { small: 1100, medium: 1500, large: 2100 };
+
+  // Daily calorie & protein targets. Adults: Mifflin-St Jeor × activity, adjusted for the goal. Every detail is
+  // optional: missing ones use typical values, and with no sex given the result is the average of both.
   MP.memberTargets = function (m) {
+    if (m.kind === 'child' && !Number(m.age)) {
+      const kcal = MP.CHILD_PORTIONS[m.portion] || MP.CHILD_PORTIONS.medium;
+      return { kcal, protein: Math.round((kcal * 0.15) / 4), isChild: true, bmr: null, tdee: kcal };
+    }
+    if (m.sex !== 'm' && m.sex !== 'f' && !MP.isChild(m)) {
+      const a = MP.memberTargets(Object.assign({}, m, { sex: 'm' }));
+      const b = MP.memberTargets(Object.assign({}, m, { sex: 'f' }));
+      const avg = (k) => Math.round((a[k] + b[k]) / 2 / (k === 'kcal' ? 10 : 1)) * (k === 'kcal' ? 10 : 1);
+      return { kcal: avg('kcal'), protein: avg('protein'), isChild: false, bmr: avg('bmr'), tdee: avg('tdee') };
+    }
     const age = Number(m.age) || 30;
     const sex = m.sex === 'm' ? 'm' : 'f';
     const weight = Number(m.weight) || (age < 18 ? null : 70);
@@ -158,21 +173,22 @@
       avoid: ['tomato', 'tomato_can', 'tomato_paste', 'spinach', 'eggplant', 'avocado', 'banana', 'berries', 'lemon', 'lime',
         'parmesan', 'cheddar', 'telemea', 'sour_cream', 'greek_yogurt', 'soy_sauce', 'miso', 'gochujang', 'curry_paste',
         'tuna_can', 'shrimp', 'walnuts', 'peanuts', 'peanut_butter', 'chili', 'chili_flakes', 'stock_cube', 'hummus',
-        'chickpeas', 'red_beans', 'black_beans', 'olives'],
+        'chickpeas', 'red_beans', 'black_beans', 'olives', 'feta'],
     },
     low_fodmap: {
       avoid: ['onion', 'garlic', 'bread', 'pasta', 'tortilla', 'pita', 'couscous', 'lentils', 'white_beans', 'chickpeas',
         'red_beans', 'black_beans', 'hummus', 'mushrooms', 'apple', 'honey', 'milk', 'greek_yogurt', 'sour_cream', 'cottage',
-        'avocado', 'green_peas', 'sweet_corn', 'stock_cube', 'curry_paste', 'gochujang', 'berries', 'cabbage'],
+        'avocado', 'green_peas', 'sweet_corn', 'stock_cube', 'curry_paste', 'gochujang', 'berries', 'cabbage', 'flour', 'cream',
+        'beetroot'],
     },
     mind: { // brain health: leafy greens, vegetables, berries, nuts, beans, whole grains, fish, poultry, olive oil
-      avoid: ['ground_beef', 'butter', 'cheddar', 'parmesan', 'sour_cream', 'paneer'],
+      avoid: ['ground_beef', 'beef_stew', 'lamb', 'butter', 'cheddar', 'parmesan', 'sour_cream', 'paneer', 'cream', 'feta'],
       favour: ['spinach', 'kale', 'lettuce', 'cabbage', 'broccoli', 'berries', 'walnuts', 'almonds', 'salmon', 'white_fish',
         'lentils', 'white_beans', 'chickpeas', 'black_beans', 'red_beans', 'oats', 'quinoa', 'olive_oil', 'chicken_breast'],
     },
     dash: { // heart and blood pressure: less salt and saturated fat, more vegetables, fruit, whole grains, low-fat dairy
       avoid: ['soy_sauce', 'miso', 'gochujang', 'stock_cube', 'olives', 'telemea', 'cheddar', 'parmesan', 'curry_paste',
-        'ground_beef', 'butter', 'sour_cream', 'coconut_milk'],
+        'ground_beef', 'beef_stew', 'lamb', 'butter', 'sour_cream', 'coconut_milk', 'cream', 'feta'],
       favour: ['spinach', 'kale', 'broccoli', 'carrot', 'sweet_potato', 'banana', 'berries', 'apple', 'oats', 'quinoa',
         'lentils', 'white_beans', 'greek_yogurt', 'milk', 'almonds', 'salmon'],
     },
@@ -182,10 +198,11 @@
         'eggs', 'greek_yogurt', 'almonds', 'walnuts', 'chia'],
     },
     anti_inflammatory: {
-      avoid: ['ground_beef', 'butter', 'sour_cream', 'cheddar'],
+      avoid: ['ground_beef', 'beef_stew', 'lamb', 'butter', 'sour_cream', 'cheddar', 'cream'],
       favour: ['salmon', 'olive_oil', 'turmeric', 'ginger', 'berries', 'spinach', 'kale', 'broccoli', 'walnuts', 'almonds',
         'chia', 'lentils', 'oats', 'sweet_potato'],
     },
+    mild: { avoid: ['chili', 'chili_flakes', 'gochujang', 'curry_paste'], avoidTags: ['spicy'] }, // children, sensitive stomachs
     halal: { avoid: [] }, // no pork or alcohol in any recipe; buy halal-certified meat
     kosher: { avoid: ['shrimp'], noMeatWithDairy: true }, // buy kosher-certified products
   };
@@ -199,6 +216,7 @@
       const rule = NEED_RULES[need];
       if (!rule) return true;
       if (ids.some((id) => rule.avoid.includes(id))) return false;
+      if (rule.avoidTags && recipe.tags.some((tg) => rule.avoidTags.includes(tg))) return false;
       if (rule.maxCarbs && MP.recipeNutrition(recipe).carbs > rule.maxCarbs) return false;
       if (rule.noMeatWithDairy) {
         const a = animalsOf(recipe);
@@ -347,7 +365,9 @@
       const eaters = MP.whoCanEat(r, members);
       if (!eaters.length) continue;
       let score = (eaters.length / members.length) * 3;
-      if (liked.length) score += liked.includes(r.cuisine) ? 2 : r.cuisine === 'international' ? 0.5 : -1;
+      // Traditional dishes of the user's country count like a liked cuisine when "local dishes" is on.
+      const local = prefs.local === true && (r.countries || []).includes(state.country);
+      if (liked.length || prefs.local === true) score += liked.includes(r.cuisine) || local ? 2 : r.cuisine === 'international' ? 0.5 : -1;
       if ((state.favorites || []).includes(r.id)) score += 1;
       if (r.time > (prefs.maxTime || 999)) score -= 2;
       if (members.some((m) => m.diet === 'mediterranean') && (r.cuisine === 'mediterranean' || r.tags.includes('mediterranean'))) score += 0.8;
@@ -576,6 +596,51 @@
       pantry: items.filter((x) => x.staple),
       total: groceries.reduce((s, x) => s + x.cost, 0) + extras.reduce((s, x) => s + x.cost, 0),
     };
+  };
+
+  // ---------- several shops ----------
+  // The main shop plus the other shops the user compares (same country / region; typed-in shops can't be compared).
+  MP.selectedShops = function (state) {
+    const main = MP.storeOf(state).store;
+    const list = MP.storesFor(MP.storeOf(state).countryCode, state.region);
+    const extra = (state.extraStores || []).map((id) => list.find((x) => x.id === id)).filter((x) => x && x.id !== main.id);
+    return [main, ...extra];
+  };
+  const withShop = (state, id) => Object.assign({}, state, { store: id });
+  // Better food is worth a little more: Nutri-Score A counts 10 % cheaper, E 10 % dearer (only for chosen products).
+  const QUALITY = { a: 0.9, b: 0.95, c: 1, d: 1.05, e: 1.1 };
+  MP.itemValue = (x) => x.cost * ((x.product && QUALITY[x.product.nutriscore]) || 1);
+
+  // Splits the list across the chosen shops: each item goes where it is the best value (price, nudged by quality).
+  // A second shop is only worth the trip if it saves at least 3 % of the bill; otherwise its items stay at the main shop.
+  // → { shops: [{ store, items, total }], total, single (the bill at the main shop only), saving, currency, extras, pantry }
+  MP.shopPlan = function (state) {
+    const shops = MP.selectedShops(state);
+    const lists = shops.map((sh) => MP.buildShoppingList(withShop(state, sh.id)));
+    const main = lists[0];
+    const at = lists.map((L) => Object.fromEntries(L.groceries.map((x) => [x.id, x])));
+    const pick = {};
+    for (const x of main.groceries) {
+      let best = 0;
+      for (let k = 1; k < shops.length; k++) if (MP.itemValue(at[k][x.id]) < MP.itemValue(at[best][x.id]) - 1e-9) best = k;
+      pick[x.id] = best;
+    }
+    const extrasTotal = main.extras.reduce((sum, x) => sum + x.cost, 0);
+    const minSaving = 0.03 * main.total;
+    for (let k = 1; k < shops.length; k++) {
+      const ids = Object.keys(pick).filter((id) => pick[id] === k);
+      const saving = ids.reduce((sum, id) => sum + at[0][id].cost - at[k][id].cost, 0);
+      if (saving < minSaving) for (const id of ids) pick[id] = 0;
+    }
+    const out = shops.map((store, k) => {
+      const items = main.groceries.filter((x) => pick[x.id] === k).map((x) => Object.assign({}, at[k][x.id], {
+        others: shops.map((sh, j) => (j === k ? null : { store: sh, cost: at[j][x.id].cost })).filter(Boolean),
+      }));
+      return { store, items, total: items.reduce((sum, x) => sum + x.cost, 0) };
+    }).filter((g, k, all) => g.items.length || (k === 0 && all.every((x) => !x.items.length)));
+    const total = out.reduce((sum, g) => sum + g.total, 0) + extrasTotal;
+    return { shops: out, total, single: main.total, saving: Math.max(0, main.total - total), currency: main.currency,
+      extras: main.extras, pantry: main.pantry };
   };
 
   // ---------- formatting ----------
