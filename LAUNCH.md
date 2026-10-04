@@ -38,28 +38,42 @@ plus waiting for Apple / Google approvals.
    cd functions && npm install && cd ..
    firebase functions:secrets:set REVENUECAT_WEBHOOK_AUTH   # type any long random text, keep it for step 5.6
    firebase functions:secrets:set REVENUECAT_SECRET_KEY     # from step 5.5
+   firebase functions:secrets:set INSTACART_API_KEY         # optional, section 9b (type "none" until you have one)
    firebase deploy --only firestore:rules,functions
    ```
    The deploy prints the URL of `revenuecatWebhook`. Keep it for step 5.6.
+   The same deploy switches on **household sharing** (the `households` rules and the `joinHousehold` / `leaveHousehold`
+   functions). Nothing else to set up: each household's plan is encrypted on the phones, the server only stores ciphertext.
 8. **Make yourself admin:** open the app, create your account (thelilactester@gmail.com) → Firebase console → Authentication →
    copy your **User UID** → Firestore → **Start collection** `admins` → Document ID = your UID → add a field `email` = your email.
 
 ## 2. Choose final prices (already set in the app)
 
-| Market | Monthly | Yearly | Amazon Prime monthly |
-|---|---|---|---|
-| United States | $7.99 | $59.99 | $14.99 |
-| United Kingdom | £5.99 | £44.99 | £8.99 |
-| Germany / Austria | €6.99 | €54.99 | €8.99 |
-| France | €5.99 | €44.99 | €6.99 |
-| Other euro countries (IT, ES, NL…) | €4.49 | €34.99 | €4.99 |
-| Canada / Australia | 7.99 | 59.99 | 9.99 |
-| India | ₹249 | ₹1,899 | ₹299 |
-| Japan | ¥550 | ¥4,400 | ¥600 |
-| Romania (no Prime) | 24.99 lei | 189.99 lei | – |
+**Freemium.** Planning, recipes, every diet and health need, drinks, the shopping list, household sharing, saving tips and
+**Order online** are free for everyone, for any number of people. **Premium** (one subscription for the whole family) adds:
+compare prices across shops, the budget checker, a private food journal for each adult, and a child's food journal.
 
-All currencies are in `js/billing.js` (`MP.PRICES`, `MP.COUNTRY_PRICES`). A test fails if any price is not below Prime.
+| Market | Monthly (family) | Yearly (family) |
+|---|---|---|
+| United States | $6.99 | $49.99 |
+| United Kingdom | £4.99 | £39.99 |
+| Germany / Austria | €5.99 | €44.99 |
+| France | €5.49 | €39.99 |
+| Other euro countries (IT, ES, NL…) | €4.49 | €34.99 |
+| Switzerland | CHF 5.99 | CHF 44.99 |
+| Canada / Australia | 7.99 | 59.99 |
+| India | ₹249 | ₹1,899 |
+| Japan | ¥550 | ¥4,400 |
+| Romania | 24.99 lei | 189.99 lei |
+
+All currencies are in `js/billing.js` (`MP.PRICES`, `MP.COUNTRY_PRICES`). A test checks every price stays below Amazon Prime.
 Enter the same prices in both stores (they let you set a price per country).
+
+**One subscription for the family:**
+- **Apple:** App Store Connect → your subscription → turn on **Family Sharing** (up to 6 people in an Apple family).
+- **Google Play** has no family sharing for subscriptions. This is covered by Prepcart's own household sharing: when a
+  subscriber shares their household (Profile → Household sharing), everyone in it gets Premium through the `entitlement`
+  function (`family: true`), on any phone or the web.
 
 Everyone gets **1 month free** (the stores' *introductory offer / free trial*). People who come through an affiliate's link get
 **2 months free** (steps 3.5 and 4.4).
@@ -155,7 +169,9 @@ Everyone gets **1 month free** (the stores' *introductory offer / free trial*). 
 ## 7. Store privacy answers
 
 **Data that leaves the device:** account email and name, account id, purchase history, the affiliate code. Diets, health
-details, family members and lists stay on the device (encrypted) and are **not collected**.
+details, family members and lists stay on the device (encrypted) and are **not collected**. With household sharing switched
+on, the household's plan and people are stored online **end-to-end encrypted** (the key is only in the invite link, never on
+the server), so they are still not collected in the stores' sense. Food journals and their photos never leave the phone.
 
 **Apple, App Privacy:**
 - Data used to track you: **None**. No App Tracking Transparency prompt needed.
@@ -205,6 +221,36 @@ with VoiceOver on an iPhone yourself. Store listing text and screenshots: `store
 - Have each affiliate accept simple written terms (commission, payment timing, no spam or fake reviews, they must say the
   post is sponsored, e.g. #ad).
 
+## 9b. Order online: earning from shop links
+
+The **Order online** button on the shopping list (free for everyone) and the shop links in **Saving tips** send people to
+delivery services and shop apps. When they buy, the shop pays you a commission. This is allowed in both stores: the commission is
+on physical groceries, which Apple and Google don't require to go through in-app purchase. The app already shows the
+disclosure *"Prepcart may earn a small commission…"* next to the links.
+
+| Programme | Countries | How you're paid | Where it goes in the app |
+|---|---|---|---|
+| **Amazon Associates** | each Amazon marketplace separately (US, UK, DE, FR, IT, ES, CA, JP, IN…) | a tag on the link; commission on everything bought in the next 24 h (groceries ~1–5 %) | `js/config.js` → `affiliate.amazon` = `{ 'amazon.co.uk': 'yourtag-21', 'amazon.com': 'yourtag-20', … }` |
+| **Instacart** (Developer Platform + affiliate programme via Impact) | US, Canada | the whole list opens in Instacart; commission per order | API key → `firebase functions:secrets:set INSTACART_API_KEY`; Impact tracking link → `affiliate.links.instacart` |
+| **Walmart** (Impact) | US | tracking link | `affiliate.links.walmart` |
+| **Tesco, Sainsbury's, Asda, Ocado, Carrefour…** | UK, France… | through networks such as **Awin** (where the shop runs a programme) | `affiliate.links.<id>` |
+
+Steps:
+1. Join each programme (it's free). Most of them review the app first, so do it once the app is live in the stores and the
+   web app is public. **Amazon:** list the app and website in your Associates account (*Account settings → Websites and
+   mobile apps*), and join the programme separately in each country you want.
+2. Copy the tag or tracking link into `js/config.js` → `affiliate`. Tracking links use `{url}` where the shop page goes,
+   for example `https://www.awin1.com/cread.php?awinmid=1234&awinaffid=5678&ued={url}`.
+3. **Instacart:** apply for the Developer Platform (<https://docs.instacart.com/developer_platform_api/>), set the key as a
+   secret, deploy the functions. For testing use their development key and `INSTACART_ENV=development`.
+4. Open each shop's search link once from the app (*Order online* → a shop → *Find*) and check that it still opens the right
+   search. Shops change these addresses now and then; they are in `js/delivery.js`.
+5. Delivery apps (Deliveroo, Uber Eats, Glovo, Bolt…) mostly run referral rather than affiliate programmes, and their
+   terms change often. Add one in `js/delivery.js` only after its programme accepts you.
+
+Rates are set by each shop and change; Amazon pays only once you reach a minimum (e.g. $10/£25) and closes accounts
+with no sales in the first 180 days, so join it close to launch.
+
 ## 10. Other app stores
 
 - **Samsung Galaxy Store / Huawei AppGallery / Amazon Appstore** need their own payment systems instead of Google Play Billing,
@@ -216,6 +262,7 @@ with VoiceOver on an iPhone yourself. Store listing text and screenshots: `store
 ## 11. Before every release
 
 - `npm test` and `cd functions && npm test` pass (GitHub runs them on every push).
+- Check the shop search links in `js/delivery.js` still work (section 9b).
 - Recheck Amazon Prime prices once a year (`MP.PRIME_MONTHLY`, `MP.COUNTRY_PRICES` in `js/billing.js`).
 - Have native speakers check the translations for your main markets.
 - Update exchange rates in `js/regions.js` now and then (especially NGN, ARS, EGP, TRY).

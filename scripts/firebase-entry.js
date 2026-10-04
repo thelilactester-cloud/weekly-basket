@@ -8,6 +8,6 @@ export {
   GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signOut, deleteUser, connectAuthEmulator,
 } from 'firebase/auth';
 export {
-  initializeFirestore, doc, getDoc, setDoc, serverTimestamp, connectFirestoreEmulator, collection, getDocs, query, where, writeBatch, Timestamp,
+  initializeFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp, connectFirestoreEmulator, collection, getDocs, query, where, writeBatch, Timestamp,
 } from 'firebase/firestore/lite';
 export { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';

@@ -203,6 +203,60 @@
         'chia', 'lentils', 'oats', 'sweet_potato'],
     },
     mild: { avoid: ['chili', 'chili_flakes', 'gochujang', 'curry_paste'], avoidTags: ['spicy'] }, // children, sensitive stomachs
+    // ── diets doctors and dietitians commonly recommend (planning aids, not treatment) ──
+    low_salt: { // high blood pressure, heart failure, kidney disease: fewer salty ingredients
+      avoid: ['soy_sauce', 'miso', 'gochujang', 'stock_cube', 'olives', 'telemea', 'feta', 'parmesan', 'cheddar', 'curry_paste'],
+      favour: ['spinach', 'kale', 'broccoli', 'carrot', 'sweet_potato', 'lentils', 'white_beans', 'oats', 'salmon'],
+    },
+    heart: { // high cholesterol / heart-healthy: less saturated fat, more fibre, oily fish and nuts
+      avoid: ['butter', 'cream', 'sour_cream', 'cheddar', 'parmesan', 'ground_beef', 'beef_stew', 'lamb', 'coconut_milk'],
+      favour: ['oats', 'salmon', 'walnuts', 'almonds', 'olive_oil', 'lentils', 'chickpeas', 'white_beans', 'red_beans',
+        'black_beans', 'berries', 'blueberries', 'avocado', 'broccoli'],
+    },
+    kidney: { // chronic kidney disease: less potassium, phosphorus and salt (follow your renal dietitian's limits)
+      avoid: ['potato', 'sweet_potato', 'tomato', 'tomato_can', 'tomato_paste', 'banana', 'avocado', 'spinach', 'kale',
+        'white_beans', 'red_beans', 'black_beans', 'chickpeas', 'lentils', 'hummus', 'cheddar', 'parmesan', 'telemea', 'feta',
+        'paneer', 'walnuts', 'almonds', 'peanuts', 'peanut_butter', 'soy_sauce', 'miso', 'stock_cube', 'olives', 'butternut',
+        'beetroot', 'coconut_milk', 'tahini', 'buckwheat', 'quinoa'],
+      favour: ['cabbage', 'cucumber', 'bell_pepper', 'apple', 'berries', 'blueberries', 'rice', 'pasta', 'eggs', 'chicken_breast', 'white_fish'],
+    },
+    gout: { // low purine: no red meat or shellfish, little oily fish
+      avoid: ['ground_beef', 'beef_stew', 'lamb', 'shrimp', 'tuna_can'],
+      favour: ['milk', 'greek_yogurt', 'cottage', 'berries', 'blueberries', 'eggs', 'oats'],
+    },
+    reflux: { // heartburn / GERD: no chilli, tomato, citrus or heavy cream (onion and garlic bother some people too)
+      avoid: ['tomato', 'tomato_can', 'tomato_paste', 'chili', 'chili_flakes', 'curry_paste', 'gochujang', 'lemon', 'lime', 'cream'],
+      avoidTags: ['spicy'],
+      favour: ['oats', 'banana', 'rice', 'chicken_breast', 'white_fish', 'broccoli', 'carrot', 'sweet_potato'],
+    },
+    low_fat: { // gallbladder or pancreas problems: at most 15 g fat per serving, no butter or cream
+      avoid: ['butter', 'cream', 'sour_cream', 'cheddar', 'coconut_milk', 'peanut_butter'], maxFat: 15,
+      favour: ['chicken_breast', 'white_fish', 'lentils', 'rice', 'potato', 'carrot', 'broccoli'],
+    },
+    high_fibre: { // constipation, diabetes, heart: more beans, whole grains, vegetables and fruit
+      avoid: [],
+      favour: ['lentils', 'chickpeas', 'white_beans', 'red_beans', 'black_beans', 'oats', 'quinoa', 'buckwheat', 'broccoli',
+        'kale', 'cabbage', 'carrot', 'berries', 'blueberries', 'apple', 'chia', 'green_peas', 'sweet_potato'],
+    },
+    low_fibre: { // low-residue: bowel flare-ups, after surgery, before a colonoscopy
+      avoid: ['lentils', 'white_beans', 'red_beans', 'black_beans', 'chickpeas', 'hummus', 'quinoa', 'oats', 'buckwheat',
+        'walnuts', 'almonds', 'peanuts', 'chia', 'berries', 'blueberries', 'kale', 'cabbage', 'broccoli', 'sweet_corn',
+        'green_peas', 'mushrooms'],
+      favour: ['rice', 'pasta', 'potato', 'eggs', 'chicken_breast', 'white_fish', 'carrot', 'zucchini'],
+    },
+    pregnancy: { // cooked food, pasteurised cheese, little tuna; folate, iron and calcium-rich foods
+      avoid: ['tuna_can'],
+      favour: ['spinach', 'lentils', 'chickpeas', 'eggs', 'greek_yogurt', 'milk', 'broccoli', 'salmon', 'oats', 'red_beans'],
+    },
+    lactose_free: { // lactose intolerance: no milk, cream, yogurt or fresh cheese (hard cheese is usually fine)
+      avoid: ['milk', 'cream', 'sour_cream', 'cottage', 'greek_yogurt', 'paneer', 'mozzarella'],
+    },
+    coeliac: { avoid: [], avoidAllergens: ['gluten'] }, // coeliac disease: strictly gluten-free
+    iron_rich: { // anaemia: iron-rich foods (with vitamin C to absorb it)
+      avoid: [],
+      favour: ['spinach', 'kale', 'lentils', 'chickpeas', 'red_beans', 'black_beans', 'ground_beef', 'beef_stew', 'eggs',
+        'tofu', 'quinoa', 'buckwheat', 'bell_pepper', 'lemon', 'broccoli'],
+    },
     halal: { avoid: [] }, // no pork or alcohol in any recipe; buy halal-certified meat
     kosher: { avoid: ['shrimp'], noMeatWithDairy: true }, // buy kosher-certified products
   };
@@ -218,6 +272,8 @@
       if (ids.some((id) => rule.avoid.includes(id))) return false;
       if (rule.avoidTags && recipe.tags.some((tg) => rule.avoidTags.includes(tg))) return false;
       if (rule.maxCarbs && MP.recipeNutrition(recipe).carbs > rule.maxCarbs) return false;
+      if (rule.maxFat && MP.recipeNutrition(recipe).fat > rule.maxFat) return false;
+      if (rule.avoidAllergens && MP.hasAllergen(recipe, rule.avoidAllergens)) return false;
       if (rule.noMeatWithDairy) {
         const a = animalsOf(recipe);
         if (a.has('meat') && a.has('dairy')) return false;
@@ -567,6 +623,15 @@
         const e = (need[id] = need[id] || { qty: 0, recipes: new Set() });
         e.qty += qty * servings;
         e.recipes.add(r.id);
+      }
+    }
+    // Drinks each person has (per day, every day of the week).
+    for (const m of MP.activeMembers(state)) {
+      for (const [id, perDay] of Object.entries(m.drinks || {})) {
+        const d = MP.DRINKS[id];
+        if (!d || !(perDay > 0)) continue;
+        const e = (need[id] = need[id] || { qty: 0, recipes: new Set() });
+        e.qty += perDay * d.serving * MP.DAYS;
       }
     }
     const items = Object.keys(need).map((id) => {

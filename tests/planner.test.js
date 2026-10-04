@@ -7,6 +7,10 @@ require('../js/planner.js');
 require('../js/products.js');
 require('../js/billing.js');
 require('../js/access.js');
+require('../js/budget.js');
+require('../js/delivery.js');
+require('../js/journal.js');
+require('../js/household.js');
 require('../js/i18n.js');
 const MP = globalThis.MP;
 for (const [l] of MP.LANGUAGES) if (l !== 'en') require(`../js/lang/${l}.js`);
@@ -622,4 +626,157 @@ test('with several shops, each item goes where it is the best value, and small s
     plan = MP.shopPlan(st);
     if (sains.priceIndex >= 1) assert.equal(plan.shops.length, 1);
   }
+});
+
+// ───────── medical diets and drinks ─────────
+
+test('diets doctors recommend each leave breakfasts, main meals and snacks', () => {
+  for (const need of ['low_salt', 'heart', 'kidney', 'gout', 'reflux', 'low_fat', 'high_fibre', 'low_fibre', 'pregnancy', 'lactose_free', 'coeliac', 'iron_rich']) {
+    assert.ok(MP.NEEDS.includes(need), need);
+    for (const meal of ['breakfast', 'main', 'snack']) {
+      assert.ok(MP.RECIPES.some((r) => r.meal.includes(meal) && MP.fitsNeeds(r, [need])), `${need} has no ${meal}`);
+    }
+  }
+  for (const r of MP.RECIPES) {
+    if (MP.fitsNeeds(r, ['coeliac'])) assert.equal(MP.hasAllergen(r, ['gluten']), false, r.id);
+    if (MP.fitsNeeds(r, ['low_fat'])) assert.ok(MP.recipeNutrition(r).fat <= 15, r.id);
+    if (MP.fitsNeeds(r, ['reflux'])) assert.ok(!r.tags.includes('spicy'), r.id);
+  }
+});
+
+test('drinks each person has go on the shopping list for the week', () => {
+  const st = household([MP.newMember({ drinks: { coffee: 2, still_water: 4 } }), MP.newMember({ drinks: { still_water: 2 } })]);
+  const L = MP.buildShoppingList(st);
+  const water = L.groceries.find((x) => x.id === 'still_water');
+  assert.equal(water.qty, (4 + 2) * 250 * 7);
+  assert.equal(water.cat, 'drinks');
+  assert.equal(L.groceries.find((x) => x.id === 'coffee').qty, 2 * 8 * 7);
+  for (const id of Object.keys(MP.DRINKS)) assert.ok(MP.INGREDIENTS[id], id);
+});
+
+// ───────── Premium: budget, ordering online, food diary ─────────
+
+test('budget: spending is logged per week (Monday) and compared with the weekly budget', () => {
+  const st = household([MP.newMember()], { weeklyBudget: 300 });
+  const wed = new Date(2026, 9, 7, 18).getTime(); // Wednesday 7 Oct 2026
+  assert.equal(MP.weekKey(wed), '2026-10-05');
+  MP.logSpend(st, 120, wed);
+  MP.logSpend(st, 140, wed); // same week: replaced
+  assert.equal(st.spend.length, 1);
+  const s = MP.budgetSummary(st, 320, wed);
+  assert.equal(s.spent, 140);
+  assert.equal(s.over, true);
+  assert.equal(s.left, -20);
+  assert.equal(s.weeks.length, 8);
+  assert.equal(Math.round(s.month.budget), 1300);
+});
+
+test('budget: cheaper swaps suit the same people and save money', () => {
+  const omni = MP.newMember();
+  const vegan = MP.newMember({ diet: 'vegan' });
+  const st = household([omni, vegan]);
+  MP.addToWeek(st, 'salmon_broccoli', 'dinner', 3);
+  const swaps = MP.cheaperSwaps(st);
+  assert.ok(swaps.length >= 1);
+  for (const s of swaps) {
+    assert.ok(s.saving > 0);
+    for (const id of s.item.eaters) assert.ok(MP.recipeFitsMember(s.recipe, st.members.find((m) => m.id === id)));
+  }
+});
+
+test('order online: partners per country, links per product, affiliate tags when configured', () => {
+  assert.ok(MP.deliveryPartners('US').some((p) => p.id === 'instacart' && p.whole));
+  assert.ok(MP.deliveryPartners('GB').some((p) => p.id === 'tesco'));
+  assert.deepEqual(MP.deliveryPartners('RO').map((p) => p.id), []);
+  const amazon = MP.deliveryPartners('DE').find((p) => p.id === 'amazon');
+  assert.equal(MP.deliveryLink(amazon, 'Hafer flocken'), 'https://www.amazon.de/s?k=Hafer%20flocken');
+  MP.CONFIG = { affiliate: { amazon: { 'amazon.de': 'prepcart-21' }, links: { tesco: 'https://track.example/?u={url}' } } };
+  assert.match(MP.deliveryLink(amazon, 'milk'), /&tag=prepcart-21$/);
+  const tesco = MP.deliveryPartners('GB').find((p) => p.id === 'tesco');
+  assert.equal(MP.deliveryLink(tesco, 'milk'), 'https://track.example/?u=' + encodeURIComponent('https://www.tesco.com/groceries/en-GB/search?query=milk'));
+  delete MP.CONFIG;
+  assert.deepEqual(MP.instacartItems([{ id: 'rice', qty: 499.5, unit: 'g' }], () => 'Rice'), [{ name: 'Rice', quantity: 500, unit: 'gram' }]);
+});
+
+test('food diary: planned meals, quick entries and goals add up per day', () => {
+  const m = MP.newMember({ id: 'ana' });
+  const st = household([m]);
+  const J = MP.journalOf(st, 'ana');
+  J.goals = MP.defaultGoals(m).concat([{ id: 'walk', type: 'custom', text: 'Walk after dinner' }]);
+  const ts = new Date(2026, 9, 7, 13).getTime();
+  const day = MP.dayKey(ts);
+  MP.addEntry(st, 'ana', MP.plannedEntry(MP.RECIPE_BY_ID.chana_masala, 1.5, 'lunch'), ts);
+  MP.addEntry(st, 'ana', { kind: 'photo', name: 'Pizza slice', kcal: MP.PLATE_KCAL.medium }, ts);
+  MP.addEntry(st, 'ana', { kind: 'drink', water: 3 }, ts);
+  const r = MP.dayTotals(st, 'ana', day);
+  assert.equal(r.totals.entries, 3);
+  assert.equal(r.totals.kcal, Math.round(MP.recipeNutrition(MP.RECIPE_BY_ID.chana_masala).kcal * 1.5) + 550);
+  assert.ok(r.totals.veg > 0);
+  assert.equal(r.totals.water, 3);
+  assert.equal(r.goals.find((x) => x.goal.id === 'walk').done, false);
+  J.checks[day] = { walk: true };
+  assert.equal(MP.dayTotals(st, 'ana', day).goals.find((x) => x.goal.id === 'walk').done, true);
+  const e = J.days[day][0];
+  MP.removeEntry(st, 'ana', day, e.id);
+  assert.equal(MP.dayTotals(st, 'ana', day).totals.entries, 2);
+});
+
+test('food diary: an optional PIN keeps a diary private on a shared phone', async () => {
+  const st = household([MP.newMember({ id: 'ion' })]);
+  await MP.setDiaryPin(st, 'ion', '4321');
+  assert.equal(await MP.checkDiaryPin(st, 'ion', '4321'), true);
+  assert.equal(await MP.checkDiaryPin(st, 'ion', '1234'), false);
+  assert.ok(!JSON.stringify(st.journal).includes('4321'));
+});
+
+test('saving tips: the loyalty-app tip every week plus others that change, and partner start pages carry affiliate tags', () => {
+  const a = MP.weeklyTips(1, 3);
+  const b = MP.weeklyTips(2, 3);
+  assert.equal(a[0], 'tip_loyalty');
+  assert.equal(a.length, 3);
+  assert.ok(MP.weeklyTips(1, 3).join() === a.join());
+  assert.ok(a.join() !== b.join() || MP.weeklyTips(3, 3).join() !== a.join());
+  const amazon = MP.deliveryPartners('GB').find((p) => p.id === 'amazon');
+  assert.equal(MP.deliveryHome(amazon), 'https://www.amazon.co.uk/');
+  MP.CONFIG = { affiliate: { amazon: { 'amazon.co.uk': 'prepcart-21' } } };
+  assert.equal(MP.deliveryHome(amazon), 'https://www.amazon.co.uk/?tag=prepcart-21');
+  delete MP.CONFIG;
+});
+
+// ───────── household sharing ─────────
+
+test('household sharing: the plan and people are shared, journals and display settings are not', () => {
+  const ana = MP.newMember({ id: 'ana', name: 'Ana' });
+  const kid = MP.newMember({ id: 'kid', kind: 'child' });
+  const st = Object.assign(household([ana, kid]), { lang: 'ro', tab: 'journal', journal: { ana: { days: {} } }, display: { font: 'dyslexic' } });
+  MP.addToWeek(st, 'chana_masala', 'dinner', 2);
+  const { shared, people } = MP.household.split(st);
+  assert.ok(shared.week && shared.prefs);
+  assert.equal(shared.journal, undefined);
+  assert.equal(shared.lang, undefined);
+  assert.equal(shared.display, undefined);
+  assert.deepEqual(Object.keys(people), ['ana', 'kid']);
+  // another phone: merging brings the same plan and people, keeps its own journal and language
+  const other = Object.assign(household([MP.newMember({ id: 'ion' })]), { lang: 'en', journal: { ion: { days: { x: [] } } } });
+  MP.household.merge(other, JSON.parse(JSON.stringify(shared)), JSON.parse(JSON.stringify(people)));
+  assert.deepEqual(other.members.map((m) => m.id), ['ana', 'kid']);
+  assert.equal(other.week.items[0].recipeId, 'chana_masala');
+  assert.equal(other.lang, 'en');
+  assert.ok(other.journal.ion);
+  assert.equal(other.members[0].order, undefined);
+});
+
+test('household sharing: end-to-end encryption and invite links', async () => {
+  const H = MP.household;
+  const key = await H.newKey();
+  const rec = await H.encrypt(key, { secret: 'low histamine' });
+  assert.ok(!JSON.stringify(rec).includes('histamine'));
+  assert.deepEqual(await H.decrypt(key, rec), { secret: 'low histamine' });
+  await assert.rejects(H.decrypt(await H.newKey(), rec));
+  const link = H.inviteLink('https://x.github.io/app/index.html#old', 'abc123def4', 'f'.repeat(32), key);
+  assert.ok(link.startsWith('https://x.github.io/app/index.html#join='));
+  assert.deepEqual(H.parseInvite(link), { hid: 'abc123def4', token: 'f'.repeat(32), key });
+  assert.equal(H.parseInvite('https://x/#join=bad'), null);
+  assert.equal(H.hash({ a: 1 }), H.hash({ a: 1 }));
+  assert.notEqual(H.hash({ a: 1 }), H.hash({ a: 2 }));
 });

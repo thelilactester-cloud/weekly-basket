@@ -29,11 +29,12 @@
     privacyUrl: 'privacy.html',
   };
 
-  // Our prices per currency [monthly, yearly]: a mid-market price that stays below Amazon Prime's
+  // One Premium subscription covers the whole family (Family Sharing in the stores, and every adult in a shared
+  // household). Prices per currency [monthly, yearly]: affordable (about $7 a month or less), and below Amazon Prime's
   // monthly price wherever Prime is sold. The stores show their own localised price once loaded;
   // these are what the paywall shows before that, and what you enter in the store consoles.
   MP.PRICES = {
-    USD: [7.99, 59.99], EUR: [4.49, 34.99], GBP: [5.99, 44.99], CHF: [6.99, 54.99], CAD: [7.99, 59.99],
+    USD: [6.99, 49.99], EUR: [4.49, 34.99], GBP: [4.99, 39.99], CHF: [5.99, 44.99], CAD: [7.99, 59.99],
     AUD: [7.99, 59.99], NZD: [8.99, 69.99], RON: [24.99, 189.99], MDL: [99, 799], HUF: [1990, 14990],
     PLN: [9.99, 74.99], CZK: [129, 999], SEK: [49, 379], NOK: [59, 449], DKK: [45, 349], RSD: [599, 4590],
     TRY: [59.99, 459.99], RUB: [299, 2290], UAH: [129, 999], AED: [14.99, 109.99], SAR: [14.99, 109.99],
@@ -47,8 +48,8 @@
   // Countries whose Prime price differs from the rest of their currency area get their own price
   // (set these as country prices in App Store Connect / Play Console).
   MP.COUNTRY_PRICES = {
-    DE: { price: [6.99, 54.99], prime: 8.99 }, AT: { price: [6.99, 54.99], prime: 8.99 },
-    FR: { price: [5.99, 44.99], prime: 6.99 },
+    DE: { price: [5.99, 44.99], prime: 8.99 }, AT: { price: [5.99, 44.99], prime: 8.99 },
+    FR: { price: [5.49, 39.99], prime: 6.99 },
   };
 
   // Amazon Prime monthly price in each currency where Prime is sold (approx. 2026).
@@ -229,9 +230,10 @@
     return now < ends ? { active: true, reason: 'trial', trialEndsAt: ends } : { active: false, reason: 'none', trialEndsAt: ends };
   };
 
-  // Screens that need Premium once the trial is over. Profile (including export / delete data)
-  // and browsing recipes always stay free.
-  MP.PREMIUM_TABS = ['week', 'list', 'store'];
+  // Prepcart is free: planning for any number of people, every diet, recipes, drinks, the shopping list and
+  // household sharing, ordering online and saving tips. Premium (free for the first month) adds these features:
+  MP.PREMIUM_FEATURES = ['compareShops', 'budget', 'diary', 'childDiary'];
+  MP.PREMIUM_TABS = ['journal'];
 
   MP.billing = billing;
 })(typeof window !== 'undefined' ? window : globalThis);

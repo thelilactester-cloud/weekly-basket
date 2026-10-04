@@ -3,7 +3,7 @@
 A weekly meal planner and shopping list for **your supermarket**, **where you live**, **your diet** and **your family**.
 Made to be used every week to take the pressure off shopping.
 
-**27 languages · 58 countries · 192 recipes from 16 cuisines, with traditional dishes for every country · 9 health needs (low histamine, MIND, DASH, mild…) · light & dark mode · dyslexia-friendly reading mode · per-person meal schedules · per-person diets · encrypted on the device · optional accounts (email, Google, Apple, Facebook) · 1 month free, then below Amazon Prime · affiliate links**
+**27 languages · 58 countries · 192 recipes from 16 cuisines, with traditional dishes for every country · 21 health needs (diabetes, kidney, heart, coeliac, pregnancy, low histamine…) · drinks on the list · household sharing, end-to-end encrypted · order online with delivery services · light & dark mode · dyslexia-friendly reading mode · per-person meal schedules · encrypted on the device · optional accounts · free, with a $6.99 family Premium (budget, price comparison, private food journals)**
 
 ## How it works for the user
 
@@ -45,6 +45,24 @@ reduced motion. Screens are checked with axe-core (WCAG 2.1 AA) in light and dar
 
 **Every week after that:** Week tab → **Start a new week** (or **Repeat last week**) → choose recipes → shopping list.
 
+### Free and Premium
+**Free for everyone, any number of people:** planning, all recipes, every diet and health need, drinks, the shopping list,
+**household sharing** (each adult sets their own preferences on their own phone and it all adds up to one list),
+**Order online** (send the list to Instacart, or open each item at Tesco, Walmart, Amazon… in the shop's app) and weekly
+**saving tips** with links to the shop's loyalty app and delivery services.
+
+**Premium, one subscription for the whole family** ($6.99 / £4.99 a month, 1 month free): compare prices across shops,
+the **budget checker** (weekly budget, what was really spent, the last 8 weeks, cheaper swaps when over budget), a
+**private food journal for each adult** (planned meals, photos, water, goals, optional PIN; never shared) and a
+**child's food journal** for a diet the doctor recommended, with a place for the doctor's or dietitian's advice.
+
+**Health needs from medical advice:** diabetes / blood-sugar friendly, low salt, heart-healthy, kidney-friendly (CKD), gout,
+reflux, low fat, high and low fibre, pregnancy, lactose-free, coeliac, iron-rich, low histamine, low FODMAP, MIND, DASH,
+anti-inflammatory, mild, halal, kosher, with short notes where a dietitian's advice matters most.
+
+**Dropdowns you can type in:** language, country, region, diet, needs, allergies, foods to avoid and drinks are all
+type-to-search lists (any language, accents ignored); foods not on the list can be typed in.
+
 ### Families where people eat differently (meal prep)
 Each person has their own diet. A dish is shared by everyone it suits. Anyone it doesn't suit gets their own
 dish for that meal (e.g. *Chana masala for Ana and Maria · not for Ion*, while Ion, who eats low-carb, has a Greek salad).
@@ -69,19 +87,25 @@ which are free, open and crowd-sourced. Coverage is best for big chains in Europ
   and subscription checks (RevenueCat).
 - **Strict Content Security Policy:** only the app's own code (plus Google's sign-in helper) runs; connections only to the product
   databases, Firebase and RevenueCat; product images only from Open Food Facts; all outside text is escaped.
+- **Household sharing** (`js/household.js`): the household's plan and people are encrypted on the phone (AES-256-GCM) with a
+  household key that exists only in the invite link after the `#` (never sent to a server). Firestore stores ciphertext only;
+  `firestore.rules` lets only members read it, and invites are accepted by the `joinHousehold` function. Food journals
+  are never shared; journal photos are encrypted on the device.
 - **Export my data**, **Delete all my data** (device) and **Delete my account** (online) are in Profile and always free.
 - [`privacy.html`](privacy.html) (GDPR / UK GDPR / CCPA), [`terms.html`](terms.html) (incl. Apple's required terms),
   [`delete-account.html`](delete-account.html) (for Google Play and Facebook). Store privacy answers: [`LAUNCH.md`](LAUNCH.md).
 
 ## Subscription (paywall)
 
-- **1 month free for everyone** (2 months through an affiliate's link), then **Premium** monthly or yearly, **always cheaper
-  than Amazon Prime** in the same country (a test enforces it): US $7.99 / $59.99 vs Prime $14.99; UK £5.99 vs £8.99;
-  Germany €6.99 vs €8.99; France €5.99 vs €6.99; other euro countries €4.49 vs €4.99; India ₹249 vs ₹299; Japan ¥550 vs ¥600.
-- After the trial, the Week, Shopping and Store tabs need Premium. Recipes and Profile (including export and delete) stay free.
+- **Free:** everything needed to plan and shop, for any number of people (see *Free and Premium* above).
+- **Premium, for the whole family:** 1 month free (2 through an affiliate's link), then US $6.99 / $49.99 a year, UK £4.99 /
+  £39.99, Germany €5.99, France €5.49, other euro countries €4.49… always below Amazon Prime in the same country (a test
+  enforces it). Apple Family Sharing covers an Apple family; household sharing extends Premium to everyone in the household.
 - In the iPhone and Android apps, payment goes through Apple / Google in-app purchase, managed with
   [RevenueCat](https://www.revenuecat.com) (`js/billing.js`). Apple and Google pay you monthly into your bank account.
   With an account, Premium follows the person to their other devices and the web.
+- **Shop commissions:** *Order online* and the saving tips use Amazon Associates tags and affiliate links (Instacart, Walmart,
+  Awin…) set in `js/config.js` → `affiliate`. Setup: [`LAUNCH.md`](LAUNCH.md) section 9b.
 - Setup steps (accounts, product ids, keys, bank): **[`LAUNCH.md`](LAUNCH.md)**.
 
 ## Affiliates

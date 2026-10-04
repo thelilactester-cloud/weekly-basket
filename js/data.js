@@ -9,7 +9,7 @@
   const MP = (g.MP = g.MP || {});
 
   // Order in which shop sections appear on the shopping list.
-  MP.CATEGORIES = ['produce', 'bakery', 'meat', 'fish', 'dairy', 'frozen', 'pantry', 'spices'];
+  MP.CATEGORIES = ['produce', 'bakery', 'meat', 'fish', 'dairy', 'frozen', 'pantry', 'drinks', 'spices'];
 
   // ing(en, ro, category, unit, packSize, packPriceRON, [kcal, protein, carbs, fat] per 100, options)
   // options: g = grams per piece (unit 'pcs'), allergens, animal ('meat'|'fish'|'dairy'|'egg'|'honey'),
@@ -124,6 +124,16 @@
     flour: ing('Plain flour', 'Făină albă', 'pantry', 'g', 1000, 4, [364, 10, 76, 1], { allergens: ['gluten'] }),
     cream: ing('Cooking cream', 'Smântână lichidă pentru gătit', 'dairy', 'ml', 200, 6, [200, 2.5, 3.5, 20], { allergens: ['dairy'], animal: 'dairy' }),
     feta: ing('Feta cheese', 'Brânză feta', 'dairy', 'g', 200, 12, [264, 14, 4, 21], { allergens: ['dairy'], animal: 'dairy' }),
+    // drinks (chosen per person on the people step; see MP.DRINKS)
+    still_water: ing('Still water', 'Apă plată', 'drinks', 'ml', 9000, 14, [0, 0, 0, 0]),
+    sparkling_water: ing('Sparkling water', 'Apă minerală carbogazoasă', 'drinks', 'ml', 9000, 16, [0, 0, 0, 0]),
+    orange_juice: ing('Orange juice', 'Suc de portocale', 'drinks', 'ml', 1000, 10, [45, 0.7, 10, 0.2]),
+    apple_juice: ing('Apple juice', 'Suc de mere', 'drinks', 'ml', 1000, 8, [46, 0.1, 11, 0.1]),
+    coffee: ing('Ground coffee', 'Cafea măcinată', 'drinks', 'g', 250, 20, [2, 0.1, 0, 0]),
+    tea: ing('Black tea (tea bags)', 'Ceai negru (plicuri)', 'drinks', 'pcs', 50, 10, [0, 0, 0, 0], { g: 2 }),
+    herbal_tea: ing('Herbal tea (tea bags)', 'Ceai de plante (plicuri)', 'drinks', 'pcs', 20, 7, [0, 0, 0, 0], { g: 2 }),
+    soft_drink: ing('Soft drink', 'Băutură răcoritoare', 'drinks', 'ml', 2000, 8, [42, 0, 10.6, 0]),
+    diet_soft_drink: ing('Soft drink, no sugar', 'Băutură răcoritoare fără zahăr', 'drinks', 'ml', 2000, 8, [1, 0, 0, 0]),
     olive_oil: ing('Olive oil', 'Ulei de măsline', 'pantry', 'ml', 500, 30, [884, 0, 0, 100], { staple: true }),
     butter: ing('Butter', 'Unt', 'dairy', 'g', 200, 10, [717, 0.9, 0.1, 81], { allergens: ['dairy'], animal: 'dairy', staple: true }),
     soy_sauce: ing('Soy sauce', 'Sos de soia', 'pantry', 'ml', 150, 6, [53, 8, 5, 0.6], { allergens: ['soy', 'gluten'], staple: true }),
@@ -1114,6 +1124,16 @@
 
   MP.CUISINES = ['international', 'eastern_european', 'mediterranean', 'italian', 'french', 'iberian', 'central_european',
     'nordic', 'western', 'latin', 'middle_eastern', 'african', 'indian', 'chinese', 'japanese_korean', 'southeast_asian'];
+
+  // Drinks people can add for themselves: how much one drink is, and what it is called (glass / cup / can).
+  // Coffee is ground coffee per cup, tea is one bag per cup.
+  MP.DRINKS = {
+    still_water: { serving: 250, per: 'glass' }, sparkling_water: { serving: 250, per: 'glass' },
+    milk: { serving: 200, per: 'glass' }, oat_drink: { serving: 200, per: 'glass' },
+    orange_juice: { serving: 200, per: 'glass' }, apple_juice: { serving: 200, per: 'glass' },
+    coffee: { serving: 8, per: 'cup' }, tea: { serving: 1, per: 'cup' }, herbal_tea: { serving: 1, per: 'cup' },
+    soft_drink: { serving: 330, per: 'can' }, diet_soft_drink: { serving: 330, per: 'can' },
+  };
 
   MP.RECIPE_BY_ID = Object.fromEntries(MP.RECIPES.map((r) => [r.id, r]));
 })(typeof window !== 'undefined' ? window : globalThis);
