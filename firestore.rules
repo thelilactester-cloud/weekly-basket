@@ -39,6 +39,35 @@ service cloud.firestore {
       allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['paid', 'paidAt']);
       allow create, delete: if false;
     }
+    // Household sharing. The plan and the people are encrypted on the phones (js/household.js): the server only
+    // sees ciphertext and which accounts belong to the household. Joining goes through the joinHousehold function.
+    function household(hid) { return get(/databases/$(database)/documents/households/$(hid)).data; }
+    function inHousehold(hid) { return signedIn() && request.auth.uid in household(hid).members; }
+    match /households/{hid} {
+      allow read: if signedIn() && request.auth.uid in resource.data.members;
+      allow create: if signedIn() && request.resource.data.owner == request.auth.uid
+        && request.resource.data.members == [request.auth.uid]
+        && request.resource.data.keys().hasOnly(['owner', 'members', 'iv', 'ct', 'updatedBy', 'createdAt']);
+      // Members change the encrypted plan; the owner can also remove members (never add: that's joinHousehold).
+      allow update: if signedIn() && request.auth.uid in resource.data.members
+        && request.resource.data.owner == resource.data.owner
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['iv', 'ct', 'updatedBy', 'members'])
+        && (request.resource.data.members == resource.data.members
+          || (request.auth.uid == resource.data.owner && resource.data.members.hasAll(request.resource.data.members)
+              && request.resource.data.members.hasAny([resource.data.owner])));
+      allow delete: if signedIn() && request.auth.uid == resource.data.owner;
+      match /people/{pid} {
+        allow read, delete: if inHousehold(hid);
+        allow create, update: if inHousehold(hid) && request.resource.data.keys().hasOnly(['iv', 'ct', 'updatedBy']);
+      }
+      match /invites/{token} {
+        allow create: if inHousehold(hid) && request.resource.data.keys().hasOnly(['createdBy', 'expiresAt'])
+          && request.resource.data.createdBy == request.auth.uid;
+        allow delete: if inHousehold(hid);
+        allow read, update: if false; // checked by joinHousehold only
+      }
+    }
+
     // Admin accounts: added by hand in the Firebase console (see LAUNCH.md).
     match /admins/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;

@@ -27,6 +27,11 @@
     playStoreLive: false,
     // Where the web app lives; used to build affiliate links.
     webUrl: 'https://thelilactester-cloud.github.io/weekly-basket/',
+    // Commission on orders placed through "Order online" and the saving tips (see LAUNCH.md → "Earning from shop links").
+    // amazon: your Amazon Associates tracking id per Amazon site, e.g. { 'amazon.co.uk': 'prepcart-21', 'amazon.com': 'prepcart-20' }.
+    // links: a tracking link per partner from its affiliate network, with {url} where the shop page goes, e.g.
+    //   tesco: 'https://www.awin1.com/cread.php?awinmid=MERCHANT&awinaffid=YOURID&ued={url}'
+    affiliate: { amazon: {}, links: {} },
     // Local testing only: talk to the Firebase emulators instead of the real project.
     emulators: false,
   };

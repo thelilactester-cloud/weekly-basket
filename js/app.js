@@ -90,10 +90,10 @@
   MP.lang = state.lang;
   await MP.loadLanguage(state.lang);
 
-  function save() { MP.secureStore.save(state); }
+  function save() { MP.secureStore.save(state); scheduleSync(); }
 
   // UI-only state (not saved)
-  const ui = { member: 0, slot: 'dinner', weekView: 'plan', sugLimit: 12, plan: 'yearly', recipeQuery: '', cuisineFilter: '' };
+  const ui = { open: {}, unlocked: {}, tipsOpen: true, jDay: 0, jForm: null, jMember: null, budgetOpen: false, member: 0, slot: 'dinner', weekView: 'plan', sugLimit: 12, plan: 'yearly', recipeQuery: '', cuisineFilter: '' };
 
   // ---------- premium ----------
   // Order: a store subscription, then a free-access code (js/access.js), then the free trial.
@@ -173,8 +173,130 @@
         await a.addReferral(state.referral).catch(() => {});
       }
       await MP.billing.identify(a.user.uid, state.referral ? { affiliate: state.referral.code } : null);
+      if (pendingJoin) startJoin(); else scheduleSync(0);
     }
     refreshPremium();
+  }
+
+  // ---------- household sharing (free; js/household.js) ----------
+  const H = MP.household;
+  let syncTimer = null;
+  let syncing = false;
+  function scheduleSync(delay) {
+    if (!state.sync) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(runSync, delay == null ? 1500 : delay);
+  }
+  async function runSync() {
+    const a = acct();
+    if (!state.sync || syncing || !a || !a.user) return;
+    syncing = true;
+    try {
+      const changed = await H.sync(state);
+      MP.secureStore.save(state);
+      // don't re-render under someone's fingers
+      const typing = document.activeElement && document.activeElement.matches('input, textarea, select');
+      if (changed && !typing && !$modal.classList.contains('open')) render();
+    } catch (e) {
+      if (e && (e.code === 'household/removed' || e.code === 'household/gone')) {
+        delete state.sync;
+        MP.secureStore.save(state);
+        toast(t('householdEnded'));
+        render();
+      }
+    } finally {
+      syncing = false;
+    }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') scheduleSync(0); });
+  setInterval(() => { if (document.visibilityState === 'visible') scheduleSync(0); }, 45000);
+
+  function sharingCard() {
+    const a = acct();
+    const S = state.sync;
+    let body;
+    if (!a) body = `<p class="muted small">${t('sharingNeedsSetup')}</p>`;
+    else if (!a.user) body = `<p class="muted small">${t('sharingWhy')}</p><button type="button" class="btn primary wide" data-account="signup">${t('signUpToShare')}</button>`;
+    else if (!S) body = `<p class="muted small">${t('sharingWhy')}</p><button type="button" class="btn primary wide" data-share-household>👨‍👩‍👧 ${t('inviteAdult')}</button>`;
+    else {
+      body = `<p>✅ ${esc(t('sharedWith', S.count || 1))}${S.at ? ` <small class="muted">· ${esc(t('syncedAt', new Date(S.at).toLocaleTimeString(state.lang, { hour: '2-digit', minute: '2-digit' })))}</small>` : ''}</p>
+        <button type="button" class="btn primary wide" data-invite>➕ ${t('inviteAdult')}</button>
+        <button type="button" class="btn ghost wide" data-sync-now>🔄 ${t('syncNow')}</button>
+        <button type="button" class="btn ghost wide danger" data-leave-household>${S.owner === S.uid ? t('stopSharing') : t('leaveHousehold')}</button>`;
+    }
+    return `
+      <h2>👨‍👩‍👧 ${t('sharingTitle')}</h2>
+      <div class="card form">${body}
+        ${ui.inviteLink ? `<label class="field top"><span>${t('inviteLinkLabel')}</span><input readonly value="${esc(ui.inviteLink)}" data-select-all></label>
+          <div class="row"><button type="button" class="btn small" data-copy-invite>📋 ${t('copy')}</button>
+          ${navigator.share ? `<button type="button" class="btn small" data-share-invite>📤 ${t('share')}</button>` : ''}</div>
+          <p class="muted small">${t('inviteHint')}</p>` : ''}
+        <p class="fine">🔒 ${t('sharingPrivacy')}</p>
+      </div>`;
+  }
+
+  // An adult who edits their own preferences on their own phone: shown, not editable here.
+  function readOnlyMember(m, i) {
+    return `
+      <div class="member" data-m="${i}">
+        <div class="member-head"><strong>${memberName(m)}</strong><span class="pill">${t('daily')}: ${MP.memberTargets(m).kcal} ${t('kcal')}</span></div>
+        <p class="note">📱 ${esc(t('editsOwn', memberName(m)))}</p>
+        <p class="small">${esc([t('diet_' + m.diet), ...(m.needs || []).map((n) => t('need_' + n)), ...m.allergies.map((x) => t('al_' + x))].join(' · '))}</p>
+      </div>`;
+  }
+
+  // Invite links: …#join=<hid>.<token>.<key>
+  let pendingJoin = null;
+  async function startJoin() {
+    const a = acct();
+    if (!pendingJoin) return;
+    if (!a) { toast(t('sharingNeedsSetup')); pendingJoin = null; return; }
+    if (!a.user) { openAccount('signin', { intro: true, join: true }); return; }
+    const inv = pendingJoin;
+    pendingJoin = null;
+    if (state.sync && state.sync.hid === inv.hid) return;
+    if (state.onboarded && !confirm(t('joinReplace'))) return;
+    try {
+      if (state.sync) await H.leave(state).catch(() => {});
+      await H.join(state, inv);
+      state.onboarded = true;
+      state.tab = 'week';
+      MP.secureStore.save(state);
+      render();
+      choosePerson();
+    } catch (e) {
+      toast(t('joinFailed'));
+    }
+  }
+  // "Which person are you?" after joining.
+  function choosePerson() {
+    const free = state.members.filter((m) => !MP.isChild(m) && !m.uid);
+    $modal.innerHTML = `
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t('whoAreYou'))}">
+        <h2>${t('whoAreYou')}</h2>
+        <p class="muted">${t('whoAreYouHint')}</p>
+        ${free.map((m) => `<button type="button" class="btn wide" data-iam="${m.id}">${memberName(m)}</button>`).join('')}
+        <button type="button" class="btn primary wide" data-iam="new">➕ ${t('newAdult')}</button>
+      </div>`;
+    $modal.classList.add('open');
+    $modal.onclick = (e) => {
+      const b = e.target.closest('[data-iam]');
+      if (!b) return;
+      let me = state.members.find((m) => m.id === b.dataset.iam);
+      if (!me) {
+        me = newPerson('adult');
+        const u = acct() && acct().user;
+        if (u && u.displayName) me.name = u.displayName.slice(0, 40);
+        const kids = state.members.filter((m) => MP.isChild(m));
+        state.members = state.members.filter((m) => !MP.isChild(m)).concat(me, kids);
+      }
+      me.uid = state.sync.uid;
+      state.household = state.members.length > 1 ? 'family' : state.household;
+      ui.member = state.members.indexOf(me);
+      state.tab = 'profile';
+      save();
+      closeModal();
+    };
   }
 
   function accountCard() {
@@ -299,7 +421,9 @@
     const same = state.members.filter((x) => MP.isChild(x) === MP.isChild(m));
     const i = same.indexOf(m);
     if (MP.isChild(m)) return esc(t('childN', i + 1));
-    return esc(state.members.indexOf(m) === 0 ? t('you') : t('adultN', i + 1));
+    // "You" is the person using this phone (in a shared household, the one linked to this account)
+    const mine = state.sync ? m.uid === state.sync.uid : state.members.indexOf(m) === 0;
+    return esc(mine ? t('you') : t('adultN', i + 1));
   };
   const nameById = (id) => { const m = state.members.find((x) => x.id === id); return m ? memberName(m) : ''; };
   const round = (v) => Math.round(v);
@@ -321,6 +445,11 @@
   function select(field, value, options, attrs) {
     return `<select ${attrs || ''} data-f="${field}">${options.map(([v, label]) =>
       `<option value="${esc(v)}" ${String(v) === String(value) ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select>`;
+  }
+
+  // Type-to-search dropdown (js/combobox.js) with the app's wording.
+  function combo(cfg) {
+    return MP.Combo.html(Object.assign({ placeholder: t('typeToSearch'), emptyLabel: t('noMatches'), removeLabel: t('remove') }, cfg));
   }
 
   function segmented(field, value, options) {
@@ -355,11 +484,10 @@
       .sort((x, y) => x[1].localeCompare(y[1], state.lang))
       .map(([k, n]) => [k, `${MP.flag(k)} ${n}`]);
     return `
-      <label class="field"><span>🌐 ${t('language')}</span>${select('lang', state.lang, MP.LANGUAGES, 'data-scope="root"')}</label>
-      <label class="field"><span>${t('country')}</span>${select('country', state.country, countries, 'data-scope="root"')}</label>
-      ${c.regions ? `<label class="field"><span>${t('region_' + (c.regionLabel || 'region'))}</span>
-        ${select('region', state.region || '', [...Object.entries(c.regions).map(([k, r]) => [k, r.name]), ['', t('otherRegion')]], 'data-scope="root"')}
-      </label>` : ''}
+      <div class="field">${combo({ key: 'lang', label: '🌐 ' + t('language'), options: MP.LANGUAGES, values: [state.lang], onPick: (v) => setRoot('lang', v) })}</div>
+      <div class="field">${combo({ key: 'country', label: t('country'), options: countries, values: [state.country], onPick: (v) => setRoot('country', v) })}</div>
+      ${c.regions ? `<div class="field">${combo({ key: 'region', label: t('region_' + (c.regionLabel || 'region')),
+        options: [...Object.entries(c.regions).map(([k, r]) => [k, r.name]), ['', t('otherRegion')]], values: [state.region || ''], onPick: (v) => setRoot('region', v) })}</div>` : ''}
       <div class="field"><span>${t('units')}</span>${segmented('units', state.units, [['metric', t('metric')], ['imperial', t('imperial')]])}</div>`;
   }
 
@@ -396,24 +524,71 @@
         <p class="note">${t('peopleHint')}</p>` : ''}`;
   }
 
+  // A part of the person card that folds open; remembers whether it was open.
+  function section(key, icon, title, summary, body, openByDefault) {
+    const open = key in ui.open ? ui.open[key] : openByDefault;
+    return `
+      <details class="section" data-section="${esc(key)}" ${open ? 'open' : ''}>
+        <summary><span class="sec-icon" aria-hidden="true">${icon}</span><span class="sec-text"><span class="sec-title">${title}</span>
+          ${summary ? `<small class="sec-sum">${esc(summary)}</small>` : ''}</span></summary>
+        <div class="sec-body">${body}</div>
+      </details>`;
+  }
+
+  const DRINK_ICON = { still_water: '💧', sparkling_water: '🫧', milk: '🥛', oat_drink: '🌾', orange_juice: '🍊', apple_juice: '🍏',
+    coffee: '☕', tea: '🫖', herbal_tea: '🌿', soft_drink: '🥤', diet_soft_drink: '🥤' };
+  const dislikeList = (m) => String(m.dislikes || '').split(',').map((x) => x.trim()).filter(Boolean);
+
   function memberFields(m, i) {
     const target = MP.memberTargets(m);
     const isChild = MP.isChild(m);
     const opt = (prefix, keys) => keys.map((k) => [k, t(prefix + k)]);
     const hasDetails = ['age', 'height', 'weight'].some((k) => m[k] !== '' && m[k] != null) || m.sex === 'm' || m.sex === 'f';
-    return `
-      <div class="member" data-m="${i}">
-        <div class="member-head">
-          <strong data-member-name>${isChild ? '🧒 ' : ''}${memberName(m)}</strong>
-          <span class="pill">${t('daily')}: ${hasDetails || isChild ? '' : '≈ '}${target.kcal} ${t('kcal')}</span>
-        </div>
-        <label class="field"><span>${t('name')}</span><input data-f="name" value="${esc(m.name)}" autocomplete="off" maxlength="40" placeholder="${esc(t('optional'))}"></label>
-        ${isChild ? `
+    const needs = m.needs || [];
+    const drinks = m.drinks || {};
+    const k = (name) => `${m.id}:${name}`;
+    const changed = () => { save(); render(); };
+    const toggleIn = (list, v) => { const at = list.indexOf(v); if (at >= 0) list.splice(at, 1); else list.push(v); };
+    const days = MP.memberMeals(m, state.prefs.mealsPerDay);
+    const mode = (m.meals && m.meals.mode) || 'same';
+    const mealsSum = mode === 'same' ? mealsSummary(days[0]) : t(mode === 'split' ? 'mealsSplit' : 'mealsEach');
+
+    const dietBody = `
+      <div class="field">${combo({ key: k('diet'), label: t('diet'), options: opt('diet_', MP.DIETS), values: [m.diet],
+        onPick: (v) => { m.diet = v; changed(); } })}</div>
+      <div class="field">${combo({ key: k('needs'), label: t('needs'), multi: true, options: opt('need_', MP.NEEDS), values: needs,
+        onPick: (v) => { m.needs = needs; if (!needs.includes(v)) needs.push(v); changed(); },
+        onRemove: (v) => { m.needs = needs.filter((x) => x !== v); changed(); } })}
+        ${needNotes(needs)}</div>`;
+    const avoidBody = `
+      <div class="field">${combo({ key: k('allergies'), label: t('allergies'), multi: true, options: opt('al_', MP.ALLERGENS), values: m.allergies,
+        onPick: (v) => { if (!m.allergies.includes(v)) m.allergies.push(v); changed(); },
+        onRemove: (v) => { toggleIn(m.allergies, v); changed(); } })}</div>
+      <div class="field">${combo({ key: k('dislikes'), label: t('dislikes'), multi: true, free: true,
+        options: Object.keys(MP.INGREDIENTS).filter((id) => !MP.INGREDIENTS[id].staple && MP.INGREDIENTS[id].cat !== 'drinks').map((id) => [iName(id), iName(id)])
+          .sort((a, b) => a[1].localeCompare(b[1], state.lang)),
+        values: dislikeList(m),
+        onPick: (v) => { const xs = dislikeList(m); if (!xs.some((x) => MP.normalize(x) === MP.normalize(v))) xs.push(v.slice(0, 40)); m.dislikes = xs.join(', '); changed(); },
+        onRemove: (v) => { m.dislikes = dislikeList(m).filter((x) => x !== v).join(', '); changed(); } })}</div>`;
+    const drinksBody = `
+      ${Object.keys(drinks).length ? `<ul class="drink-list">${Object.entries(drinks).map(([id, n]) => {
+        const d = MP.DRINKS[id];
+        if (!d) return '';
+        return `<li><span class="drink-name"><span><span aria-hidden="true">${DRINK_ICON[id] || '🥤'}</span> ${esc(iName(id))}</span>
+            <small class="muted">${t('drinkUnit_' + d.per)} · ${qty(d.serving, MP.INGREDIENTS[id].unit)}</small></span>
+          <div class="stepper" role="group" aria-label="${esc(iName(id))}">
+            <button type="button" data-drink="${id}:-1" aria-label="${esc(t('fewer', iName(id)))}">−</button><b>${n}</b><small>${t('perDayShort')}</small>
+            <button type="button" data-drink="${id}:1" aria-label="${esc(t('more', iName(id)))}">＋</button>
+          </div></li>`;
+      }).join('')}</ul>` : `<p class="muted small">${t('drinksHint')}</p>`}
+      <div class="field">${combo({ key: k('drinks'), label: t('addDrink'), multi: true,
+        options: Object.keys(MP.DRINKS).filter((id) => !(id in drinks)).map((id) => [id, iName(id), DRINK_ICON[id]]), values: [],
+        onPick: (v) => { m.drinks = Object.assign({}, drinks, { [v]: 1 }); changed(); } })}</div>`;
+    const detailsBody = isChild ? `
         <div class="field"><span id="lbl-portion-${i}">${t('childPortion')}</span>
           ${segmented('portion', m.portion || 'medium', [['small', t('portion_small')], ['medium', t('portion_medium')], ['large', t('portion_large')]]).replace('role="radiogroup"', `role="radiogroup" aria-labelledby="lbl-portion-${i}"`)}
           <small class="muted">${t('childPortionHint')}</small>
         </div>` : `
-        <details class="optional-details" ${hasDetails ? 'open' : ''}><summary>${t('adultDetails')}</summary>
         <p class="muted small">${t('adultDetailsHint')}</p>
         <div class="grid2">
           <label class="field"><span>${t('sex')}</span>${select('sex', m.sex || '', [['', t('notSay')], ['f', t('female')], ['m', t('male')]])}</label>
@@ -426,22 +601,21 @@
           <label class="field"><span>${t('activity')}</span>${select('activity', m.activity, opt('activity_', Object.keys(MP.ACTIVITY)))}</label>
         </div>
         <p class="note" data-child-note ${MP.isChild(m) ? '' : 'hidden'}>${t('childNote')}</p>
-        <label class="field" data-goal ${MP.isChild(m) ? 'hidden' : ''}><span>${t('goal')}</span>${select('goal', m.goal, opt('goal_', MP.GOALS))}</label>
-        </details>`}
-        ${mealsFields(m)}
-        <label class="field"><span>${t('diet')}</span>${select('diet', m.diet, opt('diet_', MP.DIETS))}</label>
-        <div class="field"><span>${t('needs')}</span>
-          <div class="chips">${MP.NEEDS.map((n) => `
-            <button type="button" class="chip ${(m.needs || []).includes(n) ? 'on' : ''}" data-need="${n}">${t('need_' + n)}</button>`).join('')}
-          </div>
-          ${needNotes(m.needs || [])}
+        <label class="field" data-goal ${MP.isChild(m) ? 'hidden' : ''}><span>${t('goal')}</span>${select('goal', m.goal, opt('goal_', MP.GOALS))}</label>`;
+    const avoidSum = [...m.allergies.map((a) => t('al_' + a)), ...dislikeList(m)].join(', ') || t('nothingToAvoid');
+    const drinksSum = Object.keys(drinks).map((id) => `${iName(id)} ×${drinks[id]}`).join(', ') || t('noDrinks');
+    return `
+      <div class="member" data-m="${i}">
+        <div class="member-head">
+          <strong data-member-name>${isChild ? '🧒 ' : ''}${memberName(m)}</strong>
+          <span class="pill">${t('daily')}: ${hasDetails || isChild ? '' : '≈ '}${target.kcal} ${t('kcal')}</span>
         </div>
-        <div class="field"><span>${t('allergies')}</span>
-          <div class="chips">${MP.ALLERGENS.map((a) => `
-            <button type="button" class="chip ${m.allergies.includes(a) ? 'on' : ''}" data-allergy="${a}">${t('al_' + a)}</button>`).join('')}
-          </div>
-        </div>
-        <label class="field"><span>${t('dislikes')}</span><input data-f="dislikes" value="${esc(m.dislikes)}" placeholder="${t('dislikesHint')}" autocomplete="off" maxlength="200"></label>
+        <label class="field"><span>${t('name')}</span><input data-f="name" value="${esc(m.name)}" autocomplete="off" maxlength="40" placeholder="${esc(t('optional'))}"></label>
+        ${section(k('diet'), '🥗', t('secDiet'), [t('diet_' + m.diet), ...needs.map((n) => t('need_' + n))].join(', '), dietBody, true)}
+        ${section(k('avoid'), '⚠️', t('secAvoid'), avoidSum, avoidBody, true)}
+        ${section(k('meals'), '🗓', t('mealsTitle'), mealsSum, mealsFields(m), false)}
+        ${section(k('drinks'), '🥤', t('secDrinks'), drinksSum, drinksBody, false)}
+        ${section(k('details'), '📏', isChild ? t('childPortion') : t('adultDetails'), isChild ? t('portion_' + (m.portion || 'medium')) : (hasDetails ? `${target.kcal} ${t('kcal')}` : t('optional')), detailsBody, false)}
       </div>`;
   }
 
@@ -479,7 +653,7 @@
         </fieldset>`;
     }).join('');
     return `
-      <div class="field meals-field"><span>${t('mealsTitle')}</span>
+      <div class="field meals-field">
         <p class="muted small">${t('mealsHint')}</p>
         ${segmented('mealMode', mode, [['same', t('mealsSame')], ['split', t('mealsSplit')], ['each', t('mealsEach')]])}
         ${rows}
@@ -503,7 +677,9 @@
     if (needs.includes('low_histamine')) notes.push(t('needNote_low_histamine'));
     if (needs.includes('halal')) notes.push(t('needNote_halal'));
     if (needs.includes('kosher')) notes.push(t('needNote_kosher'));
-    if (needs.some((n) => ['low_histamine', 'low_fodmap', 'blood_sugar', 'dash'].includes(n))) notes.push(t('needNote_medical'));
+    for (const n of ['kidney', 'pregnancy', 'lactose_free', 'reflux']) if (needs.includes(n)) notes.push(t('needNote_' + n));
+    if (needs.some((n) => ['low_histamine', 'low_fodmap', 'blood_sugar', 'dash', 'low_salt', 'heart', 'kidney', 'gout', 'reflux',
+      'low_fat', 'low_fibre', 'pregnancy', 'coeliac', 'iron_rich'].includes(n))) notes.push(t('needNote_medical'));
     return notes.map((x) => `<p class="note">${esc(x)}</p>`).join('');
   }
 
@@ -513,7 +689,7 @@
     return `
       ${ms.length > 1 ? `<div class="member-tabs">${ms.map((m, i) => `
         <button type="button" class="chip ${i === ui.member ? 'on' : ''}" data-member-tab="${i}">${memberName(m)} · ${t('diet_' + m.diet)}</button>`).join('')}</div>` : ''}
-      ${memberFields(ms[ui.member], ui.member)}`;
+      ${state.sync && ms[ui.member].uid && ms[ui.member].uid !== state.sync.uid ? readOnlyMember(ms[ui.member], ui.member) : memberFields(ms[ui.member], ui.member)}`;
   }
 
   function tasteFields() {
@@ -667,17 +843,17 @@
   function renderMain() {
     const { store } = MP.storeOf(state);
     const locked = !premium.active && MP.PREMIUM_TABS.includes(state.tab);
-    const view = locked ? paywallView : ({ week: weekView, list: listView, store: storeView, recipes: recipesView, profile: profileView, paywall: paywallView }[state.tab] || weekView);
+    const view = locked ? paywallView : ({ week: weekView, list: listView, store: storeView, journal: journalView, recipes: recipesView, profile: profileView, paywall: paywallView }[state.tab] || weekView);
     const daysLeft = premium.reason === 'trial' && premium.trialEndsAt ? Math.max(0, Math.ceil((premium.trialEndsAt - Date.now()) / DAY)) : null;
     $app.innerHTML = `
       <header class="topbar">
         <h1 class="brand"><img class="brand-logo" src="icon.svg" alt="">${t('appName')}</h1>
         <button type="button" class="pill" data-tab="profile">${MP.flag(state.country)} ${esc(store.name)}</button>
       </header>
-      ${daysLeft !== null && !locked ? `<button type="button" class="trial-bar" data-tab="paywall">⏳ ${esc(t('trialLeft', daysLeft))} · ${t('seePlans')}</button>` : ''}
+      ${daysLeft !== null && !locked ? `<button type="button" class="trial-bar" data-tab="paywall">⭐ ${esc(t('premiumTrialLeft', daysLeft))} · ${t('seePlans')}</button>` : ''}
       <main class="screen">${view()}</main>
       <nav class="tabs">
-        ${[['week', '📅', t('tabWeek')], ['list', '🛒', t('tabList')], ['store', '🏪', t('tabStore')], ['recipes', '📖', t('tabRecipes')], ['profile', '👤', t('tabProfile')]].map(([k, ic, label]) =>
+        ${[['week', '📅', t('tabWeek')], ['list', '🛒', t('tabList')], ['journal', '📓', t('tabJournal')], ['recipes', '📖', t('tabRecipes')], ['profile', '👤', t('tabProfile')]].map(([k, ic, label]) =>
           `<button type="button" data-tab="${k}" class="${state.tab === k ? 'on' : ''}"><span>${ic}</span>${label}</button>`).join('')}
       </nav>`;
   }
@@ -759,7 +935,7 @@
         <button type="button" class="btn primary wide" data-go-choose>${t('chooseRecipes')}</button></div>`;
     }
     const multi = MP.selectedShops(state).length > 1;
-    if (multi && state.prefs.listMode !== 'one') return planView();
+    if (multi && pro() && state.prefs.listMode !== 'one') return planView();
     const L = MP.buildShoppingList(state);
     const budget = Number(state.prefs.weeklyBudget) || 0;
     const groups = MP.CATEGORIES.map((c) => [c, L.groceries.filter((x) => x.cat === c)]).filter(([, xs]) => xs.length);
@@ -767,14 +943,15 @@
     const count = L.groceries.length + L.extras.length;
     return `
       <div class="section-head"><h2>${esc(t('shoppingAt', L.store))}</h2></div>
-      ${multi ? listModeSwitch() : ''}
+      ${multi ? (pro() ? listModeSwitch() : upsell('compareShops')) : ''}
       <div class="card total">
         <div><small class="muted">${t('estTotal')}</small><div class="big">${money(L.total)}</div></div>
         <div class="right">
           <div class="mono">${done}/${count} ✓</div>
-          ${budget ? `<small class="${L.total > budget ? 'bad' : 'good'}">${L.total > budget ? t('overBudget') : t('underBudget')} ${money(Math.abs(budget - L.total))}</small>` : ''}
+          ${budget && pro() ? `<small class="${L.total > budget ? 'bad' : 'good'}">${L.total > budget ? t('overBudget') : t('underBudget')} ${money(Math.abs(budget - L.total))}</small>` : ''}
         </div>
       </div>
+      ${listTools(L.total)}
       <div class="list-actions">
         <button type="button" class="btn small" data-copy>📋 ${t('copy')}</button>
         ${navigator.share ? `<button type="button" class="btn small" data-share>📤 ${t('share')}</button>` : ''}
@@ -788,6 +965,31 @@
       <p class="fine">${t('priceNote')}</p>`;
   }
 
+  // Order online, other products and the budget checker, above the list.
+  function listTools(estimate) {
+    return `
+      <div class="tool-row">
+        <button type="button" class="btn" data-order>🛵 ${t('orderOnline')}</button>
+        <button type="button" class="btn" data-tab="store">➕ ${t('otherProducts')}</button>
+      </div>
+      ${budgetCard(estimate)}
+      ${tipsCard()}`;
+  }
+
+  // Saving tips for everyone: a few each week, the shop's loyalty app, and delivery services (affiliate links).
+  function tipsCard() {
+    const store = MP.storeOf(state).store.name;
+    const partners = MP.deliveryPartners(state.country);
+    return `
+      <details class="card tips" ${ui.tipsOpen ? 'open' : ''} data-tips-card>
+        <summary><strong>💡 ${t('tipsTitle')}</strong></summary>
+        <ul>${MP.weeklyTips(state.week.seed, 3).map((k) => `<li>${esc(t(k, store))}</li>`).join('')}</ul>
+        ${partners.length ? `<p class="small"><strong>${t('tipsDelivery')}</strong></p>
+        <div class="chips">${partners.map((p) => `<a class="chip" href="${esc(MP.deliveryHome(p))}" target="_blank" rel="noopener sponsored">${esc(p.name)} ↗</a>`).join('')}</div>
+        <p class="fine">${t('orderNote')}</p>` : ''}
+      </details>`;
+  }
+
   function listModeSwitch() {
     return `<div class="field">${segmented('listMode', state.prefs.listMode === 'one' ? 'one' : 'best', [['best', '🏪🏪 ' + t('listBest')], ['one', '🏪 ' + t('listOne', MP.storeOf(state).store.name)]])}</div>`;
   }
@@ -799,7 +1001,7 @@
     const all = P.shops.flatMap((g) => g.items);
     const done = all.filter((x) => state.checked[x.id]).length + P.extras.filter((x) => state.checked['x:' + x.key]).length;
     const count = all.length + P.extras.length;
-    const mainName = P.shops[0].store.name;
+    const mainName = MP.storeOf(state).store.name; // the main shop, even when nothing is bought there
     return `
       <div class="section-head"><h2>${t('shoppingPlan')}</h2></div>
       ${listModeSwitch()}
@@ -811,6 +1013,7 @@
           ${budget ? `<small class="${P.total > budget ? 'bad' : 'good'}">${P.total > budget ? t('overBudget') : t('underBudget')} ${money(Math.abs(budget - P.total))}</small>` : ''}
         </div>
       </div>
+      ${listTools(P.total)}
       <div class="list-actions">
         <button type="button" class="btn small" data-copy>📋 ${t('copy')}</button>
         ${navigator.share ? `<button type="button" class="btn small" data-share>📤 ${t('share')}</button>` : ''}
@@ -923,6 +1126,7 @@
     const manage = MP.billing.manageUrl();
     return `
       ${accountCard()}
+      ${sharingCard()}
       <h2>${t('placeTitle')}</h2><form class="card form">${placeFields()}</form>
       <h2>${t('shopTitle')}</h2><form class="card form">${shopFields()}</form>
       <h2>${t('householdTitle')}</h2><form class="card form">${householdFields()}</form>
@@ -968,7 +1172,9 @@
         ${trialOver ? `<p class="bad">${t('trialOver')}</p>` : ''}
         <p class="muted">${t('premiumPitch')}</p>
         ${state.referral && !trialOver ? `<p class="good center">🎁 ${esc(t('referralBanner', state.referral.name, Math.round(MP.BILLING_CONFIG.affiliateTrialDays / 30)))}</p>` : ''}
-        <ul class="perks"><li>👨‍👩‍👧 ${t('perk1')}</li><li>🛒 ${t('perk2')}</li><li>🏷 ${t('perk3')}</li><li>🌍 ${t('perk4')}</li></ul>
+        <p class="small">${t('freeForever')}</p>
+        <ul class="perks">${['compareShops', 'budget', 'diary', 'childDiary'].map((f, k) => `<li>${['🏷', '💰', '📓', '🧒'][k]} ${t('feat_' + f)}</li>`).join('')}</ul>
+        <p class="good small center">👨‍👩‍👧 ${t('familyPlan')}</p>
         <div class="plans">
           ${plansCache.map((p) => `
             <button type="button" class="plan ${ui.plan === p.id ? 'on' : ''}" data-plan="${p.id}">
@@ -984,6 +1190,216 @@
         <p class="legal">${t('legal')}</p>
         <p class="legal"><a href="${esc(MP.BILLING_CONFIG.termsUrl)}" target="_blank" rel="noopener">${t('terms')}</a> · <a href="privacy.html" target="_blank" rel="noopener">${t('privacyPolicy')}</a></p>
       </div>`;
+  }
+
+  // ---------- Premium features ----------
+  const pro = () => premium.active;
+  const priceLine = () => {
+    const p = MP.priceFor(state.country);
+    return MP.formatMoney(p.monthly, p.currency, state.lang, state.country);
+  };
+  // A friendly card for a Premium feature someone can't use yet.
+  function upsell(feature) {
+    return `
+      <div class="card upsell">
+        <p><strong>⭐ ${t('premiumFeature')}</strong> · ${t('feat_' + feature)}</p>
+        <p class="muted small">${esc(t('upsellLine', priceLine()))}</p>
+        <button type="button" class="btn small primary" data-tab="paywall">${t('seePremium')}</button>
+      </div>`;
+  }
+
+  // Budget checker (Premium): this week against the budget, what was spent, and cheaper swaps.
+  function budgetCard(estimate) {
+    if (!pro()) return upsell('budget');
+    const B = MP.budgetSummary(state, estimate);
+    const max = Math.max(B.budget || 0, ...B.weeks.map((w) => w.spent || 0), 1);
+    const swaps = B.over ? MP.cheaperSwaps(state, 3) : [];
+    return `
+      <details class="card budget" ${ui.budgetOpen ? 'open' : ''} data-budget-card>
+        <summary><strong>💰 ${t('budgetTitle')}</strong>
+          <small class="${B.over ? 'bad' : 'muted'}">${B.budget ? esc(t(B.over ? 'budgetOver' : 'budgetLeft', money(Math.abs(B.left)))) : t('budgetSet')}</small></summary>
+        <label class="field"><span>${t('weeklyBudget')} (${MP.storeOf(state).country.currency})</span>
+          <input data-pref="weeklyBudget" type="number" inputmode="decimal" min="0" value="${esc(state.prefs.weeklyBudget)}"></label>
+        <form class="row" data-spend-form>
+          <label class="field grow"><span>${t('spentThisWeek')}</span>
+            <input name="spent" type="number" inputmode="decimal" min="0" step="any" value="${B.spent == null ? '' : B.spent}"></label>
+          <button class="btn small primary" type="submit">${t('saveBtn')}</button>
+        </form>
+        <div class="bars" role="img" aria-label="${esc(t('last8Weeks'))}">${B.weeks.map((w) => `
+          <div class="barcol"><i style="height:${w.spent ? Math.max(4, (w.spent / max) * 100) : 0}%" class="${B.budget && w.spent > B.budget ? 'over' : ''}"></i>
+          <small>${w.week.slice(8)}/${w.week.slice(5, 7)}</small></div>`).join('')}
+          ${B.budget ? `<b class="budget-line" style="bottom:${(B.budget / max) * 100}%"></b>` : ''}
+        </div>
+        <p class="small muted">${esc(t('monthLine', money(B.month.spent), B.month.budget ? money(B.month.budget) : '—'))}
+          ${B.average != null ? ` · ${esc(t('avgLine', money(B.average)))}` : ''}</p>
+        ${swaps.length ? `<h3>${t('cheaperTitle')}</h3><ul class="swaps">${swaps.map((x) => `
+          <li><span>${esc(rName(MP.RECIPE_BY_ID[x.item.recipeId]))} → <b>${esc(rName(x.recipe))}</b> <small class="good">−${money(x.saving)}</small></span>
+            <button type="button" class="btn small" data-swap="${x.item.key}:${x.recipe.id}">${t('swapBtn')}</button></li>`).join('')}</ul>` : ''}
+      </details>`;
+  }
+
+  // Order online (Premium): send the list to a delivery service.
+  function openOrderSheet() {
+    const partners = MP.deliveryPartners(state.country);
+    const L = MP.buildShoppingList(state);
+    let partner = partners[0] || null;
+    const draw = () => {
+      $modal.innerHTML = `
+        <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t('orderOnline'))}">
+          <button type="button" class="icon-btn close" data-close aria-label="${t('close')}">✕</button>
+          <h2>🛵 ${t('orderOnline')}</h2>
+          <p class="muted small">${t('orderHint')}</p>
+          ${partners.length ? `<div class="seg" role="radiogroup" aria-label="${esc(t('orderWith'))}">${partners.map((p) => `
+            <button type="button" role="radio" aria-checked="${p === partner}" class="${p === partner ? 'on' : ''}" data-partner="${p.id}">${esc(p.name)}</button>`).join('')}</div>`
+            : `<p class="note">${esc(t('noPartners', MP.countryName(state.country, state.lang)))}</p>`}
+          ${partner && partner.whole ? `<button type="button" class="btn primary wide" data-whole>${esc(t('sendWhole', partner.name))}</button>` : ''}
+          <button type="button" class="btn wide" data-copy-order>📋 ${t('copyForApp')}</button>
+          ${partner ? `<h3>${esc(t('itemByItem', partner.name))}</h3>
+          <ul class="order-list">${L.groceries.map((x) => `
+            <li><span>${esc(iName(x.id))} <small class="muted">${qty(x.qty, x.unit)}</small></span>
+              <a class="btn small" href="${esc(MP.deliveryLink(partner, iName(x.id)))}" target="_blank" rel="noopener sponsored">${t('findBtn')} ↗</a></li>`).join('')}</ul>` : ''}
+          <p class="fine">${t('orderNote')}</p>
+        </div>`;
+      $modal.classList.add('open');
+    };
+    $modal.onsubmit = null;
+    delete $modal.dataset.pick;
+    $modal.onclick = async (e) => {
+      const b = e.target.closest('button');
+      if (e.target === $modal || (b && b.hasAttribute('data-close'))) return closeModal();
+      if (!b) return;
+      if (b.dataset.partner) { partner = partners.find((p) => p.id === b.dataset.partner); draw(); }
+      if (b.hasAttribute('data-copy-order')) {
+        try { await navigator.clipboard.writeText(listText()); toast(t('copied')); } catch (x) { toast(t('copyFailed')); }
+      }
+      if (b.hasAttribute('data-whole')) {
+        b.disabled = true;
+        const url = await MP.instacartLink(t('appName'), MP.instacartItems(L.groceries, iName));
+        b.disabled = false;
+        if (url) window.open(url, '_blank', 'noopener'); else toast(t('wholeUnavailable'));
+      }
+    };
+    draw();
+  }
+
+  // ---------- Journal (Premium): food diary, goals, children's diets ----------
+  function journalView() {
+    const ms = state.members;
+    if (!ms.find((m) => m.id === ui.jMember)) ui.jMember = ms[0].id;
+    const m = ms.find((x) => x.id === ui.jMember);
+    const J = MP.journalOf(state, m.id);
+    const child = MP.isChild(m);
+    const tabs = ms.length > 1 ? `<div class="member-tabs" role="tablist">${ms.map((x) => `
+      <button type="button" role="tab" aria-selected="${x === m}" class="chip ${x === m ? 'on' : ''}" data-jmember="${x.id}">${MP.isChild(x) ? '🧒 ' : ''}${memberName(x)}${!MP.isChild(x) && MP.journalOf(state, x.id).pin ? ' 🔒' : ''}</button>`).join('')}</div>` : '';
+    const head = `<div class="section-head"><h2>📓 ${t('journalTitle')}</h2></div>${tabs}`;
+    if (J.pin && !ui.unlocked[m.id]) {
+      return `${head}
+        <form class="card form" data-pin-form>
+          <p>🔒 ${esc(t('diaryLocked', memberName(m)))}</p>
+          <label class="field"><span>${t('pinLabel')}</span><input name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8"></label>
+          <button class="btn primary wide" type="submit">${t('unlockBtn')}</button>
+        </form>`;
+    }
+    if (!J.goals.length) J.goals = MP.defaultGoals(m);
+    const dayTs = Date.now() + (ui.jDay || 0) * DAY;
+    const day = MP.dayKey(dayTs);
+    const R = MP.dayTotals(state, m.id, day);
+    const target = MP.memberTargets(m);
+    const streak = MP.goalStreak(state, m.id);
+    const planned = (ui.jDay || 0) === 0 ? MP.plannedToday(state, m) : [];
+    const entries = J.days[day] || [];
+    const goalLabel = (x) => {
+      const g = x.goal;
+      if (g.type === 'custom') return esc(g.text || '');
+      if (g.type === 'no_sugary_drinks') return t('goal_no_sugary_drinks');
+      const v = g.type === 'veg' || g.type === 'fruit' ? Math.floor((x.value || 0) * 10) / 10 : Math.round(x.value || 0);
+      return esc(t('goal_' + g.type, v, g.target));
+    };
+    return `${head}
+      <p class="muted small">${child ? t('childDiaryNote') : t('diaryPrivateNote')}</p>
+      <div class="day-nav">
+        <button type="button" class="icon-btn" data-jday="-1" aria-label="${t('prevDay')}">‹</button>
+        <strong>${(ui.jDay || 0) === 0 ? t('today') : new Date(dayTs).toLocaleDateString(state.lang, { weekday: 'long', day: 'numeric', month: 'short' })}</strong>
+        <button type="button" class="icon-btn" data-jday="1" aria-label="${t('nextDay')}" ${(ui.jDay || 0) >= 0 ? 'disabled' : ''}>›</button>
+      </div>
+      <div class="card">
+        <div class="target-row"><strong>${R.totals.kcal} / ${target.kcal} ${t('kcal')}</strong><span>${R.totals.protein} g ${t('protein')}</span></div>
+        <div class="bar"><i style="width:${Math.min(100, (R.totals.kcal / target.kcal) * 100)}%"></i></div>
+        <ul class="goals">${R.goals.map((x) => `
+          <li class="${x.done ? 'done' : ''}">
+            ${x.goal.type === 'custom' ? `<label><input type="checkbox" data-goal-check="${x.goal.id}" ${x.done ? 'checked' : ''}> ${goalLabel(x)}</label>` : `<span>${x.done ? '✅' : '⬜'} ${goalLabel(x)}</span>`}
+          </li>`).join('')}</ul>
+        ${streak ? `<p class="good small">🔥 ${esc(t('streak', streak))}</p>` : ''}
+      </div>
+      <h3>${t('addFood')}</h3>
+      ${planned.length ? `<div class="planned">${planned.map((p, k) => `
+        <button type="button" class="sugg-main plan-pick" data-planned="${k}"><span class="emoji">${p.recipe.emoji}</span>
+          <span class="sugg-text"><span class="meal-name">${esc(rName(p.recipe))}</span><small class="muted">${t('slot_' + p.slot)} · ×${p.servings}</small></span><b>＋</b></button>`).join('')}</div>` : ''}
+      <div class="quick-add">
+        <label class="btn small">📷 ${t('photoBtn')}<input type="file" accept="image/*" capture="environment" data-photo hidden></label>
+        <button type="button" class="btn small" data-water>💧 ${t('waterBtn')}</button>
+        <button type="button" class="btn small" data-sugary>🥤 ${t('sugaryBtn')}</button>
+        <button type="button" class="btn small" data-other>✏️ ${t('otherFood')}</button>
+      </div>
+      ${ui.jForm ? `
+      <form class="card form" data-food-form>
+        ${ui.jForm.photo ? `<img class="food-photo" src="${ui.jForm.photo}" alt="">` : ''}
+        <label class="field"><span>${t('whatWasIt')}</span><input name="name" maxlength="60" value="${esc(ui.jForm.name || '')}" autocomplete="off"></label>
+        <div class="field"><span>${t('howMuch')}</span>
+          <div class="seg">${Object.keys(MP.PLATE_KCAL).map((sz) => `<button type="button" class="${ui.jForm.size === sz ? 'on' : ''}" data-size="${sz}">${t('size_' + sz)}</button>`).join('')}</div></div>
+        <label class="field"><span>${t('kcalOptional')}</span><input name="kcal" type="number" inputmode="numeric" min="0" max="5000" value="${ui.jForm.kcal || ''}"></label>
+        <div class="row"><button class="btn primary" type="submit">${t('addBtn')}</button><button type="button" class="btn ghost" data-cancel-food>${t('cancelBtn')}</button></div>
+      </form>` : ''}
+      <h3>${t('eatenTitle')}</h3>
+      ${entries.length ? `<ul class="entries">${entries.map((e) => `
+        <li>${e.photo ? `<img class="thumb" data-photo-id="${e.photo}" alt="">` : `<span class="emoji">${e.recipeId ? MP.RECIPE_BY_ID[e.recipeId].emoji : e.water ? '💧' : e.sugary ? '🥤' : '🍽'}</span>`}
+          <span class="grow"><b>${esc(e.recipeId ? rName(MP.RECIPE_BY_ID[e.recipeId]) : e.water ? t('waterBtn') + ' ×' + e.water : e.sugary ? t('sugaryBtn') : e.name || t('otherFood'))}</b>
+            <small class="muted">${new Date(e.at).toLocaleTimeString(state.lang, { hour: '2-digit', minute: '2-digit' })}${e.kcal ? ` · ${e.kcal} ${t('kcal')}` : ''}</small></span>
+          <button type="button" class="icon-btn small" data-del-entry="${e.id}" aria-label="${t('remove')}">✕</button></li>`).join('')}</ul>`
+        : `<p class="muted">${t('nothingYet')}</p>`}
+      <details class="card"><summary><strong>🎯 ${t('goalsTitle')}</strong></summary>
+        ${child ? `<label class="field"><span>${t('doctorNotes')}</span><textarea data-doctor-notes rows="3" maxlength="500">${esc(J.notes || '')}</textarea></label>` : ''}
+        <ul class="goal-edit">${J.goals.map((g) => `
+          <li><span>${g.type === 'custom' ? esc(g.text) : t('goalType_' + g.type)}</span>
+            ${['kcal', 'protein', 'veg', 'fruit', 'water'].includes(g.type) ? `<input type="number" inputmode="numeric" min="0" max="9999" data-goal-target="${g.id}" value="${g.target}" aria-label="${esc(t('goalType_' + g.type))}">` : ''}
+            <button type="button" class="icon-btn small" data-del-goal="${g.id}" aria-label="${t('remove')}">✕</button></li>`).join('')}</ul>
+        <form class="row" data-goal-form>
+          <select name="type" aria-label="${t('goalTypeLabel')}">${MP.GOAL_TYPES.map((x) => `<option value="${x}">${t('goalType_' + x)}</option>`).join('')}</select>
+          <input name="text" maxlength="60" placeholder="${esc(t('customGoalHint'))}" aria-label="${esc(t('customGoalHint'))}">
+          <button class="btn small" type="submit">${t('addBtn')}</button>
+        </form>
+        ${child ? '' : `
+        <form class="row" data-setpin-form>
+          <label class="field grow"><span>${J.pin ? t('pinChange') : t('pinSet')}</span><input name="pin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="${esc(t('pinHint'))}"></label>
+          <button class="btn small" type="submit">${t('saveBtn')}</button>
+        </form>`}
+      </details>`;
+  }
+
+  // Shrinks a photo to at most 800 px (JPEG) before it is stored, encrypted, on this device.
+  function shrinkPhoto(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader(); // data: URL (the security policy allows data: images, not blob:)
+      img.onload = () => {
+        const k = Math.min(1, 800 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject;
+      reader.onload = () => { img.src = reader.result; };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  async function showPhotos() {
+    for (const el of $app.querySelectorAll('img[data-photo-id]')) {
+      const src = await MP.secureStore.loadPhoto(el.dataset.photoId).catch(() => null);
+      if (src && el.isConnected) el.src = src;
+    }
   }
 
   // ---------- real products (Open Food Facts / Open Prices) ----------
@@ -1290,6 +1706,7 @@
       }
     }
     if (el.dataset.pref) { state.prefs[el.dataset.pref] = el.value; save(); }
+    if (el.matches('[data-doctor-notes]')) { MP.journalOf(state, ui.jMember).notes = el.value; save(); }
   });
 
   $app.addEventListener('change', async (e) => {
@@ -1299,7 +1716,18 @@
       save(); render();
       return;
     }
-    if (el.dataset.scope === 'root') {
+    if (el.dataset.scope === 'root') return setRoot(el.dataset.f, el.value);
+    const m = memberAt(el);
+    if (m && el.tagName === 'SELECT' && el.dataset.f) {
+      m[el.dataset.f] = el.value;
+      save(); render();
+    }
+  });
+
+  // Language, country and region (from a dropdown or a select).
+  async function setRoot(field, value) {
+    const el = { dataset: { f: field }, value };
+    {
       if (el.dataset.f === 'lang') { await MP.loadLanguage(el.value); state.lang = el.value; MP.lang = el.value; plansCache = null; }
       if (el.dataset.f === 'country') {
         state.country = el.value;
@@ -1316,22 +1744,78 @@
       }
       storeSearch.res = null;
       save(); render();
-      return;
     }
-    const m = memberAt(el);
-    if (m && el.tagName === 'SELECT' && el.dataset.f) {
-      m[el.dataset.f] = el.value;
-      save(); render();
-    }
-  });
+  }
 
   $app.addEventListener('toggle', (e) => {
     if (e.target.matches('.display-quick')) ui.displayOpen = e.target.open;
+    if (e.target.matches('[data-section]')) ui.open[e.target.dataset.section] = e.target.open;
+    if (e.target.matches('[data-budget-card]')) ui.budgetOpen = e.target.open;
+    if (e.target.matches('[data-tips-card]')) ui.tipsOpen = e.target.open;
   }, true);
 
-  $app.addEventListener('submit', (e) => {
+  $app.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (e.target.hasAttribute('data-store-search')) runStoreSearch(e.target.q.value);
+    const f = e.target;
+    if (f.hasAttribute('data-store-search')) return runStoreSearch(f.q.value);
+    if (f.hasAttribute('data-spend-form')) {
+      MP.logSpend(state, Number(f.spent.value) || 0);
+      ui.budgetOpen = true;
+      save(); toast(t('saved')); return render();
+    }
+    const jm = ui.jMember;
+    if (f.hasAttribute('data-pin-form')) {
+      if (await MP.checkDiaryPin(state, jm, f.pin.value)) { ui.unlocked[jm] = true; return render(); }
+      return toast(t('wrongPin'));
+    }
+    if (f.hasAttribute('data-setpin-form')) {
+      const pin = f.pin.value.trim();
+      if (pin && !/^\d{4,8}$/.test(pin)) return toast(t('pinHint'));
+      await MP.setDiaryPin(state, jm, pin);
+      ui.unlocked[jm] = true;
+      save(); toast(pin ? t('pinSaved') : t('pinRemoved')); return render();
+    }
+    if (f.hasAttribute('data-goal-form')) {
+      const type = f.elements.type.value;
+      const m = state.members.find((x) => x.id === jm);
+      const J = MP.journalOf(state, jm);
+      if (type === 'custom' && !f.text.value.trim()) return toast(t('customGoalHint'));
+      const def = MP.defaultGoals(m).find((g) => g.type === type);
+      J.goals.push({ id: MP.uid(), type, target: def ? def.target : type === 'fruit' ? 2 : 1, text: type === 'custom' ? f.text.value.trim().slice(0, 60) : undefined });
+      save(); return render();
+    }
+    if (f.hasAttribute('data-food-form')) {
+      const kcal = Number(f.kcal.value) || MP.PLATE_KCAL[ui.jForm.size || 'medium'];
+      let photo;
+      if (ui.jForm.photo) {
+        photo = MP.uid();
+        if (!(await MP.secureStore.savePhoto(photo, ui.jForm.photo).catch(() => false))) photo = undefined;
+      }
+      MP.addEntry(state, jm, { kind: photo ? 'photo' : 'custom', name: f.elements.name.value.trim().slice(0, 60), kcal, photo },
+        Date.now() + (ui.jDay || 0) * DAY);
+      ui.jForm = null;
+      save(); toast(t('saved')); return render();
+    }
+    return undefined;
+  });
+
+  $app.addEventListener('change', async (e) => {
+    const el = e.target;
+    if (el.matches('[data-photo]') && el.files && el.files[0]) {
+      try { ui.jForm = { photo: await shrinkPhoto(el.files[0]), size: 'medium' }; } catch (x) { toast(t('photoFailed')); }
+      return render();
+    }
+    if (el.matches('[data-goal-check]')) {
+      const J = MP.journalOf(state, ui.jMember);
+      const day = MP.dayKey(Date.now() + (ui.jDay || 0) * DAY);
+      J.checks[day] = Object.assign({}, J.checks[day], { [el.dataset.goalCheck]: el.checked });
+      save(); return render();
+    }
+    if (el.matches('[data-goal-target]')) {
+      const g = MP.journalOf(state, ui.jMember).goals.find((x) => x.id === el.dataset.goalTarget);
+      if (g) { g.target = Math.max(0, Number(el.value) || 0); save(); render(); }
+    }
+    return undefined;
   });
 
   $app.addEventListener('click', async (e) => {
@@ -1349,6 +1833,77 @@
       const xs = (state.extraStores = state.extraStores || []);
       const i = xs.indexOf(d.extraStore);
       if (i >= 0) xs.splice(i, 1); else xs.push(d.extraStore);
+      save(); return render();
+    }
+    // ---- household sharing ----
+    if (b.hasAttribute('data-share-household') || b.hasAttribute('data-invite')) {
+      b.disabled = true;
+      try {
+        const base = location.href;
+        ui.inviteLink = state.sync ? await H.invite(state, base) : await H.create(state, base);
+        MP.secureStore.save(state);
+      } catch (x) { toast(t('shareFailed')); }
+      return render();
+    }
+    if (b.hasAttribute('data-copy-invite')) {
+      try { await navigator.clipboard.writeText(ui.inviteLink); toast(t('copied')); } catch (x) { toast(t('copyFailed')); }
+      return undefined;
+    }
+    if (b.hasAttribute('data-share-invite')) {
+      navigator.share({ title: t('appName'), text: t('inviteMessage'), url: ui.inviteLink }).catch(() => {});
+      return undefined;
+    }
+    if (b.hasAttribute('data-sync-now')) { await runSync(); toast(t('synced')); return render(); }
+    if (b.hasAttribute('data-leave-household')) {
+      if (!confirm(t('leaveConfirm'))) return undefined;
+      await H.leave(state);
+      ui.inviteLink = null;
+      MP.secureStore.save(state);
+      return render();
+    }
+    // ---- Premium: ordering, budget, journal ----
+    if (b.hasAttribute('data-order')) return openOrderSheet();
+    if (d.swap) {
+      const [key, rid] = d.swap.split(':');
+      const it = itemByKey(key);
+      if (it) { it.recipeId = rid; save(); toast(t('swapped')); }
+      return render();
+    }
+    if (d.jmember) { ui.jMember = d.jmember; ui.jForm = null; return render(); }
+    if (d.jday) { ui.jDay = Math.min(0, (ui.jDay || 0) + Number(d.jday)); ui.jForm = null; return render(); }
+    if (d.planned) {
+      const m = state.members.find((x) => x.id === ui.jMember);
+      const p = MP.plannedToday(state, m)[Number(d.planned)];
+      if (p) { MP.addEntry(state, m.id, MP.plannedEntry(p.recipe, p.servings, p.slot)); save(); toast(t('saved')); }
+      return render();
+    }
+    if (b.hasAttribute('data-water')) { MP.addEntry(state, ui.jMember, { kind: 'drink', water: 1 }, Date.now() + ui.jDay * DAY); save(); return render(); }
+    if (b.hasAttribute('data-sugary')) { MP.addEntry(state, ui.jMember, { kind: 'drink', sugary: true, kcal: 140 }, Date.now() + ui.jDay * DAY); save(); return render(); }
+    if (b.hasAttribute('data-other')) { ui.jForm = { size: 'medium' }; return render(); }
+    if (d.size) {
+      const form = b.closest('form');
+      ui.jForm = Object.assign({}, ui.jForm, { size: d.size, name: form.elements.name.value, kcal: '' });
+      return render();
+    }
+    if (b.hasAttribute('data-cancel-food')) { ui.jForm = null; return render(); }
+    if (d.delEntry) {
+      const day = MP.dayKey(Date.now() + (ui.jDay || 0) * DAY);
+      const e = (MP.journalOf(state, ui.jMember).days[day] || []).find((x) => x.id === d.delEntry);
+      if (e && e.photo) MP.secureStore.deletePhoto(e.photo).catch(() => {});
+      MP.removeEntry(state, ui.jMember, day, d.delEntry);
+      save(); return render();
+    }
+    if (d.delGoal) {
+      const J = MP.journalOf(state, ui.jMember);
+      J.goals = J.goals.filter((g) => g.id !== d.delGoal);
+      save(); return render();
+    }
+    if (d.drink) {
+      const m = memberAt(b);
+      const [id, delta] = d.drink.split(':');
+      const n = Math.max(0, Math.min(20, ((m.drinks || {})[id] || 0) + Number(delta)));
+      m.drinks = Object.assign({}, m.drinks);
+      if (n) m.drinks[id] = n; else delete m.drinks[id];
       save(); return render();
     }
     if (d.set === 'portion') {
@@ -1572,17 +2127,29 @@
     });
     $app.querySelectorAll('.emoji, nav.tabs button > span, .cuisine > span').forEach((x) => x.setAttribute('aria-hidden', 'true'));
     $app.querySelectorAll('nav.tabs button.on').forEach((x) => x.setAttribute('aria-current', 'page'));
+    MP.Combo.restore($app);
+    if (state.onboarded && state.tab === 'journal') showPhotos();
   }
 
+  MP.Combo.attach($app);
   render();
   await MP.billing.init();
   refreshPremium();
+
+  // Household invite links: …#join=<hid>.<token>.<key> (the key never leaves the phone)
+  const invite = MP.household.parseInvite(location.hash);
+  if (invite) {
+    history.replaceState(null, '', location.pathname + location.search);
+    pendingJoin = invite;
+  }
 
   if (MP.account) {
     MP.account.onChange((a) => { onAccountChange(a); });
     await MP.account.init();
     if (MP.account.user) await MP.account.finishRedirect().catch(() => {});
   }
+  if (pendingJoin) startJoin();
+  else scheduleSync(0);
 
   // Affiliate links: …/?ref=CODE (or #ref=CODE)
   const refMatch = (location.search + '&' + location.hash).match(/[?&#]ref=([A-Za-z0-9_-]{2,32})/);

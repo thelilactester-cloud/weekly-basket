@@ -3,7 +3,10 @@
  *
  *  revenuecatWebhook  RevenueCat → every subscription payment / refund. Records affiliate commissions.
  *  deleteAccount      The app's "Delete my account": removes the account, its data and its RevenueCat record.
- *  entitlement        Is this account's Premium active? (for the web app, where the stores can't be asked)
+ *  entitlement        Is Premium active for this account, or for the household it shares (family plan)?
+ *  joinHousehold      Adds the signed-in account to a household, from a valid invite (household sharing).
+ *  leaveHousehold     Leaves a shared household (the owner leaving deletes it).
+ *  instacartList      "Order online": the shopping list as an Instacart shopping-list page (US, Canada).
  *
  * Secrets (set once with `firebase functions:secrets:set NAME`, see LAUNCH.md):
  *  REVENUECAT_WEBHOOK_AUTH  any long random text; the same value goes in RevenueCat → Webhooks → Authorization header
@@ -13,7 +16,7 @@ const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https')
 const { setGlobalOptions } = require('firebase-functions/v2');
 const { defineSecret } = require('firebase-functions/params');
 const { initializeApp } = require('firebase-admin/app');
-const { getFirestore, Timestamp } = require('firebase-admin/firestore');
+const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
 const { classify, inWindow, commissionFor, monthOf, RATE } = require('./commission');
 
@@ -104,6 +107,7 @@ exports.deleteAccount = onCall({ secrets: [RC_SECRET_KEY] }, async (req) => {
   mine.forEach((d) => batch.update(d.ref, { uid: 'deleted-account' }));
   batch.delete(db.doc(`users/${uid}`));
   await batch.commit();
+  await leaveAll(uid);
   const key = RC_SECRET_KEY.value();
   if (key) {
     try {
@@ -117,20 +121,98 @@ exports.deleteAccount = onCall({ secrets: [RC_SECRET_KEY] }, async (req) => {
   return { deleted: true };
 });
 
+// Premium of one account, from RevenueCat → { active, expires }
+async function premiumOf(uid, key) {
+  try {
+    const r = await rc(`/subscribers/${encodeURIComponent(uid)}`, key);
+    if (!r.ok) return { active: false };
+    const data = await r.json();
+    const ent = ((data.subscriber || {}).entitlements || {})[ENTITLEMENT];
+    const expires = ent && ent.expires_date ? Date.parse(ent.expires_date) : null;
+    return { active: !!ent && (expires === null || expires > Date.now()), expires };
+  } catch (e) {
+    return { active: false };
+  }
+}
+
+// One subscription covers the family: anyone sharing a household with a subscriber has Premium too.
 exports.entitlement = onCall({ secrets: [RC_SECRET_KEY] }, async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
   const key = RC_SECRET_KEY.value();
   if (!key) return { active: false };
-  let data;
-  try {
-    const r = await rc(`/subscribers/${encodeURIComponent(req.auth.uid)}`, key);
-    if (!r.ok) return { active: false };
-    data = await r.json();
-  } catch (e) {
-    return { active: false };
+  const own = await premiumOf(req.auth.uid, key);
+  if (own.active) return own;
+  const homes = await db.collection('households').where('members', 'array-contains', req.auth.uid).limit(3).get();
+  for (const h of homes.docs) {
+    for (const uid of (h.data().members || []).filter((u) => u !== req.auth.uid).slice(0, 8)) {
+      const p = await premiumOf(uid, key);
+      if (p.active) return Object.assign({ family: true }, p);
+    }
   }
-  const ent = ((data.subscriber || {}).entitlements || {})[ENTITLEMENT];
-  const expires = ent && ent.expires_date ? Date.parse(ent.expires_date) : null;
-  return { active: !!ent && (expires === null || expires > Date.now()), expires };
+  return own;
 });
 
+// ---------- household sharing ----------
+const HOUSEHOLD_MAX = 12;
+exports.joinHousehold = onCall(async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
+  const { hid, token } = req.data || {};
+  if (!/^[a-z0-9]{6,40}$/i.test(String(hid)) || !/^[a-f0-9]{32}$/.test(String(token))) throw new HttpsError('invalid-argument', 'Bad invite.');
+  const ref = db.doc(`households/${hid}`);
+  const inv = ref.collection('invites').doc(token);
+  await db.runTransaction(async (tx) => {
+    const [h, i] = await Promise.all([tx.get(ref), tx.get(inv)]);
+    if (!h.exists || !i.exists || i.data().expiresAt.toMillis() < Date.now()) throw new HttpsError('not-found', 'This invite has expired.');
+    const members = h.data().members || [];
+    if (members.includes(req.auth.uid)) return;
+    if (members.length >= HOUSEHOLD_MAX) throw new HttpsError('resource-exhausted', 'This household is full.');
+    tx.update(ref, { members: FieldValue.arrayUnion(req.auth.uid) });
+  });
+  return { joined: true };
+});
+
+async function leaveAll(uid, onlyHid) {
+  const homes = await db.collection('households').where('members', 'array-contains', uid).get();
+  for (const h of homes.docs) {
+    if (onlyHid && h.id !== onlyHid) continue;
+    if (h.data().owner === uid) await db.recursiveDelete(h.ref);
+    else await h.ref.update({ members: FieldValue.arrayRemove(uid) });
+  }
+}
+exports.leaveHousehold = onCall(async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
+  const hid = String((req.data || {}).hid || '');
+  if (!/^[a-z0-9]{6,40}$/i.test(hid)) throw new HttpsError('invalid-argument', 'Bad household.');
+  await leaveAll(req.auth.uid, hid);
+  return { left: true };
+});
+
+
+// "Order online" → Instacart (US, Canada): turns the shopping list into an Instacart shopping-list page.
+// Needs an Instacart Developer Platform API key: firebase functions:secrets:set INSTACART_API_KEY
+// (and INSTACART_ENV=development while testing, see LAUNCH.md). Commission: Instacart's affiliate programme.
+const INSTACART_API_KEY = defineSecret('INSTACART_API_KEY');
+const UNITS = new Set(['gram', 'milliliter', 'each']);
+exports.instacartList = onCall({ secrets: [INSTACART_API_KEY] }, async (req) => {
+  const key = INSTACART_API_KEY.value();
+  if (!key) throw new HttpsError('failed-precondition', 'Instacart is not set up.');
+  const d = req.data || {};
+  const items = Array.isArray(d.items) ? d.items.slice(0, 150) : [];
+  const lineItems = items
+    .filter((x) => x && typeof x.name === 'string' && x.name.trim())
+    .map((x) => ({
+      name: x.name.trim().slice(0, 100),
+      quantity: Math.max(1, Math.min(100000, Math.round(Number(x.quantity) || 1))),
+      unit: UNITS.has(x.unit) ? x.unit : 'each',
+    }));
+  if (!lineItems.length) throw new HttpsError('invalid-argument', 'The list is empty.');
+  const host = process.env.INSTACART_ENV === 'development' ? 'https://connect.dev.instacart.tools' : 'https://connect.instacart.com';
+  const r = await fetch(`${host}/idp/v1/products/products_link`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ title: String(d.title || 'Prepcart').slice(0, 80), link_type: 'shopping_list', line_items: lineItems }),
+  });
+  if (!r.ok) throw new HttpsError('unavailable', 'Instacart did not accept the list.');
+  const out = await r.json();
+  return { url: out.products_link_url || null };
+});

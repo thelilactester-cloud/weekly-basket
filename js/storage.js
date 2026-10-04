@@ -111,6 +111,30 @@
       return store._queue;
     },
 
+    // Food-diary photos, encrypted one by one next to the main data (kept out of the main data so saving stays fast).
+    async savePhoto(id, dataUrl) {
+      await store.ready;
+      if (!store.encrypted) return false;
+      const key = await keyPromise;
+      const iv = g.crypto.getRandomValues(new Uint8Array(12));
+      const ct = await g.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(dataUrl));
+      await tx(await dbPromise, 'data', 'readwrite', (s) => s.put({ iv, ct }, 'photo:' + id));
+      return true;
+    },
+    async loadPhoto(id) {
+      await store.ready;
+      if (!store.encrypted) return null;
+      const rec = await tx(await dbPromise, 'data', 'readonly', (s) => s.get('photo:' + id));
+      if (!rec) return null;
+      const plain = await g.crypto.subtle.decrypt({ name: 'AES-GCM', iv: rec.iv }, await keyPromise, rec.ct);
+      return dec.decode(plain);
+    },
+    async deletePhoto(id) {
+      await store.ready;
+      if (!store.encrypted) return;
+      await tx(await dbPromise, 'data', 'readwrite', (s) => s.delete('photo:' + id));
+    },
+
     // "Delete all my data": encrypted data, the key, cached product searches and offline files.
     async wipe() {
       await store._queue;

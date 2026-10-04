@@ -432,3 +432,71 @@ h1.brand { margin: 0; font-size: 1.1rem; }
 .optional-details { border: 1px solid var(--line); border-radius: 14px; padding: 6px 12px; margin: 0 0 14px; }
 .optional-details > summary { cursor: pointer; font-weight: 600; padding: 8px 0; min-height: 44px; display: flex; align-items: center; }
 .shop-group h3 small { font-weight: 400; }
+
+/* ---------- type-to-search dropdown ---------- */
+.combo { position: relative; }
+.combo-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.combo-box { position: relative; }
+.combo-box input { padding-inline-end: 36px; min-height: 44px; }
+.combo-caret { position: absolute; inset-inline-end: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.combo-list {
+  position: absolute; z-index: 30; inset-inline: 0; top: calc(100% + 4px); max-height: 260px; overflow: auto; margin: 0; padding: 6px;
+  list-style: none; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+}
+.combo-list li { padding: 10px 12px; border-radius: 10px; cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.combo-list li.active, .combo-list li:hover { background: var(--brand-soft); }
+.combo-list li[aria-selected="true"] { font-weight: 700; }
+.combo-list .combo-empty { color: var(--muted); cursor: default; }
+.combo-chips { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.combo-chips li { display: inline-flex; align-items: center; gap: 2px; background: var(--brand-soft); border: 1px solid var(--brand);
+  border-radius: 999px; padding: 4px 4px 4px 12px; font-size: 0.9rem; }
+.combo-x { border: 0; background: none; cursor: pointer; font-size: 1.1rem; line-height: 1; width: 32px; height: 32px; border-radius: 50%; color: var(--ink); }
+.combo-x:hover { background: var(--card); }
+
+/* ---------- person card sections ---------- */
+.member .section { border: 1px solid var(--line); border-radius: 16px; margin: 10px 0; background: var(--card); }
+.member .section > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 56px; }
+.member .section > summary::-webkit-details-marker { display: none; }
+.member .section > summary::after { content: '▾'; margin-inline-start: auto; color: var(--muted); transition: transform .15s; }
+.member .section[open] > summary::after { transform: rotate(180deg); }
+.sec-icon { font-size: 1.3rem; }
+.sec-text { display: flex; flex-direction: column; min-width: 0; }
+.sec-title { font-weight: 700; }
+.sec-sum { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62vw; }
+.sec-body { padding: 0 14px 12px; }
+.drink-list { list-style: none; margin: 0 0 10px; padding: 0; }
+.drink-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.drink-name { display: flex; flex-direction: column; }
+.drink-list .stepper small { margin: 0 4px; color: var(--muted); }
+
+/* ---------- Premium ---------- */
+.upsell { border: 1px dashed var(--brand); background: var(--brand-soft); }
+.upsell p { margin: 0 0 8px; }
+.tool-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.tool-row .btn { width: 100%; }
+.budget > summary { cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; }
+.row .grow, .grow { flex: 1; }
+.bars { position: relative; display: flex; align-items: flex-end; gap: 6px; height: 110px; margin: 12px 0 6px; padding-bottom: 18px; }
+.barcol { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; }
+.barcol i { display: block; width: 100%; background: var(--accent); border-radius: 6px 6px 0 0; }
+.barcol i.over { background: var(--bad); }
+.barcol small { position: absolute; bottom: -18px; font-size: 0.7rem; color: var(--muted); }
+.budget-line { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--brand); margin-bottom: 18px; }
+.swaps, .order-list, .entries, .goals, .goal-edit { list-style: none; margin: 0; padding: 0; }
+.swaps li, .order-list li, .entries li, .goal-edit li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.goals li { padding: 4px 0; }
+.goals li.done { color: var(--good); }
+.goal-edit input { width: 90px; }
+.day-nav { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 12px; }
+.quick-add { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.quick-add label.btn { cursor: pointer; }
+.planned { display: grid; gap: 8px; margin-bottom: 8px; }
+.plan-pick { display: flex; align-items: center; gap: 10px; width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; text-align: start; cursor: pointer; }
+.plan-pick b { margin-inline-start: auto; color: var(--accent); font-size: 1.3rem; }
+.food-photo { width: 100%; max-height: 240px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; }
+.entries .thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; background: var(--brand-soft); }
+.entries .grow { display: flex; flex-direction: column; }
+.tips > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.tips ul { margin: 6px 0 10px; padding-inline-start: 20px; }
+.tips li { margin: 6px 0; }
+.tips a.chip { text-decoration: none; color: var(--ink); }
